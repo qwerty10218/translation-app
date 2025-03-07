@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/你的倉庫名/', // 修改成你的 GitHub Repo 名稱
+  base: '/translation-app/', 
 });
 
 // package.json
