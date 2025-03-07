@@ -1,13 +1,35 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>詮語翻譯</title>
-    <link rel="stylesheet" href="./assets/index.css">
-    <script src="./assets/index.js"></script>  
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="root"></div>
+    <div class="container">
+        <h1>詮語翻譯</h1>
+        <div class="lang-selectors">
+            <select id="sourceLang">
+                <option value="日文">日文</option>
+                <option value="英文">英文</option>
+                <option value="中文">中文</option>
+            </select>
+            <select id="targetLang">
+                <option value="中文">中文</option>
+                <option value="英文">英文</option>
+                <option value="日文">日文</option>
+            </select>
+        </div>
+        <select id="tone">
+            <option value="自然口語">自然口語</option>
+            <option value="正式文書">正式文書</option>
+            <option value="文學風格">文學風格</option>
+        </select>
+        <textarea id="inputText" placeholder="輸入文字..."></textarea>
+        <button id="translateButton">翻譯</button>
+        <div id="result"></div>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>
