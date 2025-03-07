@@ -6,18 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
+    <!-- 新增必要依赖 -->
+    <script src="https://cdn.jsdelivr.net/npm/jschardet@2.2.1/dist/jschardet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.8/mammoth.browser.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>詮語翻譯</h1>
         
-        <!-- 文件上傳區 -->
         <div class="file-upload">
             <input type="file" id="fileInput" accept=".txt,.docx">
-            <p class="file-info">支持格式：txt, docx（最大 50KB）</p>
+            <p class="file-info">支持格式：txt/docx（最大 50KB）</p>
         </div>
 
-        <!-- 語言選擇區 -->
         <div class="controls-grid">
             <select id="sourceLang">
                 <option value="日文">日文</option>
@@ -31,27 +32,20 @@
             </select>
         </div>
 
-        <!-- 語氣選擇 -->
         <select id="tone">
             <option value="自然口語">自然口語</option>
             <option value="正式文書">正式文書</option>
-            <option value="文學風格">文學風格</option>
         </select>
 
-        <!-- 輸入/輸出區 -->
         <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
-        <button id="translateButton">開始翻譯</button>
+        <button id="translateButton">翻譯</button>
         
-        <!-- 狀態指示器 -->
         <div class="status-indicator">
             <div class="loader" id="loader"></div>
             <div id="statusText"></div>
         </div>
 
-        <!-- 結果顯示區 -->
         <div class="result-box" id="result"></div>
-        
-        <!-- 錯誤訊息 -->
         <div class="error-box" id="error"></div>
     </div>
 
