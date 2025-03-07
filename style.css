@@ -5,47 +5,48 @@ body {
     line-height: 1.8;
     margin: 0;
     padding: 20px;
-    background: #e9ecef;
-    color: #333;
+    background: #f5f0e6; /* 柔和大地色系背景 */
+    color: #4a4a4a;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
-    background: #ffffff;
+    background: #fdfaf6;
     padding: 40px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
 }
 
 h1 {
     text-align: center;
-    color: #2c3e50;
+    color: #6d4c41; /* 咖啡色系標題 */
     margin-bottom: 40px;
     font-size: 2em;
     letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 /* 文件上傳樣式 */
 .file-upload {
-    border: 2px dashed #ccc;
+    border: 2px dashed #a1887f;
     border-radius: 12px;
     padding: 25px;
     margin: 25px 0;
     text-align: center;
     transition: border-color 0.3s, background 0.3s;
     cursor: pointer;
-    background: #f8f9fa;
+    background: #f5f0e6;
 }
 
 .file-upload:hover {
-    border-color: #1abc9c;
-    background: #e8f5e9;
+    border-color: #8d6e63;
+    background: #ece1d5;
 }
 
 .file-info {
-    color: #7f8c8d;
+    color: #8d6e63;
     font-size: 0.9em;
     margin-top: 10px;
     text-transform: uppercase;
@@ -64,21 +65,24 @@ select, textarea, button {
     width: 100%;
     padding: 12px;
     margin: 10px 0;
-    border: 1px solid #ccc;
+    border: 1px solid #a1887f;
     border-radius: 8px;
     font-size: 16px;
     transition: all 0.3s ease;
-}
-
-select {
-    background: #f8f9fa;
-    cursor: pointer;
+    background: #fdfaf6;
 }
 
 select:disabled {
-    background: #dfe6e9;
-    color: #7f8c8d;
+    background: #e0d7cf;
+    color: #8d6e63;
     cursor: not-allowed;
+}
+
+select[data-disabled="true"] {
+    background: #e0d7cf;
+    color: #8d6e63;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 textarea {
@@ -87,7 +91,7 @@ textarea {
 }
 
 button {
-    background: #1abc9c;
+    background: #a1887f;
     color: white;
     border: none;
     cursor: pointer;
@@ -95,12 +99,12 @@ button {
 }
 
 button:hover {
-    background: #16a085;
+    background: #8d6e63;
     transform: scale(1.05);
 }
 
 button:disabled {
-    background: #bdc3c7;
+    background: #d7ccc8;
     cursor: not-allowed;
 }
 
@@ -113,7 +117,7 @@ button:disabled {
 .loader {
     display: none;
     border: 4px solid #f3f3f3;
-    border-top: 4px solid #1abc9c;
+    border-top: 4px solid #8d6e63;
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -128,24 +132,24 @@ button:disabled {
 
 /* 結果顯示 */
 .result-box {
-    background: #f8f9fa;
+    background: #fdfaf6;
     padding: 20px;
     border-radius: 10px;
     margin-top: 30px;
     white-space: pre-wrap;
     min-height: 120px;
-    border-left: 5px solid #1abc9c;
+    border-left: 5px solid #a1887f;
 }
 
 /* 錯誤訊息 */
 .error-box {
     display: none;
-    background: #ffecec;
-    color: #e74c3c;
+    background: #fbe9e7;
+    color: #d84315;
     padding: 15px;
     border-radius: 8px;
     margin-top: 20px;
-    border: 1px solid #e74c3c;
+    border: 1px solid #d84315;
     text-align: center;
     font-weight: bold;
 }
