@@ -9,14 +9,15 @@
     <!-- 新增必要依赖 -->
     <script src="https://cdn.jsdelivr.net/npm/jschardet@2.2.1/dist/jschardet.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.8/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.2.146/build/pdf.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>詮語翻譯</h1>
         
         <div class="file-upload">
-            <input type="file" id="fileInput" accept=".txt,.docx">
-            <p class="file-info">支持格式：txt/docx（最大 50KB）</p>
+            <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
+            <p class="file-info">支持格式：txt/docx/pdf（最大 50KB）</p>
         </div>
 
         <div class="controls-grid">
@@ -30,6 +31,7 @@
                 <option value="英文">英文</option>
                 <option value="日文">日文</option>
             </select>
+            <button id="swapLang">↔️</button>
         </div>
 
         <select id="tone">
@@ -39,6 +41,7 @@
 
         <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
         <button id="translateButton">翻譯</button>
+        <button id="downloadButton" disabled>下載結果</button>
         
         <div class="status-indicator">
             <div class="loader" id="loader"></div>
