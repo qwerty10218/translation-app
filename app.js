@@ -1,4 +1,4 @@
-// app.js (完整修复版)
+// app.js (修复版)
 const API_CONFIG = {
     URL: 'https://free.v36.cm/v1/chat/completions',
     KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827',
@@ -20,24 +20,21 @@ const dom = {
     loader: document.getElementById('loader'),
     statusText: document.getElementById('statusText')
 };
-// 核心修复点：事件绑定和异步处理
+
 function init() {
-    // 确保DOM元素存在
     if (!dom.translateBtn) {
         console.error('无法找到翻译按钮');
         return;
     }
-    // 使用更可靠的事件绑定方式
     dom.translateBtn.addEventListener('click', async (e) => {
-        e.preventDefault(); // 防止默认行为
+        e.preventDefault();
         await handleTranslation();
     });
     dom.fileInput.addEventListener('change', handleFileUpload);
     dom.inputText.addEventListener('input', handleInputValidation);
 }
+
 async function handleTranslation() {
-    console.log('翻译按钮被点击'); // 调试日志
-    
     try {
         clearError();
         if (!validateInput()) return;
@@ -45,14 +42,15 @@ async function handleTranslation() {
         const response = await fetchAPI();
         const data = await processResponse(response);
         
+        // 简化输出，只显示翻译结果
         dom.result.textContent = data;
-        showStatus('翻译完成');
     } catch (error) {
         handleError(error);
     } finally {
         setLoadingState(false);
     }
 }
+
 async function fetchAPI() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
@@ -79,13 +77,16 @@ async function fetchAPI() {
         throw error;
     }
 }
+
 function buildPrompt() {
-    return `請將以下${dom.sourceLang.value}翻譯成${dom.targetLang.value}，語氣為${dom.tone.value}：${dom.inputText.value}`;
+    // 简化翻译提示，避免多余解释
+    return `将下面${dom.sourceLang.value}文本翻译成${dom.targetLang.value}，使用${dom.tone.value}语气。只返回翻译结果，不要添加任何解释或原文：\n\n${dom.inputText.value}`;
 }
-// 新增输入验证
+
 function handleInputValidation() {
     dom.translateBtn.disabled = !validateInput(true);
 }
+
 function validateInput(silentCheck = false) {
     const hasText = dom.inputText.value.trim().length > 0;
     const isValidLength = dom.inputText.value.length <= APP_CONFIG.MAX_TEXT;
@@ -97,40 +98,80 @@ function validateInput(silentCheck = false) {
     
     return hasText && isValidLength;
 }
-// 状态管理
+
 function setLoadingState(isLoading) {
     dom.translateBtn.disabled = isLoading;
     dom.loader.style.display = isLoading ? 'block' : 'none';
     dom.statusText.textContent = isLoading ? '翻译中...' : '';
 }
-// 文件处理
+
+// 修复文件上传处理，解决乱码问题
 function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
     
     if (file.size > APP_CONFIG.MAX_FILE_SIZE) {
         showError(`文件大小超过限制 (最大 ${APP_CONFIG.MAX_FILE_SIZE / 1024} KB)`);
+        dom.fileInput.value = ''; // 清除文件选择
         return;
     }
     
     const reader = new FileReader();
+    // 检测文件类型
+    if (file.type.includes('text')) {
+        reader.readAsText(file, 'UTF-8'); // 指定UTF-8编码
+    } else {
+        // 对于非文本文件，作为二进制读取然后转换
+        reader.readAsArrayBuffer(file);
+    }
+    
     reader.onload = function(e) {
         try {
-            const text = e.target.result;
+            let text;
+            if (typeof e.target.result === 'string') {
+                // 直接获取文本结果
+                text = e.target.result;
+            } else {
+                // 处理二进制数据，尝试多种编码
+                const buffer = e.target.result;
+                const decoder = new TextDecoder('UTF-8'); // 首先尝试UTF-8
+                text = decoder.decode(buffer);
+                
+                // 如果检测到乱码，尝试其他编码
+                if (containsGarbledText(text)) {
+                    const gbkDecoder = new TextDecoder('gbk'); // 尝试GBK
+                    try {
+                        text = gbkDecoder.decode(buffer);
+                    } catch (error) {
+                        // GBK失败，尝试其他方法
+                        console.warn('GBK解码失败，继续使用UTF-8结果');
+                    }
+                }
+            }
+            
+            // 截断过长文本
             dom.inputText.value = text.length > APP_CONFIG.MAX_TEXT 
                 ? text.substring(0, APP_CONFIG.MAX_TEXT) 
                 : text;
             handleInputValidation();
         } catch (error) {
+            console.error('文件读取错误:', error);
             showError('无法读取文件内容');
         }
     };
+    
     reader.onerror = function() {
         showError('读取文件时出错');
     };
-    reader.readAsText(file);
 }
-// 错误处理增强
+
+// 简单的乱码检测
+function containsGarbledText(text) {
+    // 检查特殊乱码字符比例是否较高
+    const garbledChars = text.match(/[\uFFFD\u2026\u25A1\u25CF]/g) || [];
+    return (garbledChars.length / text.length) > 0.1;
+}
+
 function handleError(error) {
     console.error('Error details:', error);
     
@@ -145,24 +186,19 @@ function handleError(error) {
     )?.[1] || `翻译失败：${error.message || '未知错误'}`;
     showError(message);
 }
-// 显示错误
+
 function showError(message) {
     if (!dom.error) return;
     dom.error.textContent = message;
     dom.error.style.display = 'block';
 }
-// 清除错误
+
 function clearError() {
     if (!dom.error) return;
     dom.error.textContent = '';
     dom.error.style.display = 'none';
 }
-// 显示状态
-function showStatus(message) {
-    if (!dom.statusText) return;
-    dom.statusText.textContent = message;
-}
-// 处理API响应
+
 async function processResponse(response) {
     if (!response.ok) {
         throw new Error(`${response.status}`);
@@ -179,5 +215,5 @@ async function processResponse(response) {
         throw error;
     }
 }
-// 初始化执行
+
 document.addEventListener('DOMContentLoaded', init);
