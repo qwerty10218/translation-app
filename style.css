@@ -30,6 +30,46 @@ h1 {
 }
 
 /* =======================
+   分頁 (Tab) 樣式
+   ======================= */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #b89b8c;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #6a4f4b;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-button.active {
+    font-weight: bold;
+    color: #8d6c61;
+    border-bottom: 3px solid #8d6c61;
+}
+
+.tab-button:hover {
+    color: #5c4a3d;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* =======================
    按鈕樣式
    ======================= */
 .button {
