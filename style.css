@@ -27,16 +27,15 @@ h1 {
     letter-spacing: 2px;
 }
 
-/* 文件上傳樣式 */
+/* 文件 & 圖片上傳樣式 */
 .file-upload {
     border: 2px dashed #b89b8c;
     border-radius: 12px;
     padding: 25px;
     margin: 25px 0;
     text-align: center;
-    transition: border-color 0.3s, background 0.3s;
-    cursor: pointer;
     background: #fdf7f0;
+    transition: border-color 0.3s, background 0.3s;
 }
 
 .file-upload:hover {
@@ -53,7 +52,7 @@ h1 {
 /* 控制項樣式 */
 .controls-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr;
     gap: 15px;
     margin: 20px 0;
 }
@@ -66,22 +65,6 @@ select, textarea, button {
     border-radius: 8px;
     font-size: 16px;
     transition: all 0.3s ease;
-}
-
-select {
-    background: #fdf7f0;
-    cursor: pointer;
-}
-
-select:disabled {
-    background: #e0d4c6;
-    color: #8d7765;
-    cursor: not-allowed;
-}
-
-textarea {
-    height: 180px;
-    resize: vertical;
 }
 
 button {
@@ -102,20 +85,6 @@ button:disabled {
     cursor: not-allowed;
 }
 
-/* 語言選擇美化 */
-.language-select {
-    position: relative;
-}
-
-.language-select select {
-    padding-right: 30px;
-    background: #fdf7f0;
-}
-
-.language-select option:disabled {
-    color: #b89b8c;
-}
-
 /* 手機版優化 */
 @media (max-width: 600px) {
     .container {
@@ -123,9 +92,5 @@ button:disabled {
     }
     .controls-grid {
         grid-template-columns: 1fr;
-    }
-    select, textarea, button {
-        font-size: 14px;
-        padding: 10px;
     }
 }
