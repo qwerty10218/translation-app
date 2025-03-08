@@ -1,7 +1,6 @@
-// ======================== 完整強化版 app.js ========================
 const API_CONFIG = {
-    URL: 'https://free.v36.cm',
-    KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827',
+    URL: 'https://free.v36.cm', //
+    KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827', // 
     TIMEOUT: 15000
 };
 
@@ -76,12 +75,19 @@ async function fetchAPI() {
 
         clearTimeout(timeoutId);
 
+        // 檢查回應的 Content-Type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const responseText = await response.text();
+            throw new Error(`無效的回應格式: ${responseText}`);
+        }
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(`API錯誤: ${errorData.error?.message || response.status}`);
         }
 
-        return response;
+        return response.json();
     } catch (error) {
         throw new Error(`請求失敗: ${error.message}`);
     }
@@ -185,4 +191,3 @@ function clearError() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
