@@ -16,17 +16,34 @@
             <button class="tab-button active" data-tab="textTab">文本翻譯</button>
             <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
         </div>
-        
+
+        <!-- 文本翻譯區 -->
         <div id="textTab" class="tab-content active">
+            <div class="language-selectors">
+                <label for="sourceLang">從：</label>
+                <select id="sourceLang">
+                    <option value="中文">中文</option>
+                    <option value="英文">英文</option>
+                    <option value="日文">日文</option>
+                </select>
+                <button id="swapLang">⇄</button>
+                <label for="targetLang">到：</label>
+                <select id="targetLang">
+                    <option value="英文">英文</option>
+                    <option value="中文">中文</option>
+                    <option value="日文">日文</option>
+                </select>
+            </div>
             <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
             <button id="translateButton" class="button">翻譯</button>
             <div id="result" class="result-box"></div>
         </div>
-        
+
+        <!-- 圖片翻譯區 -->
         <div id="imageTab" class="tab-content">
             <input type="file" id="imageInput" accept="image/*">
             <div class="image-drop-area" id="imageDropArea">拖放圖片或點擊上傳</div>
-            <canvas id="imageCanvas"></canvas>
+            <canvas id="imageCanvas" style="display: block; max-width: 100%;"></canvas>
             <button id="extractTextButton" class="button">擷取文字</button>
             <button id="translateExtractedButton" class="button" disabled>翻譯</button>
             <div id="extractedText" class="result-box"></div>
