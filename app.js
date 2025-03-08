@@ -23,7 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
         extractTextBtn: document.getElementById("extractTextButton"),
         translateExtractedBtn: document.getElementById("translateExtractedButton"),
         extractedText: document.getElementById("extractedText"),
-        imageDropArea: document.getElementById("imageDropArea")
+        imageDropArea: document.getElementById("imageDropArea"),
+        clearTextButton: document.getElementById("clearTextButton"),
+        copyResultButton: document.getElementById("copyResultButton"),
+        clearResultButton: document.getElementById("clearResultButton")
     };
 
     function init() {
@@ -31,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
         initTextTranslation();
         initImageTranslation();
         initDragAndDrop();
+        initButtons();
         // 初始檢查翻譯按鈕狀態
         validateTranslationInput();
         // 設置文本區域高度
@@ -38,6 +42,28 @@ document.addEventListener("DOMContentLoaded", () => {
         // 默認禁用圖片相關按鈕
         dom.extractTextBtn.disabled = true;
         dom.translateExtractedBtn.disabled = true;
+    }
+
+    function initButtons() {
+        // 清除文本按鈕
+        dom.clearTextButton.addEventListener("click", () => {
+            dom.inputText.value = "";
+            validateTranslationInput();
+        });
+        
+        // 複製結果按鈕
+        dom.copyResultButton.addEventListener("click", () => {
+            if (dom.result.textContent) {
+                navigator.clipboard.writeText(dom.result.textContent)
+                    .then(() => alert("已複製到剪貼簿"))
+                    .catch(err => alert("複製失敗: " + err));
+            }
+        });
+        
+        // 清除結果按鈕
+        dom.clearResultButton.addEventListener("click", () => {
+            dom.result.textContent = "";
+        });
     }
 
     function initTabs() {
@@ -59,6 +85,10 @@ document.addEventListener("DOMContentLoaded", () => {
         dom.translateBtn.addEventListener("click", handleTranslation);
         dom.swapLang.addEventListener("click", swapLanguages);
         dom.inputText.addEventListener("input", validateTranslationInput);
+        
+        // 語言選擇改變時檢查翻譯按鈕狀態
+        dom.sourceLang.addEventListener("change", validateTranslationInput);
+        dom.targetLang.addEventListener("change", validateTranslationInput);
     }
 
     function swapLanguages() {
@@ -67,13 +97,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function validateTranslationInput() {
-        dom.translateBtn.disabled = !dom.inputText.value.trim();
+        const textInput = dom.inputText.value.trim();
+        const sourceLang = dom.sourceLang.value;
+        const targetLang = dom.targetLang.value;
+        
+        // 檢查輸入是否為空以及源語言和目標語言是否相同
+        const sameLanguage = sourceLang === targetLang;
+        
+        // 如果源語言和目標語言相同，禁用翻譯按鈕
+        if (sameLanguage) {
+            dom.translateBtn.disabled = true;
+            // 可以添加提示信息
+            dom.translateBtn.title = "源語言和目標語言不能相同";
+            
+            // 如果需要，可以添加視覺提示
+            dom.targetLang.classList.add("error-select");
+        } else {
+            // 正常檢查輸入是否為空
+            dom.translateBtn.disabled = !textInput;
+            dom.translateBtn.title = textInput ? "" : "請輸入要翻譯的內容";
+            
+            // 移除可能的錯誤樣式
+            dom.targetLang.classList.remove("error-select");
+        }
     }
 
     async function handleTranslation(extractedText = null) {
         const text = extractedText || dom.inputText.value.trim();
         if (!text) {
             alert("請輸入要翻譯的內容");
+            return;
+        }
+        
+        // 再次檢查源語言和目標語言是否相同
+        if (dom.sourceLang.value === dom.targetLang.value) {
+            alert("源語言和目標語言不能相同");
             return;
         }
 
@@ -286,6 +344,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const extractedText = dom.extractedText.textContent.trim();
         if (!extractedText || extractedText === "識別中..." || extractedText.startsWith("識別失敗")) {
             alert("沒有可翻譯的文字");
+            return;
+        }
+
+        // 圖片翻譯也需要檢查源語言和目標語言是否相同
+        if (dom.sourceLang.value === dom.targetLang.value) {
+            alert("源語言和目標語言不能相同");
             return;
         }
 
