@@ -112,11 +112,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             dom.result.textContent = data.choices[0]?.message?.content || "翻譯失敗";
         } catch (error) {
-            dom.result.textContent = "請求失敗：" + error.message;
+                dom.extractedText.textContent = "請求失敗：" + error.message;
         }
     }
+    // 绑定 OCR 翻译按钮
+    dom.translateExtractedBtn.addEventListener("click", translateExtractedText);
 
+    // 初始化应用
     init();
+});
  // 处理图片上传
     function handleImageUpload(e) {
         const file = e.target.files[0];
