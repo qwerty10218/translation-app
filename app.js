@@ -1,6 +1,6 @@
 const API_CONFIG = {
-    URL: 'https://free.v36.cm', //
-    KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827', // 
+    URL: 'https://free.v36.cm/v1/chat/completions', // free_chatgpt_api 的端點
+    KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827', // free_chatgpt_api 的金鑰
     TIMEOUT: 15000
 };
 
