@@ -65,9 +65,43 @@ body {
     text-decoration: none;
     font-weight: bold;
     transition: background 0.3s, transform 0.2s;
+    cursor: pointer;
 }
 
 .button:hover {
     background: #C47F49; /* 深一點的木質色 */
     transform: scale(1.05);
+}
+
+/* 複製文字區塊樣式 */
+.copy-container {
+    background: #FFF8E1; /* 柔和的黃色背景 */
+    border: 1px solid #D4A373;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    text-align: left;
+    position: relative;
+    font-size: 1em;
+    color: #5A3E36;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #D4A373;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.copy-button:hover {
+    background: #C47F49;
 }
