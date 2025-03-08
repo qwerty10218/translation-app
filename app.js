@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 配置
     const API_CONFIG = {
         URL: "https://free.v36.cm/v1/chat/completions",
-        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827", // 这里不要暴露真实 API Key
+        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827", // 這里不要暴露真實 API Key
         TIMEOUT: 15000
     };
 
@@ -442,13 +442,18 @@ document.addEventListener("DOMContentLoaded", () => {
         notification.style.borderRadius = "4px";
         notification.style.zIndex = "1000";
         notification.style.boxShadow = "0 2px 10px rgba(0,0,0,0.2)";
+        notification.style.opacity = "1";
+        notification.style.transition = "opacity 0.5s";
         
         document.body.appendChild(notification);
         
         setTimeout(() => {
             notification.style.opacity = "0";
-            notification.style.transition = "opacity 0.5s";
-            setTimeout(() => document.body.removeChild(notification), 500);
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 500);
         }, 3000);
     }
 
@@ -506,8 +511,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
             return response.json();
         } catch (error) {
+            if (error.name === 'AbortError') {
+                throw new Error("請求超時，請稍後再試");
+            }
             throw new Error(`請求失敗: ${error.message}`);
         }
+    }
+
+    // 处理 API 响应
+    function processResponse(response) {
+        if (!response || !response.choices || !response.choices[0] || !response.choices[0].message) {
+            throw new Error("API 返回了無效的響應");
+        }
+        return response.choices[0].message.content.trim();
     }
 
     // 生成翻译请求的内容
@@ -770,15 +786,81 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 计算覆盖层位置
                 const left = region.bbox.x0 / scaleX;
                 const top = region.bbox.y0 / scaleY;
-                const width = (region.bbox.x1 - region.bbox.x0) / scaleX;
-                
-                overlay.style.left = `${left}px`;
-                overlay.style.top = `${top}px`;
-                overlay.style.minWidth = `${width}px`;
-                overlay.textContent = region.translated;
-                
-                overlayContainer.appendChild(overlay);
-            });
-        } else {
-            // 如果没有区域信息，则创建一个居中的覆盖层
-            const overlay = document.createElement("div");
+                const width = (region.bbox.x1
+region.bbox.x0) / scaleX;
+const height = (region.bbox.y1 - region.bbox.y0) / scaleY;
+
+复制
+         overlay.style.left = `${left}px`;
+         overlay.style.top = `${top}px`;
+         overlay.style.width = `${width}px`;
+         overlay.style.height = `${height}px`;
+         overlay.textContent = region.translated;
+
+         overlayContainer.appendChild(overlay);
+     });
+ } else {
+     // 如果没有识别到文本区域，显示整个翻译结果
+     const overlay = document.createElement("div");
+     overlay.className = "translation-overlay";
+     overlay.style.left = "50%";
+     overlay.style.top = "50%";
+     overlay.style.transform = "translate(-50%, -50%)";
+     overlay.textContent = translatedText;
+
+     overlayContainer.appendChild(overlay);
+ }
+}
+
+// 清除覆盖层
+function clearOverlays() {
+const overlayContainer = dom.overlayContainer;
+while (overlayContainer.firstChild) {
+overlayContainer.removeChild(overlayContainer.firstChild);
+}
+}
+
+// 将提取的文本传输到文本翻译页面
+function transferTextToTextTab() {
+const extractedText = dom.extractedText.textContent.trim();
+if (!extractedText) {
+showError("沒有可傳輸的文字");
+return;
+}
+
+复制
+ // 切换到文本翻译标签页
+ dom.tabs[0].click();
+
+ // 将提取的文本填入文本翻译的输入框
+ dom.inputText.value = extractedText;
+ handleInputValidation();
+}
+
+// 设置加载状态
+function setLoadingState(isLoading, message = "") {
+if (isLoading) {
+dom.loader.style.display = "block";
+dom.statusText.textContent = message;
+dom.statusText.style.display = "block";
+} else {
+dom.loader.style.display = "none";
+dom.statusText.style.display = "none";
+}
+}
+
+// 显示错误信息
+function showError(message) {
+dom.error.textContent = message;
+dom.error.style.display = "block";
+}
+
+// 清除错误信息
+function clearError() {
+dom.error.style.display = "none";
+dom.error.textContent = "";
+}
+
+// 初始化应用
+init();
+});
