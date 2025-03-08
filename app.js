@@ -2,17 +2,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // 配置
     const API_CONFIG = {
         URL: "https://free.v36.cm/v1/chat/completions",
-        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827", // 這裡不要暴露真實 API Key
+        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
         TIMEOUT: 15000
     };
 
     // 獲取 DOM 元素
     const dom = {
-        // 標籤頁
         tabs: document.querySelectorAll(".tab-button"),
         tabContents: document.querySelectorAll(".tab-content"),
         
-        // 文本翻譯相關元素
+        // 文本翻譯相關
         inputText: document.getElementById("inputText"),
         translateBtn: document.getElementById("translateButton"),
         result: document.getElementById("result"),
@@ -20,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
         targetLang: document.getElementById("targetLang"),
         swapLang: document.getElementById("swapLang"),
 
-        // 圖片翻譯相關元素
+        // 圖片翻譯相關
         imageInput: document.getElementById("imageInput"),
         imageCanvas: document.getElementById("imageCanvas"),
         extractTextBtn: document.getElementById("extractTextButton"),
@@ -28,14 +27,12 @@ document.addEventListener("DOMContentLoaded", () => {
         extractedText: document.getElementById("extractedText"),
     };
 
-    // 初始化應用
     function init() {
         initTabs();
         initTextTranslation();
         initImageTranslation();
     }
 
-    // 標籤頁切換功能
     function initTabs() {
         dom.tabs.forEach(tab => {
             tab.addEventListener("click", () => {
@@ -52,14 +49,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 文本翻譯功能初始化
     function initTextTranslation() {
         dom.translateBtn.addEventListener("click", handleTranslation);
         dom.swapLang.addEventListener("click", swapLanguages);
         dom.inputText.addEventListener("input", validateTranslationInput);
     }
 
-    // 交換語言
     function swapLanguages() {
         const temp = dom.sourceLang.value;
         dom.sourceLang.value = dom.targetLang.value;
@@ -72,21 +67,18 @@ document.addEventListener("DOMContentLoaded", () => {
         validateTranslationInput();
     }
 
-    // 確保翻譯按鈕狀態正確
     function validateTranslationInput() {
         dom.translateBtn.disabled = !dom.inputText.value.trim();
     }
 
-    // 進行文本翻譯
     async function handleTranslation() {
         const text = dom.inputText.value.trim();
-        if (text.length === 0) {
+        if (!text) {
             alert("請輸入要翻譯的內容");
             return;
         }
 
         dom.result.textContent = "翻譯中...";
-        const prompt = `請將以下${dom.sourceLang.value}文本翻譯成${dom.targetLang.value}，只返回翻譯結果：\n\n${text}`;
         try {
             const response = await fetch(API_CONFIG.URL, {
                 method: "POST",
@@ -96,36 +88,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify({
                     model: "gpt-3.5-turbo",
-                    messages: [{ role: "user", content: prompt }]
+                    messages: [{ role: "user", content: `請將以下${dom.sourceLang.value}文本翻譯成${dom.targetLang.value}：\n\n${text}` }]
                 })
             });
 
             const data = await response.json();
-
-            if (!data.choices || data.choices.length === 0) {
-                dom.result.textContent = "翻譯失敗：API 未返回有效結果";
-                return;
-            }
-
-            dom.result.textContent = data.choices[0]?.message?.content || "翻譯失敗";
+            dom.result.textContent = data.choices?.[0]?.message?.content || "翻譯失敗";
         } catch (error) {
-            dom.result.textContent = "請求失敗：" + error.message;
+            dom.result.textContent = `請求失敗：${error.message}`;
         }
     }
 
-    // 初始化圖片翻譯功能
     function initImageTranslation() {
         dom.imageInput.addEventListener("change", handleImageUpload);
         dom.extractTextBtn.addEventListener("click", extractTextFromImage);
         dom.translateExtractedBtn.addEventListener("click", translateExtractedText);
     }
 
-    // 處理圖片上傳
     function handleImageUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (!file.type.match('image.*')) {
+        if (!file.type.startsWith("image/")) {
             alert("請上傳圖片文件");
             return;
         }
@@ -143,34 +127,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 dom.extractTextBtn.disabled = false;
             };
+            img.onerror = () => alert("圖片載入失敗，請使用其他圖片。");
             img.src = e.target.result;
         };
         reader.readAsDataURL(file);
     }
 
-    // OCR 文字識別
     async function extractTextFromImage() {
         dom.extractTextBtn.disabled = true;
         dom.translateExtractedBtn.disabled = true;
         dom.extractedText.textContent = "識別中...";
 
         try {
-            const { data } = await Tesseract.recognize(
-                dom.imageCanvas,
-                "chi_tra+eng",
-                { logger: (m) => console.log(m) }
-            );
+            const { data } = await Tesseract.recognize(dom.imageCanvas, "chi_tra+eng");
 
-            dom.extractedText.textContent = data.text.trim();
-            dom.translateExtractedBtn.disabled = !data.text.trim();
+            const extractedText = data.text.trim();
+            dom.extractedText.textContent = extractedText || "未能識別出文字";
+
+            dom.translateExtractedBtn.disabled = !extractedText;
         } catch (error) {
-            dom.extractedText.textContent = "識別失敗：" + error.message;
+            dom.extractedText.textContent = `識別失敗：${error.message}`;
         } finally {
             dom.extractTextBtn.disabled = false;
         }
     }
 
-    // 翻譯擷取的文字
     async function translateExtractedText() {
         const extractedText = dom.extractedText.textContent.trim();
         if (!extractedText) {
@@ -180,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         dom.extractedText.textContent = "翻譯中...";
         try {
-            const prompt = `請將以下文本翻譯成${dom.targetLang.value}，只返回翻譯結果：\n\n${extractedText}`;
             const response = await fetch(API_CONFIG.URL, {
                 method: "POST",
                 headers: {
@@ -189,17 +169,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: JSON.stringify({
                     model: "gpt-3.5-turbo",
-                    messages: [{ role: "user", content: prompt }]
+                    messages: [{ role: "user", content: `請將以下文本翻譯成${dom.targetLang.value}：\n\n${extractedText}` }]
                 })
             });
 
             const data = await response.json();
-            dom.extractedText.textContent = data.choices[0]?.message?.content || "翻譯失敗";
+            dom.extractedText.textContent = data.choices?.[0]?.message?.content || "翻譯失敗";
         } catch (error) {
-            dom.extractedText.textContent = "請求失敗：" + error.message;
+            dom.extractedText.textContent = `請求失敗：${error.message}`;
         }
     }
 
-    // 啟動應用
     init();
 });
