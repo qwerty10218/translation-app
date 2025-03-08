@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function init() {
+        if (!dom.translateBtn) {
+            console.error('找不到 translateButton 元素');
+            return;
+        }
+
         dom.translateBtn.addEventListener('click', handleTranslation);
         dom.fileInput.addEventListener('change', handleFileUpload);
         dom.swapLang.addEventListener('click', swapLanguages);
