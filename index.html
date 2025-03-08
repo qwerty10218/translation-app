@@ -7,73 +7,31 @@
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.2.146/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jschardet@2.2.1/dist/jschardet.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.8/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.0"></script>
 </head>
 <body>
     <div class="container">
         <h1>詮語翻譯</h1>
-
-        <!-- 檔案上傳區域 -->
-        <div class="file-upload">
-            <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
-            <p class="file-info">支持格式：txt/docx/pdf（最大 50KB）</p>
+        <div class="tabs">
+            <button class="tab-button active" data-tab="textTab">文本翻譯</button>
+            <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
         </div>
-
-        <!-- 圖片上傳區域 -->
-        <div class="file-upload">
+        
+        <div id="textTab" class="tab-content active">
+            <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
+            <button id="translateButton" class="button">翻譯</button>
+            <div id="result" class="result-box"></div>
+        </div>
+        
+        <div id="imageTab" class="tab-content">
             <input type="file" id="imageInput" accept="image/*">
-            <p class="file-info">支持格式：JPG/PNG（最大 5MB）</p>
+            <div class="image-drop-area" id="imageDropArea">拖放圖片或點擊上傳</div>
+            <canvas id="imageCanvas"></canvas>
+            <button id="extractTextButton" class="button">擷取文字</button>
+            <button id="translateExtractedButton" class="button" disabled>翻譯</button>
+            <div id="extractedText" class="result-box"></div>
         </div>
-
-        <!-- 語言選擇區域 -->
-        <div class="controls-grid">
-            <div class="select-group">
-                <label for="sourceLang">來源語言</label>
-                <select id="sourceLang">
-                    <option value="日文">日文</option>
-                    <option value="英文">英文</option>
-                    <option value="中文">中文</option>
-                </select>
-            </div>
-            <div class="select-group">
-                <label for="targetLang">目標語言</label>
-                <select id="targetLang">
-                    <option value="中文">中文</option>
-                    <option value="英文">英文</option>
-                    <option value="日文">日文</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- 語氣選擇區域 -->
-        <div class="select-group">
-            <label for="tone">翻譯語氣</label>
-            <select id="tone">
-                <option value="自然口語">自然口語</option>
-                <option value="正式文書">正式文書</option>
-            </select>
-        </div>
-
-        <!-- 輸入區域 -->
-        <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
-
-        <!-- 按鈕區域 -->
-        <button id="translateButton" class="button">翻譯</button>
-        <button id="copyButton" class="button" disabled>複製結果</button>
-
-        <!-- 狀態指示器 -->
-        <div class="status-indicator">
-            <div class="loader" id="loader"></div>
-            <div id="statusText"></div>
-        </div>
-
-        <!-- 結果顯示區域 -->
-        <div class="result-box copy-container" id="result"></div>
-        <div class="error-box copy-container" id="error"></div>
     </div>
-
     <script src="app.js"></script>
 </body>
 </html>
