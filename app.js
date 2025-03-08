@@ -26,7 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
         imageDropArea: document.getElementById("imageDropArea"),
         clearTextButton: document.getElementById("clearTextButton"),
         copyResultButton: document.getElementById("copyResultButton"),
-        clearResultButton: document.getElementById("clearResultButton")
+        clearResultButton: document.getElementById("clearResultButton"),
+        imageTab: document.getElementById("imageTab") // 添加缺少的 imageTab 元素引用
     };
 
     function init() {
@@ -82,7 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function initTextTranslation() {
-        dom.translateBtn.addEventListener("click", handleTranslation);
+        // 修正: 不直接傳遞事件對象，而是使用箭頭函數
+        dom.translateBtn.addEventListener("click", () => handleTranslation());
         dom.swapLang.addEventListener("click", swapLanguages);
         dom.inputText.addEventListener("input", validateTranslationInput);
         
@@ -123,6 +125,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function handleTranslation(extractedText = null) {
+        // 修正: 確保 extractedText 是字符串而不是事件對象
+        if (extractedText && typeof extractedText === 'object' && extractedText.type === 'click') {
+            extractedText = null; // 如果是事件對象，設為 null，使用輸入框中的文本
+        }
+        
         const text = extractedText || dom.inputText.value.trim();
         if (!text) {
             alert("請輸入要翻譯的內容");
@@ -190,7 +197,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function initImageTranslation() {
         dom.imageInput.addEventListener("change", handleImageUpload);
         dom.extractTextBtn.addEventListener("click", extractTextFromImage);
-        dom.translateExtractedBtn.addEventListener("click", () => translateExtractedText());
+        // 修正: 使用箭頭函數避免傳遞事件對象
+        dom.translateExtractedBtn.addEventListener("click", () => {
+            if (dom.extractedText && dom.extractedText.textContent) {
+                translateExtractedText();
+            }
+        });
     }
 
     function initDragAndDrop() {
@@ -353,6 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // 修正: 確保我們傳遞的是文本而不是事件
         await handleTranslation(extractedText);
     }
 
