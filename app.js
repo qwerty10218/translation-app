@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 配置
     const API_CONFIG = {
         URL: "https://free.v36.cm/v1/chat/completions",
-        KEY: "your-api-key-here", // 这里不要暴露真实 API Key
+        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827", // 这里不要暴露真实 API Key
         TIMEOUT: 15000
     };
 
