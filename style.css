@@ -1,22 +1,22 @@
-/* style.css - 大地色系風格，包含文本翻譯與圖片翻譯區域 */
+/* 優化版大地色系 CSS，改善按鈕無障礙性、陰影效果與圖片預覽 */
 
-/* 基礎樣式 */
+/* 全局樣式 */
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     line-height: 1.8;
     margin: 0;
     padding: 20px;
-    background: #f4ede4;
+    background: #f3eadb;
     color: #5c4a3d;
 }
 
 .container {
     max-width: 900px;
     margin: 0 auto;
-    background: #fff8f0;
+    background: #fffaf0;
     padding: 40px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
@@ -24,10 +24,10 @@ h1 {
     color: #6a4f4b;
     margin-bottom: 40px;
     font-size: 2em;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
 }
 
-/* 兩個翻譯區塊 */
+/* 翻譯區域 */
 .translation-sections {
     display: flex;
     flex-wrap: wrap;
@@ -40,23 +40,24 @@ h1 {
     padding: 20px;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* 文件上傳樣式 */
+/* 文件上傳 */
 .file-upload {
     border: 2px dashed #b89b8c;
     border-radius: 12px;
     padding: 20px;
     text-align: center;
-    background: #fdf7f0;
+    background: #fcf5eb;
     cursor: pointer;
     transition: all 0.3s;
 }
 
-.file-upload:hover {
+.file-upload:hover, .file-upload:focus-within {
     border-color: #8d6c61;
     background: #f0e4d7;
+    box-shadow: 0 0 10px rgba(138, 92, 82, 0.4);
 }
 
 .file-info {
@@ -65,7 +66,7 @@ h1 {
     margin-top: 10px;
 }
 
-/* 控制項樣式 */
+/* 控制項 */
 .controls-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -76,7 +77,6 @@ h1 {
 select, textarea, button {
     width: 100%;
     padding: 12px;
-    margin: 10px 0;
     border: 1px solid #b89b8c;
     border-radius: 8px;
     font-size: 16px;
@@ -101,21 +101,25 @@ button:hover {
     transform: scale(1.05);
 }
 
+button:focus {
+    outline: 3px solid #b89b8c;
+}
+
 button:disabled {
     background: #c4b3a8;
     cursor: not-allowed;
 }
 
-/* 圖片預覽區域 */
+/* 圖片區域 */
 .image-preview {
     width: 100%;
+    max-width: 100%;
     max-height: 300px;
     object-fit: contain;
     display: block;
     margin: 10px 0;
 }
 
-/* 圖片文字區域 */
 .image-text-overlay {
     position: absolute;
     top: 50%;
@@ -129,7 +133,7 @@ button:disabled {
     text-align: center;
 }
 
-/* 手機版優化 */
+/* 響應式設計 */
 @media (max-width: 600px) {
     .container {
         padding: 20px;
