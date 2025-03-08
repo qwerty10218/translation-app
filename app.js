@@ -10,16 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const dom = {
         tabs: document.querySelectorAll(".tab-button"),
         tabContents: document.querySelectorAll(".tab-content"),
-        
-        // 文本翻譯相關
         inputText: document.getElementById("inputText"),
         translateBtn: document.getElementById("translateButton"),
         result: document.getElementById("result"),
         sourceLang: document.getElementById("sourceLang"),
         targetLang: document.getElementById("targetLang"),
         swapLang: document.getElementById("swapLang"),
-
-        // 圖片翻譯相關
+        modelSelect: document.getElementById("modelSelect"),
+        progressBar: document.getElementById("progressBar"),
         imageInput: document.getElementById("imageInput"),
         imageCanvas: document.getElementById("imageCanvas"),
         extractTextBtn: document.getElementById("extractTextButton"),
@@ -38,11 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
             tab.addEventListener("click", () => {
                 dom.tabs.forEach(t => t.classList.remove("active"));
                 dom.tabContents.forEach(c => c.classList.remove("active"));
-
                 tab.classList.add("active");
-                const tabId = tab.getAttribute("data-tab");
-                document.getElementById(tabId).classList.add("active");
-
+                document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
                 dom.result.textContent = "";
                 dom.extractedText.textContent = "";
             });
@@ -56,14 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function swapLanguages() {
-        const temp = dom.sourceLang.value;
-        dom.sourceLang.value = dom.targetLang.value;
-        dom.targetLang.value = temp;
-
-        if (dom.sourceLang.value === dom.targetLang.value) {
-            dom.targetLang.selectedIndex = (dom.targetLang.selectedIndex + 1) % dom.targetLang.options.length;
-        }
-
+        [dom.sourceLang.value, dom.targetLang.value] = [dom.targetLang.value, dom.sourceLang.value];
         validateTranslationInput();
     }
 
@@ -79,6 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         dom.result.textContent = "翻譯中...";
+        dom.progressBar.style.width = "0%";
+        dom.progressBar.parentElement.style.display = "block";
+
         try {
             const response = await fetch(API_CONFIG.URL, {
                 method: "POST",
@@ -87,8 +78,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    model: "gpt-3.5-turbo",
-                    messages: [{ role: "user", content: `請將以下${dom.sourceLang.value}文本翻譯成${dom.targetLang.value}：\n\n${text}` }]
+                    model: dom.modelSelect.value,
+                    messages: [{
+                        role: "user",
+                        content: `請專業地將以下 ${dom.sourceLang.value} 文本翻譯成 ${dom.targetLang.value}：\n\n${text}`
+                    }]
                 })
             });
 
@@ -96,6 +90,11 @@ document.addEventListener("DOMContentLoaded", () => {
             dom.result.textContent = data.choices?.[0]?.message?.content || "翻譯失敗";
         } catch (error) {
             dom.result.textContent = `請求失敗：${error.message}`;
+        } finally {
+            dom.progressBar.style.width = "100%";
+            setTimeout(() => {
+                dom.progressBar.parentElement.style.display = "none";
+            }, 500);
         }
     }
 
@@ -120,11 +119,9 @@ document.addEventListener("DOMContentLoaded", () => {
             img.onload = () => {
                 const canvas = dom.imageCanvas;
                 const ctx = canvas.getContext("2d");
-
                 canvas.width = img.width;
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0, img.width, img.height);
-                
                 dom.extractTextBtn.disabled = false;
             };
             img.onerror = () => alert("圖片載入失敗，請使用其他圖片。");
@@ -140,11 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const { data } = await Tesseract.recognize(dom.imageCanvas, "chi_tra+eng");
-
-            const extractedText = data.text.trim();
-            dom.extractedText.textContent = extractedText || "未能識別出文字";
-
-            dom.translateExtractedBtn.disabled = !extractedText;
+            dom.extractedText.textContent = data.text.trim() || "未能識別出文字";
+            dom.translateExtractedBtn.disabled = !data.text.trim();
         } catch (error) {
             dom.extractedText.textContent = `識別失敗：${error.message}`;
         } finally {
@@ -160,24 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         dom.extractedText.textContent = "翻譯中...";
-        try {
-            const response = await fetch(API_CONFIG.URL, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${API_CONFIG.KEY}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "gpt-3.5-turbo",
-                    messages: [{ role: "user", content: `請將以下文本翻譯成${dom.targetLang.value}：\n\n${extractedText}` }]
-                })
-            });
-
-            const data = await response.json();
-            dom.extractedText.textContent = data.choices?.[0]?.message?.content || "翻譯失敗";
-        } catch (error) {
-            dom.extractedText.textContent = `請求失敗：${error.message}`;
-        }
+        await handleTranslation();
     }
 
     init();
