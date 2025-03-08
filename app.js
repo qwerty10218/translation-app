@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 配置
     const API_CONFIG = {
         URL: "https://free.v36.cm/v1/chat/completions",
-        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
+        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827", // 这里不要暴露真实 API Key
         TIMEOUT: 15000
     };
 
@@ -36,6 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
         loader: document.createElement("div"), // 创建加载指示器
         statusText: document.createElement("div") // 创建状态文本
     };
+
+    // 存储OCR识别到的文本和区域信息
+    let textRegions = [];
+    let originalImage = null;
 
     // 初始化
     function init() {
@@ -83,12 +87,75 @@ document.addEventListener("DOMContentLoaded", () => {
         dom.statusText.style.margin = "10px 0";
         document.querySelector(".container").appendChild(dom.statusText);
         
+        // 添加翻译叠加层
+        dom.overlayContainer = document.createElement("div");
+        dom.overlayContainer.id = "overlayContainer";
+        dom.overlayContainer.className = "image-overlay-container";
+        document.getElementById("imageTab").insertBefore(dom.overlayContainer, dom.extractedText);
+        
         // 添加动画样式
         const style = document.createElement("style");
         style.textContent = `
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
+            }
+            
+            .image-overlay-container {
+                position: relative;
+                margin: 15px 0;
+                display: none;
+            }
+            
+            .translation-overlay {
+                position: absolute;
+                background: rgba(255, 255, 255, 0.8);
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 14px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                pointer-events: none;
+                border: 1px solid #8d6c61;
+                color: #5c4a3d;
+                max-width: 90%;
+                overflow-wrap: break-word;
+            }
+            
+            .image-drop-area.dragover {
+                background-color: #f0e4d7;
+                border-color: #8d6c61;
+            }
+            
+            #imageCanvas {
+                display: none;
+                max-width: 100%;
+                height: auto;
+            }
+            
+            .btn-group {
+                display: flex;
+                gap: 10px;
+                margin: 10px 0;
+            }
+            
+            .btn-group button {
+                flex: 1;
+            }
+            
+            .text-transfer-container {
+                display: flex;
+                align-items: center;
+                margin-top: 10px;
+                background: #fdf7f0;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid #b89b8c;
+            }
+            
+            .text-transfer-container button {
+                width: auto;
+                white-space: nowrap;
+                margin: 0 0 0 10px;
             }
         `;
         document.head.appendChild(style);
@@ -176,6 +243,9 @@ document.addEventListener("DOMContentLoaded", () => {
         dom.swapLang.addEventListener("click", swapLanguages);
         dom.inputText.addEventListener("input", handleInputValidation);
         
+        // 添加粘贴事件处理
+        document.addEventListener("paste", handlePaste);
+        
         // 初始化表单验证
         handleInputValidation();
     }
@@ -237,9 +307,49 @@ document.addEventListener("DOMContentLoaded", () => {
         const imageTab = document.getElementById("imageTab");
         imageTab.insertBefore(langContainer, dom.imageInput);
         
+        // 创建按钮组
+        const btnGroup = document.createElement("div");
+        btnGroup.className = "btn-group";
+        
+        // 移动提取和翻译按钮到按钮组
+        imageTab.removeChild(dom.extractTextBtn);
+        imageTab.removeChild(dom.translateExtractedBtn);
+        btnGroup.appendChild(dom.extractTextBtn);
+        btnGroup.appendChild(dom.translateExtractedBtn);
+        
+        // 添加显示模式切换按钮
+        const toggleOverlayBtn = document.createElement("button");
+        toggleOverlayBtn.id = "toggleOverlayBtn";
+        toggleOverlayBtn.className = "button";
+        toggleOverlayBtn.textContent = "圖上顯示";
+        toggleOverlayBtn.disabled = true;
+        btnGroup.appendChild(toggleOverlayBtn);
+        
+        // 将按钮组添加到合适的位置
+        imageTab.insertBefore(btnGroup, dom.extractedText);
+        
+        // 添加传输文本按钮
+        const textTransferContainer = document.createElement("div");
+        textTransferContainer.className = "text-transfer-container";
+        
+        const transferText = document.createElement("span");
+        transferText.textContent = "要將識別出的文字傳輸到文本翻譯頁面嗎？";
+        
+        const transferBtn = document.createElement("button");
+        transferBtn.id = "transferTextBtn";
+        transferBtn.className = "button";
+        transferBtn.textContent = "傳輸";
+        transferBtn.disabled = true;
+        
+        textTransferContainer.appendChild(transferText);
+        textTransferContainer.appendChild(transferBtn);
+        imageTab.insertBefore(textTransferContainer, dom.extractedText);
+        
         // 更新DOM元素引用
         dom.imgSourceLang = document.getElementById("imgSourceLang");
         dom.imgTargetLang = document.getElementById("imgTargetLang");
+        dom.toggleOverlayBtn = document.getElementById("toggleOverlayBtn");
+        dom.transferTextBtn = document.getElementById("transferTextBtn");
         
         // 设置图片拖放区域
         setupImageDropArea();
@@ -248,6 +358,8 @@ document.addEventListener("DOMContentLoaded", () => {
         dom.imageInput.addEventListener("change", handleImageUpload);
         dom.extractTextBtn.addEventListener("click", extractTextFromImage);
         dom.translateExtractedBtn.addEventListener("click", translateExtractedText);
+        dom.toggleOverlayBtn.addEventListener("click", toggleOverlayDisplay);
+        dom.transferTextBtn.addEventListener("click", transferTextToTextTab);
     }
     
     // 设置图片拖放区域
@@ -282,6 +394,62 @@ document.addEventListener("DOMContentLoaded", () => {
         dom.imageDropArea.style.cursor = "pointer";
         dom.imageDropArea.style.transition = "all 0.3s";
         dom.imageDropArea.style.marginBottom = "15px";
+    }
+    
+    // 处理粘贴事件
+    function handlePaste(e) {
+        // 获取活动标签页
+        const activeTab = document.querySelector(".tab-content.active");
+        const isImageTab = activeTab && activeTab.id === "imageTab";
+        
+        if (isImageTab && e.clipboardData && e.clipboardData.items) {
+            const items = e.clipboardData.items;
+            let imageItem = null;
+            
+            // 查找剪贴板中的图像数据
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image") !== -1) {
+                    imageItem = items[i];
+                    break;
+                }
+            }
+            
+            // 如果找到图像数据，处理它
+            if (imageItem) {
+                e.preventDefault();
+                const blob = imageItem.getAsFile();
+                
+                // 创建 File 对象并触发图像上传事件
+                const file = new File([blob], "pasted-image.png", { type: blob.type });
+                handleImageUpload({ target: { files: [file] } });
+                
+                showNotification("已從剪貼板粘貼圖片");
+            }
+        }
+    }
+    
+    // 显示通知
+    function showNotification(message) {
+        const notification = document.createElement("div");
+        notification.className = "notification";
+        notification.textContent = message;
+        notification.style.position = "fixed";
+        notification.style.top = "20px";
+        notification.style.right = "20px";
+        notification.style.backgroundColor = "#8d6c61";
+        notification.style.color = "white";
+        notification.style.padding = "10px 15px";
+        notification.style.borderRadius = "4px";
+        notification.style.zIndex = "1000";
+        notification.style.boxShadow = "0 2px 10px rgba(0,0,0,0.2)";
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.opacity = "0";
+            notification.style.transition = "opacity 0.5s";
+            setTimeout(() => document.body.removeChild(notification), 500);
+        }, 3000);
     }
 
     // 交换语言
@@ -398,15 +566,21 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         
-        // 清除已提取的文本
+        // 清除已提取的文本和翻译
         dom.extractedText.textContent = "";
         dom.translateExtractedBtn.disabled = true;
+        dom.toggleOverlayBtn.disabled = true;
+        dom.transferTextBtn.disabled = true;
+        clearOverlays();
         
         // 读取和显示图片
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
+                // 保存原始图像以供OCR使用
+                originalImage = img;
+                
                 // 设置画布大小
                 const canvas = dom.imageCanvas;
                 const ctx = canvas.getContext('2d');
@@ -451,6 +625,9 @@ document.addEventListener("DOMContentLoaded", () => {
         clearError();
         setLoadingState(true, "正在識別文字...");
         
+        // 清除任何先前的覆盖层
+        clearOverlays();
+        
         try {
             // 设置 Tesseract 语言
             let tesseractLang = 'eng';
@@ -465,7 +642,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             const result = await Tesseract.recognize(
-                dom.imageCanvas,
+                originalImage || dom.imageCanvas,
                 tesseractLang,
                 {
                     logger: m => {
@@ -476,7 +653,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             );
             
-            const extractedText = result.data.text.trim();
+            // 获取识别文本和区域
+            textRegions = [];
+            let extractedText = "";
+            
+            if (result.data.words && result.data.words.length > 0) {
+                // 提取每个单词及其位置
+                result.data.words.forEach(word => {
+                    textRegions.push({
+                        text: word.text,
+                        bbox: word.bbox,
+                        translated: "" // 将在翻译后填充
+                    });
+                    
+                    extractedText += word.text + " ";
+                });
+                
+                extractedText = extractedText.trim();
+            } else {
+                extractedText = result.data.text.trim();
+            }
             
             if (extractedText.length === 0) {
                 throw new Error("未能識別出文字，請嘗試其他圖片或調整圖片清晰度");
@@ -484,9 +680,12 @@ document.addEventListener("DOMContentLoaded", () => {
             
             dom.extractedText.textContent = extractedText;
             dom.translateExtractedBtn.disabled = false;
+            dom.transferTextBtn.disabled = false;
         } catch (error) {
             handleError(error);
             dom.translateExtractedBtn.disabled = true;
+            dom.toggleOverlayBtn.disabled = true;
+            dom.transferTextBtn.disabled = true;
         } finally {
             setLoadingState(false);
         }
@@ -510,46 +709,76 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // 显示翻译结果
             dom.extractedText.textContent = resultText;
+            
+            // 如果有识别到文本区域，则分配翻译结果
+            if (textRegions.length > 0) {
+                // 简单起见，我们将整个翻译结果设置为每个区域的翻译
+                textRegions.forEach(region => {
+                    region.translated = resultText;
+                });
+                
+                // 启用覆盖层切换按钮
+                dom.toggleOverlayBtn.disabled = false;
+            }
         } catch (error) {
             handleError(error);
         } finally {
             setLoadingState(false);
         }
     }
-
-    // 处理 API 响应
-    function processResponse(data) {
-        if (!data.choices?.[0]?.message?.content) {
-            throw new Error("API回應格式錯誤");
+    
+    // 切换在图片上显示翻译结果
+    function toggleOverlayDisplay() {
+        const overlayContainer = dom.overlayContainer;
+        
+        if (overlayContainer.style.display === "block") {
+            // 隐藏覆盖层
+            overlayContainer.style.display = "none";
+            dom.toggleOverlayBtn.textContent = "圖上顯示";
+            return;
         }
-        return data.choices[0].message.content.trim();
-    }
-
-    // 设置加载状态
-    function setLoadingState(isLoading, statusMessage = "處理中...") {
-        dom.translateBtn.disabled = isLoading;
-        dom.extractTextBtn.disabled = isLoading;
-        dom.translateExtractedBtn.disabled = isLoading;
-        dom.loader.style.display = isLoading ? "block" : "none";
-        dom.statusText.textContent = isLoading ? statusMessage : "";
-    }
-
-    // 处理错误
-    function handleError(error) {
-        showError(`錯誤: ${error.message}`);
-    }
-
-    // 显示错误信息
-    function showError(message) {
-        dom.error.textContent = message;
-        dom.error.style.display = "block";
-    }
-
-    // 清除错误信息
-    function clearError() {
-        dom.error.textContent = "";
-        dom.error.style.display = "none";
-    }
-
-    init();
-});
+        
+        // 显示覆盖层
+        overlayContainer.style.display = "block";
+        dom.toggleOverlayBtn.textContent = "隱藏顯示";
+        
+        // 清除现有覆盖层
+        clearOverlays();
+        
+        // 获取画布和图像的尺寸比例
+        const canvas = dom.imageCanvas;
+        const canvasRect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / canvasRect.width;
+        const scaleY = canvas.height / canvasRect.height;
+        
+        // 设置覆盖容器的尺寸和位置，与画布保持一致
+        overlayContainer.style.width = `${canvasRect.width}px`;
+        overlayContainer.style.height = `${canvasRect.height}px`;
+        overlayContainer.style.position = "relative";
+        
+        // 创建翻译覆盖层
+        const translatedText = dom.extractedText.textContent;
+        
+        if (textRegions.length > 0) {
+            // 为每个文本区域创建覆盖层
+            textRegions.forEach(region => {
+                if (!region.translated) return;
+                
+                const overlay = document.createElement("div");
+                overlay.className = "translation-overlay";
+                
+                // 计算覆盖层位置
+                const left = region.bbox.x0 / scaleX;
+                const top = region.bbox.y0 / scaleY;
+                const width = (region.bbox.x1 - region.bbox.x0) / scaleX;
+                
+                overlay.style.left = `${left}px`;
+                overlay.style.top = `${top}px`;
+                overlay.style.minWidth = `${width}px`;
+                overlay.textContent = region.translated;
+                
+                overlayContainer.appendChild(overlay);
+            });
+        } else {
+            // 如果没有区域信息，则创建一个居中的覆盖层
+            const overlay = document.createElement("div");
