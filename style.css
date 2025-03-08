@@ -141,18 +141,24 @@ h1 {
 }
 
 /* =======================
-   翻譯結果框樣式
+   翻譯結果框樣式 (獨立顯示)
    ======================= */
+.result-container {
+    margin-top: 20px;
+    padding: 20px;
+    background: #fdf7ec;
+    border: 1px solid #b89b8c;
+    border-radius: 12px;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
 .result-box {
     padding: 15px;
     background: #faf3e7;
     border: 1px solid #b89b8c;
     border-radius: 8px;
-    min-height: 50px;
-    margin-top: 15px;
     font-size: 16px;
     color: #5c4a3d;
-    box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 /* =======================
