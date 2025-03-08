@@ -1,56 +1,53 @@
-/* style.css */
+/* style.css - 大地色系風格 */
+
 /* 基礎樣式 */
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     line-height: 1.8;
     margin: 0;
     padding: 20px;
-    background: #f5f0e6; /* 柔和大地色系背景 */
-    color: #4a4a4a;
+    background: #f4ede4;
+    color: #5c4a3d;
 }
 
 .container {
     max-width: 800px;
     margin: 0 auto;
-    background: #fdfaf6;
+    background: #fff8f0;
     padding: 40px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 h1 {
     text-align: center;
-    color: #6d4c41; /* 咖啡色系標題 */
+    color: #6a4f4b;
     margin-bottom: 40px;
     font-size: 2em;
     letter-spacing: 2px;
-    text-transform: uppercase;
 }
 
 /* 文件上傳樣式 */
 .file-upload {
-    border: 2px dashed #a1887f;
+    border: 2px dashed #b89b8c;
     border-radius: 12px;
     padding: 25px;
     margin: 25px 0;
     text-align: center;
     transition: border-color 0.3s, background 0.3s;
     cursor: pointer;
-    background: #f5f0e6;
+    background: #fdf7f0;
 }
 
 .file-upload:hover {
-    border-color: #8d6e63;
-    background: #ece1d5;
+    border-color: #8d6c61;
+    background: #f0e4d7;
 }
 
 .file-info {
-    color: #8d6e63;
+    color: #7d6655;
     font-size: 0.9em;
     margin-top: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
 }
 
 /* 控制項樣式 */
@@ -65,24 +62,21 @@ select, textarea, button {
     width: 100%;
     padding: 12px;
     margin: 10px 0;
-    border: 1px solid #a1887f;
+    border: 1px solid #b89b8c;
     border-radius: 8px;
     font-size: 16px;
     transition: all 0.3s ease;
-    background: #fdfaf6;
+}
+
+select {
+    background: #fdf7f0;
+    cursor: pointer;
 }
 
 select:disabled {
-    background: #e0d7cf;
-    color: #8d6e63;
+    background: #e0d4c6;
+    color: #8d7765;
     cursor: not-allowed;
-}
-
-select[data-disabled="true"] {
-    background: #e0d7cf;
-    color: #8d6e63;
-    cursor: not-allowed;
-    pointer-events: none;
 }
 
 textarea {
@@ -91,7 +85,7 @@ textarea {
 }
 
 button {
-    background: #a1887f;
+    background: #8d6c61;
     color: white;
     border: none;
     cursor: pointer;
@@ -99,57 +93,39 @@ button {
 }
 
 button:hover {
-    background: #8d6e63;
+    background: #6a4f4b;
     transform: scale(1.05);
 }
 
 button:disabled {
-    background: #d7ccc8;
+    background: #c4b3a8;
     cursor: not-allowed;
 }
 
-/* 狀態指示器 */
-.status-indicator {
-    margin: 30px 0;
-    text-align: center;
+/* 語言選擇美化 */
+.language-select {
+    position: relative;
 }
 
-.loader {
-    display: none;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #8d6e63;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
+.language-select select {
+    padding-right: 30px;
+    background: #fdf7f0;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.language-select option:disabled {
+    color: #b89b8c;
 }
 
-/* 結果顯示 */
-.result-box {
-    background: #fdfaf6;
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 30px;
-    white-space: pre-wrap;
-    min-height: 120px;
-    border-left: 5px solid #a1887f;
-}
-
-/* 錯誤訊息 */
-.error-box {
-    display: none;
-    background: #fbe9e7;
-    color: #d84315;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 20px;
-    border: 1px solid #d84315;
-    text-align: center;
-    font-weight: bold;
+/* 手機版優化 */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+    .controls-grid {
+        grid-template-columns: 1fr;
+    }
+    select, textarea, button {
+        font-size: 14px;
+        padding: 10px;
+    }
 }
