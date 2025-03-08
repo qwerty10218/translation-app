@@ -102,7 +102,7 @@ textarea:focus, .result-box:focus {
 }
 
 /* =======================
-   語言選單樣式 (自定義下拉選單)
+   自訂語言選單樣式 (支援手機版)
    ======================= */
 .select-box {
     position: relative;
@@ -112,12 +112,12 @@ textarea:focus, .result-box:focus {
     border-radius: 8px;
     overflow: hidden;
     margin-top: 10px;
+    cursor: pointer;
 }
 
 .select-box .select-header {
     padding: 12px;
     font-size: 16px;
-    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -143,7 +143,7 @@ textarea:focus, .result-box:focus {
 }
 
 .select-box .select-options div {
-    padding: 10px;
+    padding: 12px;
     cursor: pointer;
     transition: background 0.3s ease;
 }
@@ -156,7 +156,9 @@ textarea:focus, .result-box:focus {
     display: block;
 }
 
-/* 響應式設計 (手機適配) */
+/* =======================
+   響應式設計 (手機適配)
+   ======================= */
 @media (max-width: 768px) {
     .container {
         padding: 20px;
@@ -167,5 +169,16 @@ textarea:focus, .result-box:focus {
     }
     .tab-button {
         font-size: 16px;
+    }
+    
+    /* 手機版語言選單樣式 */
+    .select-box {
+        font-size: 14px;
+    }
+    .select-box .select-header {
+        padding: 10px;
+    }
+    .select-box .select-options div {
+        padding: 10px;
     }
 }
