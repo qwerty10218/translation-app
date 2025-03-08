@@ -1,59 +1,64 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 禁止被搜尋 爬蟲；  -->
-    <meta name="robots" content="noindex, nofollow, noarchive">
-    <meta name="googlebot" content="noindex">
+    <meta name="robots" content="noindex, nofollow"> <!-  禁止搜尋引擎索引和追蹤連結 -->
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
-    <!-- 新增必要依赖 -->
-    <script src="https://mozilla.github.io/pdf.js/build/pdf.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jschardet@2.2.1/dist/jschardet.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.8/mammoth.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.2.146/build/pdf.min.js"></script>
+    <script src="https://mozilla.github.io/pdf.js/build/pdf.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jschardet@2.2.1/dist/jschardet.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.8/mammoth.browser.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.2.146/build/pdf.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="container">
         <h1>詮語翻譯</h1>
-        
+
         <div class="file-upload">
             <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
             <p class="file-info">支持格式：txt/docx/pdf（最大 50KB）</p>
         </div>
 
         <div class="controls-grid">
-            <select id="sourceLang">
-                <option value="日文">日文</option>
-                <option value="英文">英文</option>
-                <option value="中文">中文</option>
-            </select>
-            <select id="targetLang">
-                <option value="中文">中文</option>
-                <option value="英文">英文</option>
-                <option value="日文">日文</option>
+            <div class="select-group">
+                <label for="sourceLang">來源語言</label>
+                <select id="sourceLang" name="sourceLang">
+                    <option value="日文">日文</option>
+                    <option value="英文">英文</option>
+                    <option value="中文">中文</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="targetLang">目標語言</label>
+                <select id="targetLang" name="targetLang">
+                    <option value="中文">中文</option>
+                    <option value="英文">英文</option>
+                    <option value="日文">日文</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="select-group">
+            <label for="tone">翻譯語氣</label>
+            <select id="tone" name="tone">
+                <option value="自然口語">自然口語</option>
+                <option value="正式文書">正式文書</option>
             </select>
         </div>
 
-        <select id="tone">
-            <option value="自然口語">自然口語</option>
-            <option value="正式文書">正式文書</option>
-        </select>
+        <textarea id="inputText" placeholder="輸入要翻譯的文字..." aria-label="輸入要翻譯的文字"></textarea>
+        <button id="translateButton" class="button">翻譯</button>
+        <button id="downloadButton" class="button" disabled>下載結果</button>
 
-        <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
-        <button id="translateButton">翻譯</button>
-        <button id="downloadButton" disabled>下載結果</button>
-        
         <div class="status-indicator">
             <div class="loader" id="loader"></div>
             <div id="statusText"></div>
         </div>
 
-        <div class="result-box" id="result"></div>
-        <div class="error-box" id="error"></div>
+        <div class="result-box copy-container" id="result" role="region" aria-live="polite"></div>
+        <div class="error-box copy-container" id="error" role="alert" aria-live="assertive"></div>
     </div>
 
     <script src="app.js"></script>
