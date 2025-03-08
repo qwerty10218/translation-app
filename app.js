@@ -1,13 +1,15 @@
-// - app.js
+// ======================== 完整強化版 app.js ========================
 const API_CONFIG = {
-    URL: 'https://free.v36.cm/v1/chat/completions',
+    URL: 'https://free.v36.cm',
     KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827',
     TIMEOUT: 15000
 };
+
 const APP_CONFIG = {
     MAX_TEXT: 3000,
     MAX_FILE_SIZE: 50 * 1024
 };
+
 const dom = {
     fileInput: document.getElementById('fileInput'),
     inputText: document.getElementById('inputText'),
@@ -38,6 +40,7 @@ async function handleTranslation(e) {
     e.preventDefault();
     clearError();
     if (!validateInput()) return;
+
     setLoadingState(true);
     try {
         const response = await fetchAPI();
@@ -54,24 +57,34 @@ async function fetchAPI() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
-    const response = await fetch(API_CONFIG.URL, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${API_CONFIG.KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
-            messages: [{
-                role: 'user',
-                content: buildPrompt()
-            }]
-        }),
-        signal: controller.signal
-    });
+    try {
+        const response = await fetch(API_CONFIG.URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${API_CONFIG.KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [{
+                    role: 'user',
+                    content: buildPrompt()
+                }]
+            }),
+            signal: controller.signal
+        });
 
-    clearTimeout(timeoutId);
-    return response;
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`API錯誤: ${errorData.error?.message || response.status}`);
+        }
+
+        return response;
+    } catch (error) {
+        throw new Error(`請求失敗: ${error.message}`);
+    }
 }
 
 function buildPrompt() {
@@ -148,7 +161,13 @@ async function extractTextFromPDF(file) {
 async function processResponse(response) {
     if (!response.ok) throw new Error(response.status);
     const data = await response.json();
-    return data.choices?.[0]?.message?.content?.trim() ?? '翻譯失敗';
+
+    // 檢查回應格式是否符合預期
+    if (!data.choices || !data.choices[0]?.message?.content) {
+        throw new Error('API回應格式錯誤');
+    }
+
+    return data.choices[0].message.content.trim();
 }
 
 function handleError(error) {
@@ -166,3 +185,4 @@ function clearError() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
