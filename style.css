@@ -72,44 +72,58 @@ h1 {
 }
 
 /* =======================
-   語言選單樣式
+   語言選單樣式 (自定義下拉選單)
    ======================= */
 .select-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px;
+    position: relative;
+    width: 100%;
+    background: white;
     border: 2px solid #b89b8c;
     border-radius: 8px;
-    background: white;
-    cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
+    overflow: hidden;
     margin-top: 10px;
 }
 
-.select-box select {
-    width: 100%;
-    padding: 10px;
+.select-box .select-header {
+    padding: 12px;
     font-size: 16px;
-    border: none;
-    background: transparent;
     cursor: pointer;
-    appearance: none;
-    outline: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #6a4f4b;
 }
 
-.select-box::after {
+.select-box .select-header::after {
     content: '\25BC';
-    position: absolute;
-    right: 15px;
     font-size: 14px;
     color: #6a4f4b;
 }
 
-.select-box:hover {
-    border-color: #8d6c61;
+.select-box .select-options {
+    display: none;
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #b89b8c;
+    border-top: none;
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.select-box .select-options div {
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.select-box .select-options div:hover {
     background: #f8eee4;
+}
+
+.select-box.open .select-options {
+    display: block;
 }
 
 /* 響應式設計 (手機適配) */
@@ -120,9 +134,6 @@ h1 {
     .button {
         font-size: 14px;
         padding: 12px;
-    }
-    select {
-        font-size: 14px;
     }
     .tab-button {
         font-size: 16px;
