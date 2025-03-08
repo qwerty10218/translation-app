@@ -8,6 +8,7 @@
     --bg-color: #f4ede4;
     --card-bg: #fff8f0;
     --text-color: #5c4a3d;
+    --error-color: #cc3333;
     --border-radius: 12px;
     --button-radius: 8px;
     --shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
@@ -278,6 +279,18 @@ select:focus {
 
 .model-selection {
     margin: 20px 0;
+}
+
+/* 添加錯誤樣式 */
+.error-select {
+    border-color: var(--error-color);
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
 }
 
 /* =======================
