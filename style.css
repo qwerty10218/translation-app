@@ -72,6 +72,36 @@ h1 {
 }
 
 /* =======================
+   輸入框與輸出框樣式
+   ======================= */
+textarea, .result-box {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #b89b8c;
+    border-radius: 8px;
+    background: white;
+    color: #5c4a3d;
+    resize: none;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+textarea:focus, .result-box:focus {
+    border-color: #8d6c61;
+    box-shadow: 0 0 8px rgba(141, 108, 97, 0.5);
+    outline: none;
+}
+
+.result-box {
+    background: #faf3e7;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =======================
    語言選單樣式 (自定義下拉選單)
    ======================= */
 .select-box {
