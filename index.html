@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow"> <!-  禁止搜尋引擎索引和追蹤連結 -->
+    <meta name="robots" content="noindex, nofollow">
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
@@ -16,11 +16,13 @@
     <div class="container">
         <h1>詮語翻譯</h1>
 
+        <!-- 檔案上傳區域 -->
         <div class="file-upload">
-            <input type="file" id="fileInput" accept=".txt,.docx,.pdf">
+            <input type="file" id="fileInput" accept=".txt,.docx,.pdf" aria-label="上傳檔案">
             <p class="file-info">支持格式：txt/docx/pdf（最大 50KB）</p>
         </div>
 
+        <!-- 語言選擇區域 -->
         <div class="controls-grid">
             <div class="select-group">
                 <label for="sourceLang">來源語言</label>
@@ -40,6 +42,7 @@
             </div>
         </div>
 
+        <!-- 語氣選擇區域 -->
         <div class="select-group">
             <label for="tone">翻譯語氣</label>
             <select id="tone" name="tone">
@@ -48,15 +51,20 @@
             </select>
         </div>
 
+        <!-- 輸入區域 -->
         <textarea id="inputText" placeholder="輸入要翻譯的文字..." aria-label="輸入要翻譯的文字"></textarea>
-        <button id="translateButton" class="button">翻譯</button>
-        <button id="downloadButton" class="button" disabled>下載結果</button>
 
+        <!-- 按鈕區域 -->
+        <button id="translateButton" class="button">翻譯</button>
+        <button id="copyButton" class="button" disabled>複製結果</button>
+
+        <!-- 狀態指示器 -->
         <div class="status-indicator">
             <div class="loader" id="loader"></div>
             <div id="statusText"></div>
         </div>
 
+        <!-- 結果顯示區域 -->
         <div class="result-box copy-container" id="result" role="region" aria-live="polite"></div>
         <div class="error-box copy-container" id="error" role="alert" aria-live="assertive"></div>
     </div>
