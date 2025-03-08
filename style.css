@@ -3,16 +3,15 @@
    ======================= */
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
-    line-height: 1.8;
-    margin: 0;
-    padding: 20px;
     background: #f4ede4;
     color: #5c4a3d;
+    margin: 0;
+    padding: 20px;
 }
 
 .container {
     max-width: 900px;
-    margin: 0 auto;
+    margin: auto;
     background: #fff8f0;
     padding: 30px;
     border-radius: 16px;
@@ -31,129 +30,23 @@ h1 {
 }
 
 /* =======================
-   分頁 (Tab) 樣式
-   ======================= */
-.tabs {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #b89b8c;
-}
-
-.tab-button {
-    background: none;
-    border: none;
-    padding: 12px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    color: #6a4f4b;
-    transition: all 0.3s ease;
-    border-bottom: 3px solid transparent;
-}
-
-.tab-button.active {
-    font-weight: bold;
-    color: #8d6c61;
-    border-bottom: 3px solid #8d6c61;
-}
-
-.tab-button:hover {
-    color: #5c4a3d;
-}
-
-/* =======================
-   分頁內容區 (Tab Content)
-   ======================= */
-.tab-content {
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-/* =======================
-   文本翻譯區塊
-   ======================= */
-textarea {
-    width: 100%;
-    height: 150px;
-    padding: 12px;
-    border: 1px solid #b89b8c;
-    border-radius: 8px;
-    font-size: 16px;
-    resize: vertical;
-    transition: all 0.3s;
-}
-
-textarea:focus {
-    border-color: #8d6c61;
-    outline: none;
-}
-
-.result-box {
-    margin-top: 15px;
-    padding: 15px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    font-size: 16px;
-    color: #5c4a3d;
-}
-
-/* =======================
-   圖片上傳區塊
-   ======================= */
-input[type="file"] {
-    display: none;
-}
-
-.image-drop-area {
-    width: 100%;
-    padding: 20px;
-    text-align: center;
-    border: 2px dashed #b89b8c;
-    border-radius: 12px;
-    background: #fdf7f0;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.image-drop-area:hover {
-    border-color: #8d6c61;
-    background: #f0e4d7;
-}
-
-/* =======================
-   圖片預覽區
-   ======================= */
-canvas {
-    display: block;
-    max-width: 100%;
-    margin-top: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* =======================
    按鈕樣式
    ======================= */
 .button {
     width: 100%;
     padding: 12px;
-    margin: 10px 0;
     border: none;
     border-radius: 8px;
     font-size: 16px;
-    background: #8d6c61;
+    background: linear-gradient(45deg, #8d6c61, #6a4f4b);
     color: white;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
+    transition: all 0.3s;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .button:hover {
-    background: #6a4f4b;
+    background: linear-gradient(45deg, #6a4f4b, #8d6c61);
     transform: scale(1.05);
 }
 
@@ -163,61 +56,75 @@ canvas {
 }
 
 /* =======================
-   動畫效果 (淡入)
+   語言選單樣式
    ======================= */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.select-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border: 1px solid #b89b8c;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.select-box:hover {
+    border-color: #8d6c61;
+}
+
+select {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+}
+
+/* 美化 select 箭頭 */
+.select-box::after {
+    content: '\25BC';
+    position: absolute;
+    right: 12px;
+    font-size: 14px;
+    color: #6a4f4b;
 }
 
 /* =======================
-   行動裝置優化 (RWD)
+   進度條
    ======================= */
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: #f0e4d7;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: none;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #8d6c61;
+    border-radius: 4px;
+    transition: width 0.5s;
+}
+
+/* 響應式設計 */
 @media (max-width: 768px) {
     .container {
         padding: 20px;
     }
-
-    .tabs {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .tab-button {
-        width: 100%;
-        text-align: center;
-        padding: 14px;
-        font-size: 18px;
-    }
-
-    textarea {
-        font-size: 14px;
-        padding: 10px;
-    }
-
     .button {
         font-size: 14px;
         padding: 10px;
     }
-}
-
-@media (max-width: 480px) {
-    h1 {
-        font-size: 1.5em;
-    }
-
-    .tab-button {
-        font-size: 16px;
-        padding: 12px;
-    }
-
-    textarea {
-        height: 120px;
+    select {
+        font-size: 14px;
     }
 }
