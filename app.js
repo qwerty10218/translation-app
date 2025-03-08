@@ -110,4 +110,94 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     init();
+ // 处理图片上传
+    function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.match('image.*')) {
+            alert("請上傳圖片文件");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                // 显示图片
+                const canvas = dom.imageCanvas;
+                const ctx = canvas.getContext("2d");
+
+                // 设定画布大小
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+                
+                // 启用提取按钮
+                dom.extractTextBtn.disabled = false;
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // OCR 文字识别
+    async function extractTextFromImage() {
+        dom.extractTextBtn.disabled = true;
+        dom.translateExtractedBtn.disabled = true;
+        dom.extractedText.textContent = "識別中...";
+
+        try {
+            const { data } = await Tesseract.recognize(
+                dom.imageCanvas,
+                "chi_tra+eng", // 识别中文（繁体）+ 英文
+                {
+                    logger: (m) => console.log(m),
+                }
+            );
+
+            dom.extractedText.textContent = data.text.trim();
+            if (data.text.trim()) {
+                dom.translateExtractedBtn.disabled = false;
+            } else {
+                dom.extractedText.textContent = "未能識別出文字";
+            }
+        } catch (error) {
+            dom.extractedText.textContent = "識別失敗：" + error.message;
+        } finally {
+            dom.extractTextBtn.disabled = false;
+        }
+    }
+
+    // 翻译提取的文字
+    async function translateExtractedText() {
+        const extractedText = dom.extractedText.textContent.trim();
+        if (!extractedText) {
+            alert("沒有可翻譯的文字");
+            return;
+        }
+
+        dom.extractedText.textContent = "翻譯中...";
+        try {
+            const prompt = `請將以下文本翻譯成${dom.targetLang.value}，只返回翻譯結果：\n\n${extractedText}`;
+            const response = await fetch(API_CONFIG.URL, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_CONFIG.KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: "gpt-3.5-turbo",
+                    messages: [{ role: "user", content: prompt }]
+                })
+            });
+
+            const data = await response.json();
+            dom.extractedText.textContent = data.choices[0]?.message?.content || "翻譯失敗";
+        } catch (error) {
+            dom.extractedText.textContent = "請求失敗：" + error.message;
+        }
+    }
+
+    dom.translateExtractedBtn.addEventListener("click", translateExtractedText);
 });
