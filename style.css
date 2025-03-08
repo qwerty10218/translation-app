@@ -1,337 +1,73 @@
-/* style.css - 大地色系風格 + 瀑布流 + 互動性強化 */
-/* 基礎樣式 */
+/* 全局樣式，設置大地色系背景與字體 */
 body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    line-height: 1.8;
+    font-family: 'Arial', sans-serif;
+    background-color: #F5EFE6; /* 柔和的米色背景 */
+    color: #5A3E36; /* 深棕色文本 */
     margin: 0;
-    padding: 20px;
-    background: #f4ede4;
-    color: #5c4a3d;
-    display: flex;
-    justify-content: center;
-    min-height: 100vh; /* 確保在內容少時也能填充整個視窗 */
+    padding: 0;
 }
 
+/* 容器設置，瀑布流布局 */
 .container {
-    max-width: 1100px; /* 增加最大寬度，避免在大螢幕上太窄 */
-    width: 100%; /* 確保在小螢幕上也能撐滿 */
-    background: #fff8f0;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 20px 0; /* 上下增加間距 */
-}
-
-h1 {
-    text-align: center;
-    color: #6a4f4b;
-    margin-bottom: 40px;
-    font-size: 2.2em; /* 稍微增大標題 */
-    letter-spacing: 2px;
-    font-weight: 600; /* 增加字重 */
-}
-
-/* 文件上傳區塊 */
-.file-upload {
-    border: 2px dashed #b89b8c;
-    border-radius: 12px;
-    padding: 30px; /* 略微增加內邊距 */
-    margin: 25px 0;
-    text-align: center;
-    transition: all 0.3s ease; /* 改為all以包含所有變化 */
-    cursor: pointer;
-    background: #fdf7f0;
-    width: 100%;
-    position: relative; /* 為後續可能的動畫做準備 */
-    overflow: hidden; /* 確保內容不溢出 */
-}
-
-.file-upload:hover {
-    border-color: #8d6c61;
-    background: #f0e4d7;
-    transform: translateY(-3px); /* 添加上浮效果增強互動感 */
-    box-shadow: 0 5px 15px rgba(139, 108, 96, 0.2); /* 懸浮陰影 */
-}
-
-/* 拖拽文件進入時的效果 */
-.file-upload.dragover {
-    border-color: #6a4f4b;
-    background-color: #e9dfd3;
-    transform: scale(1.02);
-    box-shadow: 0 8px 20px rgba(139, 108, 96, 0.3);
-}
-
-.file-info {
-    color: #7d6655;
-    font-size: 0.95em; /* 稍微增大字體 */
-    margin-top: 12px;
-    transition: opacity 0.3s; /* 為可能的淡入淡出效果做準備 */
-}
-
-/* 控制區塊 */
-.controls-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 20px; /* 增加間距 */
-    width: 100%;
-    margin: 15px 0; /* 增加上下間距 */
-}
-
-select, textarea, button {
-    width: 100%;
-    padding: 14px; /* 增加內邊距 */
-    border: 1px solid #b89b8c;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* 輕微陰影 */
-}
-
-select {
-    background: #fdf7f0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%236a4f4b' d='M0 0l4 4 4-4z'/%3E%3C/svg%3E") no-repeat right 12px center; /* 自定義下拉箭頭 */
-    background-size: 10px;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    padding-right: 30px; /* 為箭頭留出空間 */
-    cursor: pointer;
-}
-
-select:hover {
-    border-color: #8d6c61;
-    background-color: #f0e4d7;
-}
-
-select:disabled {
-    background: #e0d4c6;
-    color: #8d7765;
-    cursor: not-allowed;
-    opacity: 0.8; /* 增加透明度增強禁用感 */
-}
-
-textarea {
-    min-height: 150px; /* 略微減少初始高度 */
-    resize: vertical;
-    transition: all 0.3s ease;
-    line-height: 1.6; /* 優化行高 */
-}
-
-textarea:focus {
-    border-color: #8d6c61;
-    box-shadow: 0 0 0 2px rgba(141, 108, 97, 0.2); /* 聚焦時添加柔和外框 */
-}
-
-button {
-    background: #8d6c61;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600; /* 加粗按鈕文字 */
-    letter-spacing: 0.5px;
-    position: relative;
-    overflow: hidden;
-}
-
-button:hover {
-    background: #6a4f4b;
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(106, 79, 75, 0.3); /* 懸浮陰影 */
-}
-
-button:active {
-    transform: scale(0.98); /* 按下效果 */
-}
-
-button:disabled {
-    background: #c4b3a8;
-    cursor: not-allowed;
-    transform: none; /* 禁用時不縮放 */
-    box-shadow: none; /* 禁用時無陰影 */
-    opacity: 0.8; /* 增加透明度 */
-}
-
-/* 翻譯結果瀑布流排版優化 */
-.result-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 25px; /* 增加卡片間間距 */
-    width: 100%;
-    margin-top: 30px;
-    /* 修復瀑布流的關鍵 - 定義為Masonry排版 */
-    grid-auto-flow: dense; /* 確保填充所有空間 */
-}
-
-.result-card {
-    background: #fff;
-    padding: 20px; /* 增加內邊距 */
-    border-radius: 10px;
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1); /* 增強陰影 */
-    transition: all 0.3s ease;
-    border-left: 4px solid #8d6c61; /* 添加左側邊框增加設計感 */
-    /* 動畫入場效果 */
-    animation: cardFadeIn 0.5s ease forwards;
-    animation-delay: calc(var(--card-index, 0) * 0.1s); /* 依據索引添加延遲 */
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-@keyframes cardFadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.result-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* 卡片標題與內容 */
-.result-card h3 {
-    margin-top: 0;
-    color: #6a4f4b;
-    border-bottom: 1px solid #e6d9cc;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-}
-
-.result-card p {
-    margin: 0;
-    line-height: 1.6;
-}
-
-/* 加載提示和狀態 */
-#loader {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 100;
-    background: rgba(255, 248, 240, 0.8);
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
 }
 
-#statusText {
+/* 卡片樣式 */
+.card {
+    background: #FDF7F0; /* 溫暖米色背景 */
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    width: 300px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 圖片樣式 */
+.card img {
+    width: 100%;
+    height: auto;
+    border-bottom: 3px solid #D4A373;
+}
+
+/* 文字區域 */
+.card-content {
+    padding: 15px;
     text-align: center;
-    font-weight: 500;
-    color: #6a4f4b;
 }
 
-/* 錯誤提示 */
-#error {
-    color: #cc3300;
-    background-color: #ffeeee;
-    padding: 10px;
-    border-radius: 5px;
-    margin: 10px 0;
-    display: none;
-    border-left: 4px solid #cc3300;
+.card-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
-/* 複製按鈕樣式 */
-#copyButton {
-    background: #6a4f4b;
-    margin-top: 15px;
-    max-width: 200px;
-    display: none;
+.card-description {
+    font-size: 1em;
+    color: #7A5C52;
 }
 
-#copyButton:hover {
-    background: #5c4a3d;
-}
-
-/* 複製成功提示樣式 */
-.copy-feedback {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #8d6c61;
+/* 按鈕樣式 */
+.button {
+    display: inline-block;
+    background: #D4A373; /* 溫暖的木質色 */
     color: white;
     padding: 10px 20px;
-    border-radius: 5px;
-    z-index: 1000;
-    animation: fadeIn 0.3s ease;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* 平板版優化 */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .container {
-        padding: 30px;
-    }
-    
-    .controls-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .controls-grid button#swapLang {
-        grid-column: span 2;
-    }
-    
-    .result-container {
-        grid-template-columns: repeat(2, 1fr); /* 平板上顯示兩列 */
-    }
-}
-
-/* 手機版優化 */
-@media (max-width: 768px) { /* 增加斷點寬度，提前啟用響應式 */
-    .container {
-        padding: 25px;
-        margin: 10px;
-    }
-    
-    .controls-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    select, textarea, button {
-        font-size: 16px; /* 保持字體大小不變 */
-        padding: 12px;
-    }
-    
-    /* 增加瀑布流響應 */
-    .result-container {
-        grid-template-columns: 1fr; /* 單列顯示 */
-    }
-}
-
-/* 為支持瀑布流布局添加的CSS */
-@supports (grid-template-rows: masonry) {
-    .result-container {
-        grid-template-rows: masonry;
-        align-items: start;
-    }
-}
-
-/* JavaScript fallback的Masonry布局支援 */
-.masonry-column {
-    float: left;
-    padding: 0 10px;
-    box-sizing: border-box;
-}
-
-.masonry-column .result-card {
-    display: block;
-    margin-bottom: 25px;
-    width: 100%;
-}
-
-/* 清除浮動 */
-.result-container::after {
-    content: "";
-    display: table;
-    clear: both;
+.button:hover {
+    background: #C47F49; /* 深一點的木質色 */
+    transform: scale(1.05);
 }
