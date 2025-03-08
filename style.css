@@ -1,21 +1,41 @@
 /* =======================
    全局基礎樣式
    ======================= */
+:root {
+    --primary-color: #8d6c61;
+    --primary-light: #b89b8c;
+    --primary-dark: #6a4f4b;
+    --bg-color: #f4ede4;
+    --card-bg: #fff8f0;
+    --text-color: #5c4a3d;
+    --border-radius: 12px;
+    --button-radius: 8px;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: #f4ede4;
-    color: #5c4a3d;
+    font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
     padding: 20px;
+    line-height: 1.6;
 }
 
 .container {
     max-width: 900px;
-    margin: auto;
-    background: #fff8f0;
+    margin: 0 auto 40px;
+    background: var(--card-bg);
     padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
 }
 
 /* =======================
@@ -23,10 +43,30 @@ body {
    ======================= */
 h1 {
     text-align: center;
-    color: #6a4f4b;
-    margin-bottom: 20px;
-    font-size: 2.2em;
+    color: var(--primary-dark);
+    margin-bottom: 25px;
+    font-size: 2.3em;
     letter-spacing: 1px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: var(--primary-light);
+    border-radius: 3px;
+}
+
+h2 {
+    color: var(--primary-dark);
+    margin: 20px 0 15px;
+    font-size: 1.5em;
 }
 
 /* =======================
@@ -35,8 +75,8 @@ h1 {
 .tabs {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #b89b8c;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--primary-light);
     position: relative;
 }
 
@@ -47,14 +87,30 @@ h1 {
     cursor: pointer;
     background: none;
     border: none;
-    color: #6a4f4b;
-    transition: all 0.3s ease;
+    color: var(--primary-dark);
+    transition: var(--transition);
     position: relative;
+    font-weight: 500;
+    outline: none;
+}
+
+.tab-button:hover {
+    background-color: rgba(184, 155, 140, 0.1);
 }
 
 .tab-button.active {
     font-weight: bold;
-    color: #8d6c61;
+    color: var(--primary-color);
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary-color);
 }
 
 .tab-content {
@@ -74,86 +130,244 @@ h1 {
 /* =======================
    輸入框與輸出框樣式
    ======================= */
-textarea, .result-box {
+textarea, .result-box, .extracted-text {
     width: 100%;
-    padding: 12px;
+    padding: 15px;
     font-size: 16px;
-    border: 2px solid #b89b8c;
-    border-radius: 8px;
+    border: 2px solid var(--primary-light);
+    border-radius: var(--button-radius);
     background: white;
-    color: #5c4a3d;
+    color: var(--text-color);
     resize: none;
     box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: var(--transition);
+    margin: 10px 0;
+    min-height: 150px;
 }
 
-textarea:focus, .result-box:focus {
-    border-color: #8d6c61;
+textarea:focus {
+    border-color: var(--primary-color);
     box-shadow: 0 0 8px rgba(141, 108, 97, 0.5);
     outline: none;
 }
 
 .result-box {
     background: #faf3e7;
+    min-height: 120px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+.extracted-text {
+    background: #faf3e7;
     min-height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin-top: 15px;
+    display: none;
 }
 
 /* =======================
-   自訂語言選單樣式 (支援手機版)
+   按鈕樣式
    ======================= */
-.select-box {
-    position: relative;
-    width: 100%;
-    background: white;
-    border: 2px solid #b89b8c;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 10px;
-    cursor: pointer;
-}
-
-.select-box .select-header {
-    padding: 12px;
+.button {
+    padding: 12px 24px;
     font-size: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #6a4f4b;
-}
-
-.select-box .select-header::after {
-    content: '\25BC';
-    font-size: 14px;
-    color: #6a4f4b;
-}
-
-.select-box .select-options {
-    display: none;
-    position: absolute;
-    width: 100%;
-    background: white;
-    border: 1px solid #b89b8c;
-    border-top: none;
-    z-index: 10;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.select-box .select-options div {
-    padding: 12px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    border: none;
+    border-radius: var(--button-radius);
+    transition: var(--transition);
+    font-weight: 500;
+    margin: 10px 0;
+    outline: none;
 }
 
-.select-box .select-options div:hover {
-    background: #f8eee4;
+.primary-button {
+    background-color: var(--primary-color);
+    color: white;
 }
 
-.select-box.open .select-options {
+.primary-button:hover:not(:disabled) {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.secondary-button {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.secondary-button:hover {
+    background-color: rgba(141, 108, 97, 0.1);
+}
+
+.swap-button {
+    background-color: var(--primary-light);
+    color: white;
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    margin: 0 15px 10px;
+}
+
+.swap-button:hover {
+    background-color: var(--primary-color);
+    transform: rotate(180deg);
+}
+
+.button:disabled {
+    background-color: #ccbbaa;
+    cursor: not-allowed;
+}
+
+.button-container {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.result-actions {
+    justify-content: flex-end;
+}
+
+/* =======================
+   語言選擇器樣式
+   ======================= */
+.language-selectors {
+    display: flex;
+    align-items: flex-end;
+    margin-bottom: 15px;
+}
+
+.select-wrapper {
+    flex: 1;
+}
+
+.select-wrapper label {
     display: block;
+    margin-bottom: 5px;
+    color: var(--primary-dark);
+    font-weight: 500;
+}
+
+select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--primary-light);
+    border-radius: var(--button-radius);
+    background-color: white;
+    color: var(--text-color);
+    font-size: 16px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%238d6c61' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.model-selection {
+    margin: 20px 0;
+}
+
+/* =======================
+   進度條樣式
+   ======================= */
+.progress-container {
+    width: 100%;
+    height: 6px;
+    background-color: #e0d5cc;
+    border-radius: 3px;
+    margin: 15px 0;
+    overflow: hidden;
+    display: none;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.ocr-progress-container {
+    width: 100%;
+    height: 8px;
+    background-color: #e0d5cc;
+    border-radius: 4px;
+    margin: 15px 0;
+    overflow: hidden;
+}
+
+.ocr-progress-bar {
+    height: 100%;
+    width: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+/* =======================
+   圖片上傳樣式
+   ======================= */
+.image-drop-area {
+    width: 100%;
+    height: 150px;
+    border: 3px dashed var(--primary-light);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background-color: rgba(184, 155, 140, 0.1);
+    margin: 15px 0;
+}
+
+.image-drop-area:hover, .image-drop-area.highlight {
+    border-color: var(--primary-color);
+    background-color: rgba(184, 155, 140, 0.2);
+}
+
+.drop-icon {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.drop-text {
+    font-size: 18px;
+    color: var(--primary-dark);
+}
+
+.image-canvas {
+    display: none;
+    max-width: 100%;
+    height: auto;
+    margin: 15px auto;
+    border: 2px solid var(--primary-light);
+    border-radius: var(--button-radius);
+}
+
+/* =======================
+   頁腳樣式
+   ======================= */
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 14px;
 }
 
 /* =======================
@@ -163,22 +377,66 @@ textarea:focus, .result-box:focus {
     .container {
         padding: 20px;
     }
-    .button {
-        font-size: 14px;
-        padding: 12px;
-    }
-    .tab-button {
-        font-size: 16px;
+    
+    h1 {
+        font-size: 1.8em;
     }
     
-    /* 手機版語言選單樣式 */
-    .select-box {
+    .button {
         font-size: 14px;
+        padding: 10px 16px;
     }
-    .select-box .select-header {
-        padding: 10px;
+    
+    .tab-button {
+        font-size: 16px;
+        padding: 12px;
     }
-    .select-box .select-options div {
-        padding: 10px;
+    
+    .language-selectors {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .select-wrapper {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .swap-button {
+        margin: 5px 0 15px;
+        align-self: center;
+    }
+    
+    .button-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .result-actions {
+        flex-direction: row;
+    }
+    
+    textarea, .result-box, .extracted-text {
+        padding: 12px;
+        font-size: 15px;
+        min-height: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 1.6em;
+    }
+    
+    .button-container {
+        flex-direction: column;
+    }
+    
+    .result-actions {
+        flex-direction: column;
     }
 }
