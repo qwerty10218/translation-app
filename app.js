@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 处理翻译请求
-    async function handleTranslation() {
+        async function handleTranslation() {
         const text = dom.inputText.value.trim();
         if (text.length === 0) {
             alert("請輸入要翻譯的內容");
@@ -103,6 +103,13 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const data = await response.json();
+
+            // **检查 API 是否返回有效结果**
+            if (!data.choices || data.choices.length === 0) {
+                dom.result.textContent = "翻譯失敗：API 未返回有效結果";
+                return;
+            }
+
             dom.result.textContent = data.choices[0]?.message?.content || "翻譯失敗";
         } catch (error) {
             dom.result.textContent = "請求失敗：" + error.message;
