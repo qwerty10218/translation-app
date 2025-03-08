@@ -57,21 +57,6 @@ h1 {
     color: #8d6c61;
 }
 
-.tab-button::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 4px;
-    background: transparent;
-    bottom: -2px;
-    left: 0;
-    transition: background 0.3s ease;
-}
-
-.tab-button.active::after {
-    background: #8d6c61;
-}
-
 .tab-content {
     display: none;
     animation: fadeIn 0.3s ease-in-out;
@@ -87,40 +72,14 @@ h1 {
 }
 
 /* =======================
-   按鈕樣式
-   ======================= */
-.button {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    background: linear-gradient(45deg, #8d6c61, #6a4f4b);
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-    margin-top: 10px;
-}
-
-.button:hover {
-    background: linear-gradient(45deg, #6a4f4b, #8d6c61);
-    transform: scale(1.05);
-}
-
-.button:disabled {
-    background: #c4b3a8;
-    cursor: not-allowed;
-}
-
-/* =======================
-   選擇框樣式 (語言選單)
+   語言選單樣式
    ======================= */
 .select-box {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 12px;
-    border: 1px solid #b89b8c;
+    border: 2px solid #b89b8c;
     border-radius: 8px;
     background: white;
     cursor: pointer;
@@ -131,7 +90,7 @@ h1 {
 
 .select-box select {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
     font-size: 16px;
     border: none;
     background: transparent;
@@ -140,72 +99,20 @@ h1 {
     outline: none;
 }
 
-/* =======================
-   翻譯結果框樣式 (獨立顯示)
-   ======================= */
-.result-container {
-    margin-top: 20px;
-    padding: 20px;
-    background: #fdf7ec;
-    border: 1px solid #b89b8c;
-    border-radius: 12px;
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.result-box {
-    padding: 15px;
-    background: #faf3e7;
-    border: 1px solid #b89b8c;
-    border-radius: 8px;
-    font-size: 16px;
-    color: #5c4a3d;
-}
-
-/* =======================
-   圖片上傳區域
-   ======================= */
-.image-drop-area {
-    width: 100%;
-    padding: 20px;
-    border: 2px dashed #b89b8c;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 16px;
+.select-box::after {
+    content: '\25BC';
+    position: absolute;
+    right: 15px;
+    font-size: 14px;
     color: #6a4f4b;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-top: 10px;
 }
 
-.image-drop-area:hover {
-    background: #f8eee4;
+.select-box:hover {
     border-color: #8d6c61;
+    background: #f8eee4;
 }
 
-/* =======================
-   進度條
-   ======================= */
-.progress-container {
-    width: 100%;
-    height: 10px;
-    background: #f0e4d7;
-    border-radius: 4px;
-    margin-top: 10px;
-    display: none;
-    overflow: hidden;
-}
-
-.progress-bar {
-    width: 0%;
-    height: 100%;
-    background: #8d6c61;
-    border-radius: 4px;
-    transition: width 0.5s;
-}
-
-/* =======================
-   響應式設計 (手機適配)
-   ======================= */
+/* 響應式設計 (手機適配) */
 @media (max-width: 768px) {
     .container {
         padding: 20px;
