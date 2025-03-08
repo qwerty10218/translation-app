@@ -7,7 +7,7 @@
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1"></script>
 </head>
 <body>
     <div class="container">
@@ -20,9 +20,9 @@
         <!-- 文本翻譯區 -->
         <div id="textTab" class="tab-content active">
             <div class="language-selectors">
-                <div class="select-box">
+                <div class="select-wrapper">
                     <label for="sourceLang">從：</label>
-                    <select id="sourceLang">
+                    <select id="sourceLang" class="language-select">
                         <option value="中文">中文</option>
                         <option value="英文">英文</option>
                         <option value="日文">日文</option>
@@ -34,10 +34,10 @@
                         <option value="俄文">俄文</option>
                     </select>
                 </div>
-                <button id="swapLang" class="button">⇄</button>
-                <div class="select-box">
+                <button id="swapLang" class="button swap-button" title="交換語言">⇄</button>
+                <div class="select-wrapper">
                     <label for="targetLang">到：</label>
-                    <select id="targetLang">
+                    <select id="targetLang" class="language-select">
                         <option value="英文">英文</option>
                         <option value="中文">中文</option>
                         <option value="日文">日文</option>
@@ -51,7 +51,7 @@
                 </div>
             </div>
             
-            <div class="select-box">
+            <div class="model-selection">
                 <label for="modelSelect">選擇模型：</label>
                 <select id="modelSelect">
                     <option value="gpt-4o-mini">GPT-4o Mini</option>
@@ -60,7 +60,10 @@
             </div>
             
             <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
-            <button id="translateButton" class="button">翻譯</button>
+            <div class="button-container">
+                <button id="translateButton" class="button primary-button" disabled>翻譯</button>
+                <button id="clearTextButton" class="button secondary-button">清除</button>
+            </div>
             
             <!-- 進度條 -->
             <div class="progress-container">
@@ -70,18 +73,32 @@
 
         <!-- 圖片翻譯區 -->
         <div id="imageTab" class="tab-content">
-            <input type="file" id="imageInput" accept="image/*">
-            <div class="image-drop-area" id="imageDropArea">拖放圖片或點擊上傳</div>
-            <canvas id="imageCanvas"></canvas>
-            <button id="extractTextButton" class="button">擷取文字</button>
-            <button id="translateExtractedButton" class="button" disabled>翻譯</button>
+            <input type="file" id="imageInput" accept="image/*" hidden>
+            <div class="image-drop-area" id="imageDropArea">
+                <div class="drop-icon">📷</div>
+                <div class="drop-text">拖放圖片或點擊上傳</div>
+            </div>
+            <canvas id="imageCanvas" class="image-canvas"></canvas>
+            <div class="button-container">
+                <button id="extractTextButton" class="button primary-button" disabled>擷取文字</button>
+                <button id="translateExtractedButton" class="button primary-button" disabled>翻譯擷取文字</button>
+            </div>
+            <div id="extractedText" class="extracted-text"></div>
         </div>
 
         <!-- 獨立翻譯結果區 -->
         <div class="result-container">
             <h2>翻譯結果</h2>
             <div id="result" class="result-box"></div>
+            <div class="button-container result-actions">
+                <button id="copyResultButton" class="button secondary-button">複製結果</button>
+                <button id="clearResultButton" class="button secondary-button">清除結果</button>
+            </div>
         </div>
+        
+        <footer class="footer">
+            <p>© 2025 詮語翻譯 - 以人工智能提供多語言翻譯服務</p>
+        </footer>
     </div>
     <script src="app.js"></script>
 </body>
