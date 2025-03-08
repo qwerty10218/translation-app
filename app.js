@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 配置
     const API_CONFIG = {
         URL: "https://free.v36.cm/v1/chat/completions",
-        KEY: "your-api-key-here", // 切勿暴露真实 API Key
+        KEY: "your-api-key-here", // 这里不要暴露真实 API Key
         TIMEOUT: 15000
     };
 
@@ -59,11 +59,18 @@ document.addEventListener("DOMContentLoaded", () => {
     function initTextTranslation() {
         dom.translateBtn.addEventListener("click", handleTranslation);
         dom.swapLang.addEventListener("click", swapLanguages);
+        dom.inputText.addEventListener("input", validateTranslationInput);
     }
 
     // 交换语言
     function swapLanguages() {
         [dom.sourceLang.value, dom.targetLang.value] = [dom.targetLang.value, dom.sourceLang.value];
+        validateTranslationInput();
+    }
+
+    // 确保翻译按钮状态正确
+    function validateTranslationInput() {
+        dom.translateBtn.disabled = !dom.inputText.value.trim();
     }
 
     // 处理翻译请求
@@ -214,4 +221,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     dom.translateExtractedBtn.addEventListener("click", translateExtractedText);
-});
