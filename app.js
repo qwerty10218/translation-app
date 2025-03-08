@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 配置
     const API_CONFIG = {
         URL: "https://free.v36.cm/v1/chat/completions",
-        KEY: "your-api-key-here", // 这里不要暴露真实 API Key
+        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827", // 这里不要暴露真实 API Key
         TIMEOUT: 15000
     };
 
@@ -64,9 +64,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 交换语言
     function swapLanguages() {
-        [dom.sourceLang.value, dom.targetLang.value] = [dom.targetLang.value, dom.sourceLang.value];
-        validateTranslationInput();
+    const temp = dom.sourceLang.value;
+    dom.sourceLang.value = dom.targetLang.value;
+    dom.targetLang.value = temp;
+
+    // 确保 targetLang 不是和 sourceLang 相同的语言
+    if (dom.sourceLang.value === dom.targetLang.value) {
+        dom.targetLang.selectedIndex = (dom.targetLang.selectedIndex + 1) % dom.targetLang.options.length;
     }
+
+    validateTranslationInput();
+}
 
     // 确保翻译按钮状态正确
     function validateTranslationInput() {
@@ -130,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     init();
-});
+
     // 处理图片上传
     function handleImageUpload(e) {
         const file = e.target.files[0];
