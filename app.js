@@ -15,7 +15,8 @@ const APP_CONFIG = {
 const API_CONFIG = {
     URL: 'https://free.v36.cm/v1/chat/completions',
     KEY: atob('c2stVHZuZElwQlVOaVJzb3cyZjg5Mjk0OUY1NTBCNzQxQ2JCYzE2QTA5OEZjQ2M3ODI3'),
-    TIMEOUT: 15000
+    TIMEOUT: 15000,
+    MODEL: 'gpt-4o-mini' // 默認模型
 };
 
 const dom = {
@@ -26,7 +27,8 @@ const dom = {
     tone: document.getElementById('tone'),
     translateBtn: document.getElementById('translateButton'),
     result: document.getElementById('result'),
-    copyBtn: document.getElementById('copyButton')
+    copyBtn: document.getElementById('copyButton'),
+    modelSelect: document.getElementById('modelSelect')
 };
 
 function init() {
@@ -43,7 +45,7 @@ function init() {
         dom.result.parentNode.insertBefore(dom.copyBtn, dom.result.nextSibling);
         dom.copyBtn.addEventListener('click', copyTranslation);
     }
-
+    
     handleInputValidation();
 }
 
@@ -94,7 +96,9 @@ function copyTranslation() {
 async function fetchAPI() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
-
+    
+    const selectedModel = dom.modelSelect ? dom.modelSelect.value : API_CONFIG.MODEL;
+    
     const response = await fetch(API_CONFIG.URL, {
         method: 'POST',
         headers: {
@@ -102,7 +106,7 @@ async function fetchAPI() {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'gpt-3.5-turbo',
+            model: selectedModel,
             messages: [{
                 role: 'user',
                 content: buildPrompt()
@@ -110,7 +114,7 @@ async function fetchAPI() {
         }),
         signal: controller.signal
     });
-
+    
     clearTimeout(timeoutId);
     return response;
 }
