@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_CONFIG = {
         URL: 'https://free.v36.cm/v1/chat/completions',
-        KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827',
+        KEY: 'sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827', // 替換為你的 API Key
         TIMEOUT: 15000
     };
 
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function init() {
         if (!dom.translateBtn) {
-            console.error('找不到 translateButton 元素');
+            console.error('錯誤：找不到按鈕元素 #translateButton');
             return;
         }
 
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetchAPI();
             const result = await processResponse(response);
-            dom.result.textContent = result;
+            dom.result.textContent = result; // 顯示翻譯結果
         } catch (error) {
             handleError(error);
         } finally {
@@ -81,13 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             clearTimeout(timeoutId);
 
-            // 檢查回應的 Content-Type
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const responseText = await response.text();
-                throw new Error(`無效的回應格式: ${responseText}`);
-            }
-
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(`API錯誤: ${errorData.error?.message || response.status}`);
@@ -100,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function buildPrompt() {
-        return `將以下${dom.sourceLang.value}文本翻譯成${dom.targetLang.value}，使用${dom.tone.value}語氣。只返回翻譯結果：\n\n${dom.inputText.value}`;
+        return `將以下${dom.sourceLang.value}文本翻譯成${dom.targetLang.value}，只返回翻譯結果：\n\n${dom.inputText.value}`;
     }
 
     function handleInputValidation() {
@@ -171,14 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function processResponse(response) {
-        if (!response.ok) throw new Error(response.status);
         const data = await response.json();
-
-        // 檢查回應格式是否符合預期
-        if (!data.choices || !data.choices[0]?.message?.content) {
+        if (!data.choices?.[0]?.message?.content) {
             throw new Error('API回應格式錯誤');
         }
-
         return data.choices[0].message.content.trim();
     }
 
