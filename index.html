@@ -58,7 +58,7 @@
                     <option value="gpt-4-turbo">GPT-4 Turbo</option>
                 </select>
             </div>
-
+            
             <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
             <button id="translateButton" class="button">翻譯</button>
             
@@ -66,8 +66,6 @@
             <div class="progress-container">
                 <div id="progressBar" class="progress-bar"></div>
             </div>
-
-            <div id="result" class="result-box"></div>
         </div>
 
         <!-- 圖片翻譯區 -->
@@ -77,7 +75,12 @@
             <canvas id="imageCanvas"></canvas>
             <button id="extractTextButton" class="button">擷取文字</button>
             <button id="translateExtractedButton" class="button" disabled>翻譯</button>
-            <div id="extractedText" class="result-box"></div>
+        </div>
+
+        <!-- 獨立翻譯結果區 -->
+        <div class="result-container">
+            <h2>翻譯結果</h2>
+            <div id="result" class="result-box"></div>
         </div>
     </div>
     <script src="app.js"></script>
