@@ -1,151 +1,223 @@
-/* 優化版大地色系 CSS，改善按鈕無障礙性、陰影效果與圖片預覽 */
-
-/* 全局樣式 */
+/* =======================
+   全局基礎樣式
+   ======================= */
 body {
     font-family: 'Segoe UI', Arial, sans-serif;
     line-height: 1.8;
     margin: 0;
     padding: 20px;
-    background: #f3eadb;
+    background: #f4ede4;
     color: #5c4a3d;
 }
 
 .container {
     max-width: 900px;
     margin: 0 auto;
-    background: #fffaf0;
-    padding: 40px;
+    background: #fff8f0;
+    padding: 30px;
     border-radius: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* =======================
+   標題樣式
+   ======================= */
 h1 {
     text-align: center;
     color: #6a4f4b;
-    margin-bottom: 40px;
+    margin-bottom: 20px;
     font-size: 2em;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
 }
 
-/* 翻譯區域 */
-.translation-sections {
+/* =======================
+   分頁 (Tab) 樣式
+   ======================= */
+.tabs {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    justify-content: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #b89b8c;
 }
 
-.translation-box {
-    flex: 1;
-    min-width: 400px;
-    padding: 20px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-}
-
-/* 文件上傳 */
-.file-upload {
-    border: 2px dashed #b89b8c;
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    background: #fcf5eb;
+.tab-button {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
     cursor: pointer;
-    transition: all 0.3s;
+    color: #6a4f4b;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
 }
 
-.file-upload:hover, .file-upload:focus-within {
-    border-color: #8d6c61;
-    background: #f0e4d7;
-    box-shadow: 0 0 10px rgba(138, 92, 82, 0.4);
+.tab-button.active {
+    font-weight: bold;
+    color: #8d6c61;
+    border-bottom: 3px solid #8d6c61;
 }
 
-.file-info {
-    color: #7d6655;
-    font-size: 0.9em;
-    margin-top: 10px;
+.tab-button:hover {
+    color: #5c4a3d;
 }
 
-/* 控制項 */
-.controls-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin: 20px 0;
+/* =======================
+   分頁內容區 (Tab Content)
+   ======================= */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
-select, textarea, button {
+.tab-content.active {
+    display: block;
+}
+
+/* =======================
+   文本翻譯區塊
+   ======================= */
+textarea {
     width: 100%;
+    height: 150px;
     padding: 12px;
     border: 1px solid #b89b8c;
     border-radius: 8px;
     font-size: 16px;
+    resize: vertical;
     transition: all 0.3s;
 }
 
-textarea {
-    height: 150px;
-    resize: vertical;
+textarea:focus {
+    border-color: #8d6c61;
+    outline: none;
 }
 
-button {
+.result-box {
+    margin-top: 15px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    color: #5c4a3d;
+}
+
+/* =======================
+   圖片上傳區塊
+   ======================= */
+input[type="file"] {
+    display: none;
+}
+
+.image-drop-area {
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    border: 2px dashed #b89b8c;
+    border-radius: 12px;
+    background: #fdf7f0;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.image-drop-area:hover {
+    border-color: #8d6c61;
+    background: #f0e4d7;
+}
+
+/* =======================
+   圖片預覽區
+   ======================= */
+canvas {
+    display: block;
+    max-width: 100%;
+    margin-top: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* =======================
+   按鈕樣式
+   ======================= */
+.button {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
     background: #8d6c61;
     color: white;
-    border: none;
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
 }
 
-button:hover {
+.button:hover {
     background: #6a4f4b;
     transform: scale(1.05);
 }
 
-button:focus {
-    outline: 3px solid #b89b8c;
-}
-
-button:disabled {
+.button:disabled {
     background: #c4b3a8;
     cursor: not-allowed;
 }
 
-/* 圖片區域 */
-.image-preview {
-    width: 100%;
-    max-width: 100%;
-    max-height: 300px;
-    object-fit: contain;
-    display: block;
-    margin: 10px 0;
+/* =======================
+   動畫效果 (淡入)
+   ======================= */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.image-text-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 16px;
-    text-align: center;
-}
-
-/* 響應式設計 */
-@media (max-width: 600px) {
+/* =======================
+   行動裝置優化 (RWD)
+   ======================= */
+@media (max-width: 768px) {
     .container {
         padding: 20px;
     }
-    .translation-sections {
+
+    .tabs {
         flex-direction: column;
+        align-items: center;
     }
-    .translation-box {
-        min-width: 100%;
+
+    .tab-button {
+        width: 100%;
+        text-align: center;
+        padding: 14px;
+        font-size: 18px;
     }
-    select, textarea, button {
+
+    textarea {
         font-size: 14px;
         padding: 10px;
+    }
+
+    .button {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5em;
+    }
+
+    .tab-button {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    textarea {
+        height: 120px;
     }
 }
