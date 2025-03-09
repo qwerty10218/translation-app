@@ -223,35 +223,98 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("源語言和目標語言不能相同", true);
             return;
         }
-
+    
         dom.result.textContent = "翻譯中...";
         showProgressBar();
-
+    
         try {
-            const response = await fetch(API_CONFIG.URL, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${API_CONFIG.KEY}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [{
-                        role: "user",
-                        content: `請專業地將以下 ${sourceLang} 文本翻譯成 ${targetLang}，保持原文格式：\n\n${text}`
-                    }],
-                    timeout: API_CONFIG.TIMEOUT
-                }),
-                signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+            let translatedText;
+            
+            // 如果是 DeepL 翻譯
+            if (model === "deepl") {
+                translatedText = await translateWithDeepL(text, sourceLang, targetLang);
+            } else {
+                // 原有的 GPT 翻譯
+                translatedText = await translateWithGPT(text, sourceLang, targetLang, model);
             }
-
-            const data = await response.json();
-            dom.result.textContent = data.choices?.[0]?.message?.content || "翻譯失敗";
+            
+            dom.result.textContent = translatedText;
         } catch (error) {
+            dom.result.textContent = `請求失敗：${error.message}`;
+        } finally {
+            hideProgressBar();
+        }
+    }
+    
+    // 添加 DeepL 翻譯函數
+    async function translateWithDeepL(text, sourceLang, targetLang) {
+        // 将中文、英文等翻譯成 DeepL 的語言代碼
+        const langMap = {
+            "中文": "ZH",
+            "英文": "EN",
+            "日文": "JA",
+            "韓文": "KO",
+            "法文": "FR",
+            "德文": "DE",
+            "西班牙文": "ES",
+            "義大利文": "IT",
+            "俄文": "RU"
+        };
+        
+        const sourceCode = langMap[sourceLang] || "AUTO";
+        const targetCode = langMap[targetLang];
+        
+        if (!targetCode) {
+            throw new Error("不支持的目標語言");
+        }
+        
+        const response = await fetch(API_CONFIG.DEEPL_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                text: text,
+                source_lang: sourceCode,
+                target_lang: targetCode
+            }),
+            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
+        });
+    
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+    
+        const data = await response.json();
+        return data.data;
+    }
+    
+    // 原有的 GPT 翻譯函数抽離出來
+    async function translateWithGPT(text, sourceLang, targetLang, model) {
+        const response = await fetch(API_CONFIG.URL, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${API_CONFIG.KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [{
+                    role: "user",
+                    content: `請專業地將以下 ${sourceLang} 文本翻譯成 ${targetLang}，保持原文格式：\n\n${text}`
+                }],
+                timeout: API_CONFIG.TIMEOUT
+            }),
+            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
+        });
+    
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+    
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || "翻譯失敗";
+    } catch (error) {
             dom.result.textContent = `請求失敗：${error.message}`;
         } finally {
             hideProgressBar();
