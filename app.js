@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 默認禁用圖片相關按鈕
         dom.extractTextBtn.disabled = true;
         dom.translateExtractedBtn.disabled = true;
+        initVoiceRecognition();
     }
 
     function initButtons() {
@@ -226,59 +227,113 @@ document.addEventListener("DOMContentLoaded", () => {
                 dom.result.textContent = data.choices?.[0]?.message?.content || "翻譯失敗";
             } 
             else if (selectedModel === 'helsinki-quick' || selectedModel === 'qwen-advanced') {
-                // 使用Hugging Face Space API
-                const sourceLang = convertToAPILanguageCode(dom.sourceLang.value);
-                const targetLang = convertToAPILanguageCode(dom.targetLang.value);
+                // 添加重試機制
+                let retryCount = 0;
+                const maxRetries = 3;
+                let lastError = null;
+                let success = false;
                 
-                response = await fetch(API_CONFIG.HUGGINGFACE_URL, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        text: text,
-                        source_lang: sourceLang,
-                        target_lang: targetLang,
-                        model: selectedModel === 'helsinki-quick' ? 'helsinki' : 'qwen'
-                    }),
-                    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
-                });
-                
-                if (!response.ok) {
-                    // 如果API返回錯誤，嘗試使用Gradio API
-                    console.log("Hugging Face REST API失敗，嘗試Gradio API...");
-                    
-                    response = await fetch(API_CONFIG.GRADIO_URL, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            data: [
-                                text,
-                                sourceLang, 
-                                targetLang,
-                                selectedModel === 'helsinki-quick' ? 'helsinki' : 'qwen'
-                            ]
-                        }),
-                        signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error(`Hugging Face API錯誤! 狀態: ${response.status}`);
+                while (retryCount < maxRetries && !success) {
+                    try {
+                        // 使用Hugging Face Space API
+                        const sourceLang = convertToAPILanguageCode(dom.sourceLang.value);
+                        const targetLang = convertToAPILanguageCode(dom.targetLang.value);
+                        
+                        // 先嘗試REST API
+                        try {
+                            console.log(`嘗試REST API（第${retryCount + 1}次）...`);
+                            
+                            // 更新狀態
+                            dom.result.textContent = retryCount > 0 ? 
+                                `翻譯中...正在重試 (${retryCount + 1}/${maxRetries})` : 
+                                "翻譯中...";
+                                
+                            response = await fetch(API_CONFIG.HUGGINGFACE_URL, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    text: text,
+                                    source_lang: sourceLang,
+                                    target_lang: targetLang,
+                                    model: selectedModel === 'helsinki-quick' ? 'helsinki' : 'qwen'
+                                }),
+                                signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
+                            });
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                dom.result.textContent = data.translation || "翻譯失敗";
+                                success = true;
+                                break;
+                            } else if (response.status === 503) {
+                                console.log("REST API 返回503，服務暫時不可用，等待重試...");
+                                throw new Error(`Hugging Face API暫時不可用 (503)`);
+                            } else {
+                                throw new Error(`REST API錯誤: ${response.status}`);
+                            }
+                        } catch (restError) {
+                            console.log("REST API失敗，嘗試Gradio API...");
+                            
+                            // 如果REST API失敗，嘗試Gradio API
+                            response = await fetch(API_CONFIG.GRADIO_URL, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    data: [
+                                        text,
+                                        sourceLang, 
+                                        targetLang,
+                                        selectedModel === 'helsinki-quick' ? 'helsinki' : 'qwen'
+                                    ]
+                                }),
+                                signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
+                            });
+                            
+                            if (response.ok) {
+                                const gradioData = await response.json();
+                                dom.result.textContent = gradioData.data || "翻譯失敗";
+                                success = true;
+                                break;
+                            } else if (response.status === 503) {
+                                console.log("Gradio API 返回503，服務暫時不可用，等待重試...");
+                                throw new Error(`Hugging Face Gradio API暫時不可用 (503)`);
+                            } else {
+                                throw new Error(`Gradio API錯誤: ${response.status}`);
+                            }
+                        }
+                    } catch (error) {
+                        lastError = error;
+                        retryCount++;
+                        
+                        if (retryCount < maxRetries) {
+                            const waitTime = 2000 * retryCount; // 漸增等待時間
+                            console.log(`等待${waitTime/1000}秒後進行第${retryCount + 1}次重試...`);
+                            await new Promise(resolve => setTimeout(resolve, waitTime));
+                        }
                     }
-                    
-                    const gradioData = await response.json();
-                    dom.result.textContent = gradioData.data || "翻譯失敗";
-                } else {
-                    const data = await response.json();
-                    dom.result.textContent = data.translation || "翻譯失敗";
+                }
+                
+                // 如果所有重試都失敗
+                if (!success) {
+                    throw lastError || new Error("所有API請求都失敗");
                 }
             }
         } catch (error) {
             clearInterval(progressInterval);
             console.error("翻譯錯誤:", error);
-            dom.result.textContent = `請求失敗：${error.message}`;
+            
+            // 更友好的錯誤訊息
+            if (error.message.includes('503')) {
+                dom.result.textContent = `Hugging Face服務暫時繁忙，請稍後再試或使用GPT模型`;
+            } else if (error.message.includes('timeout')) {
+                dom.result.textContent = `請求超時，可能是網絡問題或服務器負載過高`;
+            } else {
+                dom.result.textContent = `請求失敗：${error.message}`;
+            }
             
             // 如果是使用Hugging Face模型失敗，建議用戶嘗試GPT模型
             if (dom.modelSelect.value.includes('helsinki') || dom.modelSelect.value.includes('qwen')) {
@@ -583,6 +638,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 imageData = dom.imageCanvas;
             }
 
+            // 獲取選擇的OCR語言
+            const ocrLang = dom.ocrLanguageSelect ? dom.ocrLanguageSelect.value : 'chi_tra+eng';
+            
             // 設置 Tesseract 進度回調
             const { createWorker } = Tesseract;
             const worker = await createWorker({
@@ -594,8 +652,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 langPath: 'https://tessdata.projectnaptha.com/4.0.0'  // 使用最新的語言數據
             });
 
-            await worker.loadLanguage('chi_tra+eng');
-            await worker.initialize('chi_tra+eng');
+            // 載入選擇的語言
+            await worker.loadLanguage(ocrLang);
+            await worker.initialize(ocrLang);
             
             // 設置更精確的 OCR 參數
             await worker.setParameters({
@@ -623,6 +682,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 dom.extractedText.textContent = recognizedText;
                 dom.translateExtractedBtn.disabled = false;
                 
+                // 添加編輯按鈕
+                if (!document.getElementById('editExtractedButton')) {
+                    const editButton = document.createElement('button');
+                    editButton.id = 'editExtractedButton';
+                    editButton.className = 'button secondary-button';
+                    editButton.textContent = '編輯識別文本';
+                    editButton.style.marginTop = '10px';
+                    editButton.onclick = editExtractedText;
+                    dom.extractedText.after(editButton);
+                } else {
+                    document.getElementById('editExtractedButton').style.display = 'inline-block';
+                }
+                
                 // 添加直接翻譯按鈕的功能提示
                 const directTranslateInfo = document.createElement("div");
                 directTranslateInfo.className = "direct-translate-info";
@@ -634,6 +706,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 const prevInfo = dom.extractedText.nextElementSibling;
                 if (prevInfo && prevInfo.className === "direct-translate-info") {
                     prevInfo.remove();
+                }
+                
+                // 檢測到的語言提示
+                if (data.languages && data.languages.length > 0) {
+                    const detectedLang = data.languages.sort((a, b) => b.confidence - a.confidence)[0];
+                    
+                    if (detectedLang && detectedLang.confidence > 0.5) {
+                        const langInfo = document.createElement("div");
+                        langInfo.className = "detected-language";
+                        langInfo.textContent = `檢測到的語言: ${getLanguageName(detectedLang.code)} (信度: ${Math.round(detectedLang.confidence * 100)}%)`;
+                        langInfo.style.display = 'block';
+                        dom.extractedText.before(langInfo);
+                    }
                 }
                 
                 dom.extractedText.after(directTranslateInfo);
@@ -743,6 +828,344 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         });
+    }
+
+    // 初始化語音識別功能
+    function initVoiceRecognition() {
+        // 獲取DOM元素
+        const startVoiceBtn = document.getElementById('startVoiceBtn');
+        const stopVoiceBtn = document.getElementById('stopVoiceBtn');
+        const useVoiceTextBtn = document.getElementById('useVoiceTextBtn');
+        const clearVoiceBtn = document.getElementById('clearVoiceBtn');
+        const voiceVisualizer = document.getElementById('voiceVisualizer');
+        const voiceStatus = document.getElementById('voiceRecordingStatus');
+        const voiceTranscript = document.getElementById('voiceTranscript');
+        const expandVoiceBtn = document.getElementById('expandVoiceBtn');
+        const shrinkVoiceBtn = document.getElementById('shrinkVoiceBtn');
+        const voiceContainer = document.querySelector('.voice-visualizer-container');
+        
+        // 如果瀏覽器不支持語音識別，顯示錯誤消息
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            voiceStatus.textContent = "您的瀏覽器不支持語音識別功能，請使用Chrome或Edge瀏覽器";
+            voiceStatus.style.color = "#cc3333";
+            startVoiceBtn.disabled = true;
+            return;
+        }
+        
+        // 創建語音識別對象
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        // 設置語音識別參數
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        // 創建音頻分析器
+        let audioContext;
+        let analyser;
+        let microphone;
+        let bars = [];
+        let isRecording = false;
+        let animationId;
+        
+        // 創建視覺化條形圖
+        function createBars() {
+            voiceVisualizer.innerHTML = '';
+            const barCount = 50; // 調整條形數量
+            
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'voice-bar';
+                voiceVisualizer.appendChild(bar);
+                bars.push(bar);
+            }
+        }
+        
+        // 更新視覺化
+        function updateVisualizer(dataArray) {
+            if (!isRecording) return;
+            
+            for (let i = 0; i < bars.length; i++) {
+                const index = Math.floor(i * (dataArray.length / bars.length));
+                const value = dataArray[index] / 128; // 緩衝區值為0-255
+                const height = Math.max(5, value * 100); // 最小高度為5px，最大100px
+                bars[i].style.height = `${height}px`;
+            }
+            
+            animationId = requestAnimationFrame(() => updateVisualizer(dataArray));
+        }
+        
+        // 開始錄音
+        startVoiceBtn.addEventListener('click', () => {
+            try {
+                if (!isRecording) {
+                    // 設置語言
+                    recognition.lang = dom.sourceLang.value === '中文' ? 'zh-TW' : 'en-US';
+                    
+                    // 開始語音識別
+                    recognition.start();
+                    
+                    isRecording = true;
+                    voiceStatus.textContent = "正在錄音...";
+                    document.querySelector('.voice-container').classList.add('recording');
+                    
+                    // 變更按鈕狀態
+                    startVoiceBtn.disabled = true;
+                    stopVoiceBtn.disabled = false;
+                    useVoiceTextBtn.disabled = true;
+                    
+                    // 設置音頻處理
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        analyser = audioContext.createAnalyser();
+                        analyser.fftSize = 256;
+                    }
+                    
+                    // 創建條形圖
+                    createBars();
+                    
+                    // 獲取麥克風
+                    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                        .then(stream => {
+                            microphone = audioContext.createMediaStreamSource(stream);
+                            microphone.connect(analyser);
+                            
+                            const bufferLength = analyser.frequencyBinCount;
+                            const dataArray = new Uint8Array(bufferLength);
+                            
+                            // 更新視覺化
+                            function updateVisualizerLoop() {
+                                if (!isRecording) return;
+                                
+                                analyser.getByteFrequencyData(dataArray);
+                                updateVisualizer(dataArray);
+                            }
+                            
+                            updateVisualizerLoop();
+                        })
+                        .catch(err => {
+                            console.error("麥克風訪問錯誤:", err);
+                            voiceStatus.textContent = "無法訪問麥克風";
+                            voiceStatus.style.color = "#cc3333";
+                        });
+                }
+            } catch (error) {
+                console.error("語音識別啟動錯誤:", error);
+                voiceStatus.textContent = `語音識別錯誤: ${error.message}`;
+                voiceStatus.style.color = "#cc3333";
+            }
+        });
+        
+        // 停止錄音
+        stopVoiceBtn.addEventListener('click', () => {
+            if (isRecording) {
+                recognition.stop();
+                isRecording = false;
+                
+                // 斷開音頻連接
+                if (microphone) {
+                    microphone.disconnect();
+                    microphone = null;
+                }
+                
+                // 停止動畫
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+                
+                // 更新UI
+                voiceStatus.textContent = "錄音已停止";
+                document.querySelector('.voice-container').classList.remove('recording');
+                
+                // 重置條形圖
+                bars.forEach(bar => bar.style.height = '5px');
+                
+                // 變更按鈕狀態
+                startVoiceBtn.disabled = false;
+                stopVoiceBtn.disabled = true;
+                useVoiceTextBtn.disabled = voiceTranscript.textContent.trim() === '';
+            }
+        });
+        
+        // 使用識別文本
+        useVoiceTextBtn.addEventListener('click', () => {
+            const recognizedText = voiceTranscript.textContent.trim();
+            if (recognizedText) {
+                // 切換到文本翻譯標籤頁
+                document.querySelector('.tab-button[data-tab="textTab"]').click();
+                
+                // 設置文本
+                dom.inputText.value = recognizedText;
+                
+                // 觸發翻譯
+                validateTranslationInput();
+                
+                // 聚焦翻譯按鈕
+                dom.translateBtn.focus();
+            }
+        });
+        
+        // 清除按鈕
+        clearVoiceBtn.addEventListener('click', () => {
+            voiceTranscript.textContent = '';
+            useVoiceTextBtn.disabled = true;
+            
+            // 重置條形圖
+            bars.forEach(bar => bar.style.height = '5px');
+        });
+        
+        // 擴大視覺化區域
+        expandVoiceBtn.addEventListener('click', () => {
+            const currentHeight = parseInt(window.getComputedStyle(voiceContainer).height);
+            voiceContainer.style.height = `${currentHeight + 50}px`;
+        });
+        
+        // 縮小視覺化區域
+        shrinkVoiceBtn.addEventListener('click', () => {
+            const currentHeight = parseInt(window.getComputedStyle(voiceContainer).height);
+            if (currentHeight > 100) {
+                voiceContainer.style.height = `${currentHeight - 50}px`;
+            }
+        });
+        
+        // 語音識別結果事件
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            // 更新語音識別文本
+            if (finalTranscript) {
+                // 如果有最終結果，添加到先前結果後面
+                const previousText = voiceTranscript.textContent;
+                voiceTranscript.textContent = previousText + finalTranscript + ' ';
+                useVoiceTextBtn.disabled = false;
+            } else if (interimTranscript) {
+                // 臨時結果顯示為斜體
+                const previousText = voiceTranscript.textContent;
+                voiceTranscript.innerHTML = previousText + '<i>' + interimTranscript + '</i>';
+            }
+        };
+        
+        // 語音識別錯誤事件
+        recognition.onerror = (event) => {
+            console.error("語音識別錯誤:", event.error);
+            voiceStatus.textContent = `錯誤: ${event.error}`;
+            voiceStatus.style.color = "#cc3333";
+            
+            // 重置錄音狀態
+            isRecording = false;
+            startVoiceBtn.disabled = false;
+            stopVoiceBtn.disabled = true;
+            document.querySelector('.voice-container').classList.remove('recording');
+        };
+        
+        // 語音識別結束事件
+        recognition.onend = () => {
+            if (isRecording) {
+                // 如果用戶沒有手動停止，自動重新開始
+                recognition.start();
+            }
+        };
+        
+        // 創建初始條形圖
+        createBars();
+    }
+
+    // 編輯提取的文本
+    function editExtractedText() {
+        const currentText = dom.extractedText.textContent;
+        
+        // 創建編輯界面
+        dom.extractedText.innerHTML = '';
+        
+        const editArea = document.createElement('textarea');
+        editArea.className = 'edit-extracted-textarea';
+        editArea.value = currentText;
+        editArea.rows = 5;
+        
+        const saveButton = document.createElement('button');
+        saveButton.className = 'button primary-button';
+        saveButton.textContent = '保存';
+        saveButton.style.marginRight = '10px';
+        
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'button secondary-button';
+        cancelButton.textContent = '取消';
+        
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'edit-actions';
+        actionsDiv.appendChild(saveButton);
+        actionsDiv.appendChild(cancelButton);
+        
+        dom.extractedText.appendChild(editArea);
+        dom.extractedText.appendChild(actionsDiv);
+        
+        // 隱藏編輯按鈕
+        const editButton = document.getElementById('editExtractedButton');
+        if (editButton) editButton.style.display = 'none';
+        
+        // 保存編輯
+        saveButton.addEventListener('click', () => {
+            const editedText = editArea.value.trim();
+            dom.extractedText.textContent = editedText;
+            if (editButton) editButton.style.display = 'inline-block';
+            
+            // 啟用翻譯按鈕（如果有文本）
+            dom.translateExtractedBtn.disabled = !editedText;
+        });
+        
+        // 取消編輯
+        cancelButton.addEventListener('click', () => {
+            dom.extractedText.textContent = currentText;
+            if (editButton) editButton.style.display = 'inline-block';
+        });
+        
+        // 聚焦到文本區域
+        editArea.focus();
+    }
+
+    // 語言代碼轉換為語言名稱
+    function getLanguageName(langCode) {
+        const langMap = {
+            'eng': '英文',
+            'chi_tra': '繁體中文',
+            'chi_sim': '簡體中文',
+            'jpn': '日文',
+            'kor': '韓文',
+            'fra': '法文',
+            'deu': '德文',
+            'spa': '西班牙文',
+            'ita': '義大利文',
+            'rus': '俄文'
+        };
+        
+        return langMap[langCode] || langCode;
+    }
+
+    // 添加語言代碼轉換函數
+    function convertToAPILanguageCode(uiLanguage) {
+        const languageMap = {
+            '中文': 'zh',
+            '英文': 'en',
+            '日文': 'ja',
+            '韓文': 'ko',
+            '法文': 'fr',
+            '德文': 'de',
+            '西班牙文': 'es',
+            '義大利文': 'it',
+            '俄文': 'ru'
+        };
+        
+        return languageMap[uiLanguage] || 'en';
     }
 
     init();
