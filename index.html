@@ -80,6 +80,38 @@
 
         <!-- 圖片翻譯區 -->
         <div id="imageTab" class="tab-content">
+            <!-- Add this to your image tab -->
+            <div class="language-selectors">
+                <div class="select-wrapper">
+                    <label for="imageSourceLang">從：</label>
+                    <select id="imageSourceLang" class="language-select">
+                        <option value="中文">中文</option>
+                        <option value="英文">英文</option>
+                        <option value="日文">日文</option>
+                        <option value="韓文">韓文</option>
+                        <option value="法文">法文</option>
+                        <option value="德文">德文</option>
+                        <option value="西班牙文">西班牙文</option>
+                        <option value="義大利文">義大利文</option>
+                        <option value="俄文">俄文</option>
+                    </select>
+                </div>
+                <button id="imageSwapLang" class="button swap-button" title="交換語言">⇄</button>
+                <div class="select-wrapper">
+                    <label for="imageTargetLang">到：</label>
+                    <select id="imageTargetLang" class="language-select">
+                        <option value="英文">英文</option>
+                        <option value="中文">中文</option>
+                        <option value="日文">日文</option>
+                        <option value="韓文">韓文</option>
+                        <option value="法文">法文</option>
+                        <option value="德文">德文</option>
+                        <option value="西班牙文">西班牙文</option>
+                        <option value="義大利文">義大利文</option>
+                        <option value="俄文">俄文</option>
+                    </select>
+                </div>
+            </div>
             <input type="file" id="imageInput" accept="image/*" hidden>
             <div class="image-drop-area" id="imageDropArea">
                 <div class="drop-icon">📷</div>
