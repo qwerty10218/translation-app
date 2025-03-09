@@ -424,50 +424,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     // 翻譯文字 API
-        const MODEL_CONTEXT_LIMITS = {
-            "gpt-3.5-turbo": 4096,
-            "gpt-4": 8192,
-            "gpt-4-32k": 32768,
-            "gpt-4-turbo": 128000
-            "gpt-4o-mini": 128000
-        };
-       async function translateText(text, sourceLang, targetLang, model) {
-        try {
-            updateProgress(30);
-            
-            const prompt = `請將以下${sourceLang}文本翻譯成${targetLang}...`;
-            const maxContext = MODEL_CONTEXT_LIMITS[model] || 4096;
-            const estimatedInputTokens = Math.ceil(text.length * 2); // 修改后的估算方式
-            const maxTokens = Math.max(512, maxContext - estimatedInputTokens);
-
-            const response = await fetch(API_CONFIG.URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${API_CONFIG.KEY}`
-                },
-                body: JSON.stringify({
-                    model: model,
-                    messages: [
-                        {
-                            role: "user",
-                            content: prompt
-                        }
-                    ],
-                    temperature: 0.2,
-                    max_tokens: maxTokens
-                }),
-                signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
-            });
     async function translateText(text, sourceLang, targetLang, model) {
         try {
             updateProgress(30);
             
             const prompt = `請將以下${sourceLang}文本翻譯成${targetLang}，只需要輸出翻譯結果，不要加任何解釋或說明：\n\n${text}`;
-            const maxContext = MODEL_CONTEXT_LIMITS[model] || 4096;
-            const estimatedInputTokens = Math.ceil(text.length * 1.5);
-            const maxTokens = Math.max(512, maxContext - estimatedInputTokens);
-
+            
             const response = await fetch(API_CONFIG.URL, {
                 method: "POST",
                 headers: {
@@ -482,8 +444,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             content: prompt
                         }
                     ],
-                    temperature: 0.2,
-                    max_tokens: maxTokens
+                    temperature: 0.3,
+                    max_tokens: 2000
                 }),
                 signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
             });
