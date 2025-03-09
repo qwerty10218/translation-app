@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
         GPT_URL: "https://free.v36.cm/v1/chat/completions",
         GPT_KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
         HUGGINGFACE_URL: "https://qwerty10218-gary-translate.hf.space/api/translate",
-        GRADIO_URL: "https://qwerty10218-gary-translate.hf.space/gradio_api/predict",
+        GRADIO_URL: "https://qwerty10218-gary-translate.hf.space/api/predict",
         TIMEOUT: 60000 // 60秒超時
     };
 
