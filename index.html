@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>詮能翻譯</title>
+    <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1"></script>
 </head>
 <body>
     <div class="container">
-        <h1>詮能翻譯</h1>
+        <h1>詮語翻譯</h1>
         <div class="tabs">
             <button class="tab-button active" data-tab="textTab">文本翻譯</button>
             <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
@@ -56,13 +56,6 @@
                 <select id="modelSelect">
                     <option value="gpt-4o-mini">GPT-4o Mini</option>
                     <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                    <option value="deepl">DeepL (直接翻譯)</option>
-                </select>
-                <!-- 圖像翻譯區 -->
-                <select id="imageModelSelect">  
-                    <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                    <option value="deepl">DeepL (直接翻譯)</option>
                 </select>
             </div>
             
@@ -80,38 +73,6 @@
 
         <!-- 圖片翻譯區 -->
         <div id="imageTab" class="tab-content">
-            <!-- Add this to your image tab -->
-            <div class="language-selectors">
-                <div class="select-wrapper">
-                    <label for="imageSourceLang">從：</label>
-                    <select id="imageSourceLang" class="language-select">
-                        <option value="中文">中文</option>
-                        <option value="英文">英文</option>
-                        <option value="日文">日文</option>
-                        <option value="韓文">韓文</option>
-                        <option value="法文">法文</option>
-                        <option value="德文">德文</option>
-                        <option value="西班牙文">西班牙文</option>
-                        <option value="義大利文">義大利文</option>
-                        <option value="俄文">俄文</option>
-                    </select>
-                </div>
-                <button id="imageSwapLang" class="button swap-button" title="交換語言">⇄</button>
-                <div class="select-wrapper">
-                    <label for="imageTargetLang">到：</label>
-                    <select id="imageTargetLang" class="language-select">
-                        <option value="英文">英文</option>
-                        <option value="中文">中文</option>
-                        <option value="日文">日文</option>
-                        <option value="韓文">韓文</option>
-                        <option value="法文">法文</option>
-                        <option value="德文">德文</option>
-                        <option value="西班牙文">西班牙文</option>
-                        <option value="義大利文">義大利文</option>
-                        <option value="俄文">俄文</option>
-                    </select>
-                </div>
-            </div>
             <input type="file" id="imageInput" accept="image/*" hidden>
             <div class="image-drop-area" id="imageDropArea">
                 <div class="drop-icon">📷</div>
@@ -136,7 +97,7 @@
         </div>
         
         <footer class="footer">
-            <p>© 2025 詮能翻譯 - 以人工智能提供多語言翻譯服務</p>
+            <p>© 2025 詮語翻譯 - 以人工智能提供多語言翻譯服務</p>
         </footer>
     </div>
     <script src="app.js"></script>
