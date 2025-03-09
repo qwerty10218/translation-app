@@ -9,9 +9,13 @@
     --card-bg: #fff8f0;
     --text-color: #5c4a3d;
     --error-color: #cc3333;
-    --border-radius: 12px;
-    --button-radius: 8px;
-    --shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+    --error-bg: rgba(204, 51, 51, 0.1);
+    --disabled-color: #ccbbaa;
+    --disabled-text: #a89a8f;
+    --border-radius: 16px;
+    --button-radius: 28px;
+    --shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    --button-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     --transition: all 0.3s ease;
 }
 
@@ -26,15 +30,17 @@ body {
     background: var(--bg-color);
     color: var(--text-color);
     margin: 0;
-    padding: 20px;
+    padding: 10px;
     line-height: 1.6;
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .container {
     max-width: 900px;
     margin: 0 auto 40px;
     background: var(--card-bg);
-    padding: 30px;
+    padding: 20px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
 }
@@ -45,8 +51,8 @@ body {
 h1 {
     text-align: center;
     color: var(--primary-dark);
-    margin-bottom: 25px;
-    font-size: 2.3em;
+    margin-bottom: 20px;
+    font-size: 2.2em;
     letter-spacing: 1px;
     position: relative;
     padding-bottom: 10px;
@@ -66,7 +72,7 @@ h1::after {
 
 h2 {
     color: var(--primary-dark);
-    margin: 20px 0 15px;
+    margin: 5px 0;
     font-size: 1.5em;
 }
 
@@ -76,14 +82,14 @@ h2 {
 .tabs {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     border-bottom: 2px solid var(--primary-light);
     position: relative;
 }
 
 .tab-button {
     flex: 1;
-    padding: 14px;
+    padding: 16px;
     font-size: 18px;
     cursor: pointer;
     background: none;
@@ -131,12 +137,17 @@ h2 {
 /* =======================
    輸入框與輸出框樣式
    ======================= */
+.input-container {
+    position: relative;
+    margin: 10px 0;
+}
+
 textarea, .result-box, .extracted-text {
     width: 100%;
-    padding: 15px;
-    font-size: 16px;
+    padding: 18px;
+    font-size: 18px;
     border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
+    border-radius: var(--border-radius);
     background: white;
     color: var(--text-color);
     resize: none;
@@ -144,6 +155,7 @@ textarea, .result-box, .extracted-text {
     transition: var(--transition);
     margin: 10px 0;
     min-height: 150px;
+    line-height: 1.5;
 }
 
 textarea:focus {
@@ -166,12 +178,32 @@ textarea:focus {
     display: none;
 }
 
+.action-buttons {
+    position: absolute;
+    top: 20px;
+    right: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 10px;
+}
+
 /* =======================
    按鈕樣式
    ======================= */
 .button {
-    padding: 12px 24px;
-    font-size: 16px;
+    padding: 16px 30px;
+    font-size: 18px;
     cursor: pointer;
     border: none;
     border-radius: var(--button-radius);
@@ -179,17 +211,26 @@ textarea:focus {
     font-weight: 500;
     margin: 10px 0;
     outline: none;
+    box-shadow: var(--button-shadow);
 }
 
 .primary-button {
     background-color: var(--primary-color);
     color: white;
+    width: 100%;
+    font-weight: bold;
+    letter-spacing: 1px;
 }
 
 .primary-button:hover:not(:disabled) {
     background-color: var(--primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.primary-button:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .secondary-button {
@@ -205,9 +246,9 @@ textarea:focus {
 .swap-button {
     background-color: var(--primary-light);
     color: white;
-    font-size: 18px;
-    width: 40px;
-    height: 40px;
+    font-size: 20px;
+    width: 48px;
+    height: 48px;
     padding: 0;
     border-radius: 50%;
     display: flex;
@@ -223,8 +264,10 @@ textarea:focus {
 }
 
 .button:disabled {
-    background-color: #ccbbaa;
+    background-color: var(--disabled-color);
+    color: var(--disabled-text);
     cursor: not-allowed;
+    box-shadow: none;
 }
 
 .button-container {
@@ -233,8 +276,33 @@ textarea:focus {
     margin: 15px 0;
 }
 
-.result-actions {
-    justify-content: flex-end;
+.circle-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    background-color: rgba(141, 108, 97, 0.1);
+}
+
+.circle-button:hover {
+    background-color: rgba(141, 108, 97, 0.2);
+}
+
+.clear-button {
+    color: var(--primary-dark);
+}
+
+.copy-button {
+    color: var(--primary-dark);
+}
+
+.circle-button .icon {
+    font-size: 16px;
 }
 
 /* =======================
@@ -242,24 +310,27 @@ textarea:focus {
    ======================= */
 .language-selectors {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 .select-wrapper {
     flex: 1;
+    min-width: 120px;
 }
 
 .select-wrapper label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     color: var(--primary-dark);
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 16px;
 }
 
 select {
     width: 100%;
-    padding: 10px 12px;
+    padding: 14px 16px;
     border: 2px solid var(--primary-light);
     border-radius: var(--button-radius);
     background-color: white;
@@ -268,7 +339,7 @@ select {
     appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg fill='%238d6c61' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
     background-repeat: no-repeat;
-    background-position: right 10px center;
+    background-position: right 15px center;
     cursor: pointer;
 }
 
@@ -281,10 +352,25 @@ select:focus {
     margin: 20px 0;
 }
 
+.model-selection label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-size: 16px;
+}
+
 /* 添加錯誤樣式 */
 .error-select {
     border-color: var(--error-color);
+    background-color: var(--error-bg);
     animation: shake 0.5s ease-in-out;
+}
+
+/* 禁用樣式 - 更明顯的灰色 */
+select option:disabled {
+    color: var(--disabled-color);
+    background-color: #f5f5f5;
 }
 
 @keyframes shake {
@@ -298,9 +384,9 @@ select:focus {
    ======================= */
 .progress-container {
     width: 100%;
-    height: 6px;
+    height: 8px;
     background-color: #e0d5cc;
-    border-radius: 3px;
+    border-radius: 4px;
     margin: 15px 0;
     overflow: hidden;
     display: none;
@@ -315,9 +401,9 @@ select:focus {
 
 .ocr-progress-container {
     width: 100%;
-    height: 8px;
+    height: 10px;
     background-color: #e0d5cc;
-    border-radius: 4px;
+    border-radius: 5px;
     margin: 15px 0;
     overflow: hidden;
 }
@@ -353,7 +439,7 @@ select:focus {
 }
 
 .drop-icon {
-    font-size: 36px;
+    font-size: 42px;
     margin-bottom: 10px;
 }
 
@@ -368,7 +454,29 @@ select:focus {
     height: auto;
     margin: 15px auto;
     border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
+    border-radius: var(--border-radius);
+}
+
+/* =======================
+   Toast 提示樣式
+   ======================= */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 24px;
+    font-size: 16px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
 }
 
 /* =======================
@@ -376,7 +484,7 @@ select:focus {
    ======================= */
 .footer {
     text-align: center;
-    margin-top: 30px;
+    margin-top: 25px;
     padding-top: 20px;
     border-top: 1px solid var(--primary-light);
     color: var(--primary-dark);
@@ -387,27 +495,34 @@ select:focus {
    響應式設計 (手機適配)
    ======================= */
 @media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+
     .container {
-        padding: 20px;
+        padding: 15px;
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
     }
     
     h1 {
         font-size: 1.8em;
+        margin-bottom: 15px;
     }
     
-    .button {
-        font-size: 14px;
-        padding: 10px 16px;
+    .tabs {
+        margin-bottom: 15px;
     }
     
     .tab-button {
-        font-size: 16px;
-        padding: 12px;
+        font-size: 18px;
+        padding: 16px 12px;
     }
     
     .language-selectors {
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
     }
     
     .select-wrapper {
@@ -416,40 +531,82 @@ select:focus {
     }
     
     .swap-button {
-        margin: 5px 0 15px;
+        margin: 5px auto 15px;
         align-self: center;
+        transform: rotate(90deg);
+        width: 52px;
+        height: 52px;
+    }
+    
+    .swap-button:hover {
+        transform: rotate(270deg);
+    }
+    
+    .button {
+        padding: 16px 20px;
+        font-size: 18px;
+        width: 100%;
     }
     
     .button-container {
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
+    }
+    
+    textarea, .result-box, .extracted-text {
+        padding: 16px;
+        font-size: 18px;
+        min-height: 120px;
+    }
+    
+    .input-container, .result-box {
+        margin-bottom: 20px;
+    }
+    
+    .circle-button {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .result-header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
     }
     
     .result-actions {
         flex-direction: row;
     }
-    
-    textarea, .result-box, .extracted-text {
-        padding: 12px;
-        font-size: 15px;
-        min-height: 120px;
-    }
 }
 
 @media (max-width: 480px) {
     .container {
-        padding: 15px;
+        padding: 12px;
     }
     
     h1 {
         font-size: 1.6em;
     }
     
-    .button-container {
-        flex-direction: column;
+    .tabs {
+        margin-bottom: 15px;
     }
     
-    .result-actions {
-        flex-direction: column;
+    .button {
+        font-size: 16px;
+        padding: 16px 15px;
+    }
+    
+    .select-wrapper label {
+        font-size: 15px;
+    }
+    
+    select {
+        padding: 14px 12px;
+    }
+    
+    .circle-button {
+        width: 40px;
+        height: 40px;
     }
 }
