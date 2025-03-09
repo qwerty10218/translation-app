@@ -1,612 +1,138 @@
-/* =======================
-   全局基礎樣式
-   ======================= */
+/* ========== 全局設置 ========== */
 :root {
-    --primary-color: #8d6c61;
-    --primary-light: #b89b8c;
-    --primary-dark: #6a4f4b;
-    --bg-color: #f4ede4;
-    --card-bg: #fff8f0;
-    --text-color: #5c4a3d;
-    --error-color: #cc3333;
-    --error-bg: rgba(204, 51, 51, 0.1);
-    --disabled-color: #ccbbaa;
-    --disabled-text: #a89a8f;
-    --border-radius: 16px;
-    --button-radius: 28px;
-    --shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-    --button-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    --transition: all 0.3s ease;
+  --primary-color: #4caf50;
+  --secondary-color: #388e3c;
+  --background-color: #ffffff;
+  --text-color: #333333;
+  --border-radius: 8px;
+  --transition-speed: 0.3s;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+/* 深色模式 */
+.dark-mode {
+  --background-color: #121212;
+  --text-color: #e0e0e0;
+  --primary-color: #66bb6a;
+  --secondary-color: #43a047;
 }
 
 body {
-    font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
-    background: var(--bg-color);
-    color: var(--text-color);
-    margin: 0;
-    padding: 10px;
-    line-height: 1.6;
-    min-height: 100vh;
-    -webkit-tap-highlight-color: transparent;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: Arial, sans-serif;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
 .container {
-    max-width: 900px;
-    margin: 0 auto 40px;
-    background: var(--card-bg);
-    padding: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
 }
 
-/* =======================
-   標題樣式
-   ======================= */
-h1 {
-    text-align: center;
-    color: var(--primary-dark);
-    margin-bottom: 20px;
-    font-size: 2.2em;
-    letter-spacing: 1px;
-    position: relative;
-    padding-bottom: 10px;
-}
-
-h1::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 3px;
-    background: var(--primary-light);
-    border-radius: 3px;
-}
-
-h2 {
-    color: var(--primary-dark);
-    margin: 5px 0;
-    font-size: 1.5em;
-}
-
-/* =======================
-   分頁 (Tab) 樣式
-   ======================= */
-.tabs {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-    border-bottom: 2px solid var(--primary-light);
-    position: relative;
-}
-
-.tab-button {
-    flex: 1;
-    padding: 16px;
-    font-size: 18px;
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: var(--primary-dark);
-    transition: var(--transition);
-    position: relative;
-    font-weight: 500;
-    outline: none;
-}
-
-.tab-button:hover {
-    background-color: rgba(184, 155, 140, 0.1);
-}
-
-.tab-button.active {
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.tab-button.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: var(--primary-color);
-}
-
-.tab-content {
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-.tab-content.active {
-    display: block;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* =======================
-   輸入框與輸出框樣式
-   ======================= */
-.input-container {
-    position: relative;
-    margin: 10px 0;
-}
-
-textarea, .result-box, .extracted-text {
-    width: 100%;
-    padding: 18px;
-    font-size: 18px;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--border-radius);
-    background: white;
-    color: var(--text-color);
-    resize: none;
-    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
-    transition: var(--transition);
-    margin: 10px 0;
-    min-height: 150px;
-    line-height: 1.5;
-}
-
-textarea:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 8px rgba(141, 108, 97, 0.5);
-    outline: none;
-}
-
-.result-box {
-    background: #faf3e7;
-    min-height: 120px;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-}
-
-.extracted-text {
-    background: #faf3e7;
-    min-height: 80px;
-    margin-top: 15px;
-    display: none;
-}
-
-.action-buttons {
-    position: absolute;
-    top: 20px;
-    right: 15px;
-    display: flex;
-    gap: 10px;
-}
-
-.result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.result-actions {
-    display: flex;
-    gap: 10px;
-}
-
-/* =======================
-   按鈕樣式
-   ======================= */
+/* ========== 按鈕設計 ========== */
 .button {
-    padding: 16px 30px;
-    font-size: 18px;
-    cursor: pointer;
-    border: none;
-    border-radius: var(--button-radius);
-    transition: var(--transition);
-    font-weight: 500;
-    margin: 10px 0;
-    outline: none;
-    box-shadow: var(--button-shadow);
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background var(--transition-speed), transform 0.2s;
 }
 
-.primary-button {
-    background-color: var(--primary-color);
-    color: white;
-    width: 100%;
-    font-weight: bold;
-    letter-spacing: 1px;
+.button:hover {
+  background: var(--secondary-color);
+  transform: scale(1.05);
 }
 
-.primary-button:hover:not(:disabled) {
-    background-color: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-}
-
-.primary-button:active:not(:disabled) {
-    transform: translateY(1px);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.secondary-button {
-    background-color: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
-
-.secondary-button:hover {
-    background-color: rgba(141, 108, 97, 0.1);
-}
-
+/* 翻譯交換按鈕 - 針對小螢幕修正 */
 .swap-button {
-    background-color: var(--primary-light);
-    color: white;
-    font-size: 20px;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    align-self: flex-end;
-    margin: 0 15px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  border-radius: 50%;
+  background: var(--secondary-color);
+  color: white;
+  transition: transform var(--transition-speed);
 }
 
 .swap-button:hover {
-    background-color: var(--primary-color);
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
-.button:disabled {
-    background-color: var(--disabled-color);
-    color: var(--disabled-text);
-    cursor: not-allowed;
-    box-shadow: none;
+/* ========== 文字框 ========== */
+.textarea-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.button-container {
-    display: flex;
-    gap: 15px;
-    margin: 15px 0;
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  transition: border-color var(--transition-speed);
 }
 
-.circle-button {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-    transition: var(--transition);
-    background-color: rgba(141, 108, 97, 0.1);
+.textarea:focus {
+  border-color: var(--primary-color);
 }
 
-.circle-button:hover {
-    background-color: rgba(141, 108, 97, 0.2);
+/* 清除 & 複製按鈕合併 */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
 }
 
-.clear-button {
-    color: var(--primary-dark);
+.copy-clear-btn {
+  display: flex;
+  gap: 8px;
 }
 
-.copy-button {
-    color: var(--primary-dark);
+/* ========== 黑暗模式切換按鈕 ========== */
+.dark-mode-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--primary-color);
+  border: none;
+  padding: 8px 14px;
+  color: white;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background var(--transition-speed);
 }
 
-.circle-button .icon {
-    font-size: 16px;
+.dark-mode-toggle:hover {
+  background: var(--secondary-color);
 }
 
-/* =======================
-   語言選擇器樣式
-   ======================= */
-.language-selectors {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-}
-
-.select-wrapper {
-    flex: 1;
-    min-width: 120px;
-}
-
-.select-wrapper label {
-    display: block;
-    margin-bottom: 6px;
-    color: var(--primary-dark);
-    font-weight: 600;
-    font-size: 16px;
-}
-
-select {
-    width: 100%;
-    padding: 14px 16px;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
-    background-color: white;
-    color: var(--text-color);
-    font-size: 16px;
-    appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg fill='%238d6c61' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    cursor: pointer;
-}
-
-select:focus {
-    border-color: var(--primary-color);
-    outline: none;
-}
-
-.model-selection {
-    margin: 20px 0;
-}
-
-.model-selection label {
-    display: block;
-    margin-bottom: 6px;
-    color: var(--primary-dark);
-    font-weight: 600;
-    font-size: 16px;
-}
-
-/* 添加錯誤樣式 */
-.error-select {
-    border-color: var(--error-color);
-    background-color: var(--error-bg);
-    animation: shake 0.5s ease-in-out;
-}
-
-/* 禁用樣式 - 更明顯的灰色 */
-select option:disabled {
-    color: var(--disabled-color);
-    background-color: #f5f5f5;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-5px); }
-    40%, 80% { transform: translateX(5px); }
-}
-
-/* =======================
-   進度條樣式
-   ======================= */
-.progress-container {
-    width: 100%;
-    height: 8px;
-    background-color: #e0d5cc;
-    border-radius: 4px;
-    margin: 15px 0;
-    overflow: hidden;
-    display: none;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0;
-    background-color: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-.ocr-progress-container {
-    width: 100%;
-    height: 10px;
-    background-color: #e0d5cc;
-    border-radius: 5px;
-    margin: 15px 0;
-    overflow: hidden;
-}
-
-.ocr-progress-bar {
-    height: 100%;
-    width: 0;
-    background-color: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-/* =======================
-   圖片上傳樣式
-   ======================= */
-.image-drop-area {
-    width: 100%;
-    height: 150px;
-    border: 3px dashed var(--primary-light);
-    border-radius: var(--border-radius);
-    display: flex;
+/* ========== 響應式設計 ========== */
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
+  }
+  .textarea {
+    min-height: 100px;
+  }
+  .action-buttons {
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    cursor: pointer;
-    transition: var(--transition);
-    background-color: rgba(184, 155, 140, 0.1);
-    margin: 15px 0;
-}
-
-.image-drop-area:hover, .image-drop-area.highlight {
-    border-color: var(--primary-color);
-    background-color: rgba(184, 155, 140, 0.2);
-}
-
-.drop-icon {
-    font-size: 42px;
-    margin-bottom: 10px;
-}
-
-.drop-text {
+  }
+  .copy-clear-btn {
+    flex-direction: column;
+    gap: 5px;
+  }
+  .swap-button {
+    width: 35px;
+    height: 35px;
     font-size: 18px;
-    color: var(--primary-dark);
-}
-
-.image-canvas {
-    display: none;
-    max-width: 100%;
-    height: auto;
-    margin: 15px auto;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--border-radius);
-}
-
-/* =======================
-   Toast 提示樣式
-   ======================= */
-.toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 24px;
-    font-size: 16px;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.toast.show {
-    opacity: 1;
-}
-
-/* =======================
-   頁腳樣式
-   ======================= */
-.footer {
-    text-align: center;
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 1px solid var(--primary-light);
-    color: var(--primary-dark);
-    font-size: 14px;
-}
-
-/* =======================
-   響應式設計 (手機適配)
-   ======================= */
-@media (max-width: 768px) {
-    body {
-        padding: 0;
-    }
-
-    .container {
-        padding: 15px;
-        margin: 0;
-        border-radius: 0;
-        min-height: 100vh;
-    }
-    
-    h1 {
-        font-size: 1.8em;
-        margin-bottom: 15px;
-    }
-    
-    .tabs {
-        margin-bottom: 15px;
-    }
-    
-    .tab-button {
-        font-size: 18px;
-        padding: 16px 12px;
-    }
-    
-    .language-selectors {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .select-wrapper {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-    
-    .swap-button {
-        margin: 5px auto 15px;
-        align-self: center;
-        transform: rotate(90deg);
-        width: 52px;
-        height: 52px;
-    }
-    
-    .swap-button:hover {
-        transform: rotate(270deg);
-    }
-    
-    .button {
-        padding: 16px 20px;
-        font-size: 18px;
-        width: 100%;
-    }
-    
-    .button-container {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    textarea, .result-box, .extracted-text {
-        padding: 16px;
-        font-size: 18px;
-        min-height: 120px;
-    }
-    
-    .input-container, .result-box {
-        margin-bottom: 20px;
-    }
-    
-    .circle-button {
-        width: 45px;
-        height: 45px;
-    }
-    
-    .result-header {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-    
-    .result-actions {
-        flex-direction: row;
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 12px;
-    }
-    
-    h1 {
-        font-size: 1.6em;
-    }
-    
-    .tabs {
-        margin-bottom: 15px;
-    }
-    
-    .button {
-        font-size: 16px;
-        padding: 16px 15px;
-    }
-    
-    .select-wrapper label {
-        font-size: 15px;
-    }
-    
-    select {
-        padding: 14px 12px;
-    }
-    
-    .circle-button {
-        width: 40px;
-        height: 40px;
-    }
+  }
 }
