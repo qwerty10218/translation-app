@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>詮能翻譯</title>
+    <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1"></script>
@@ -12,10 +12,10 @@
 <body>
     <div class="container">
         <header>
-            <h1>詮能翻譯</h1>
-            <button id="darkModeToggle" class="dark-mode-button">🌙</button>
+            <h1>詮語翻譯</h1>
+            <button id="darkModeToggle" class="dark-mode-toggle">🌙</button>
         </header>
-
+        
         <div class="tabs">
             <button class="tab-button active" data-tab="textTab">文本翻譯</button>
             <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
@@ -36,12 +36,9 @@
                         <option value="es">西班牙文</option>
                         <option value="it">義大利文</option>
                         <option value="ru">俄文</option>
-                        <option value="pt">葡萄牙文</option>
-                        <option value="hi">印地文</option>
-                        <option value="ar">阿拉伯文</option>
                     </select>
                 </div>
-                <button id="swapLang" class="button swap-button" title="交換語言">⇄</button>
+                <button id="swapLang" class="swap-button" title="交換語言">⇄</button>
                 <div class="select-wrapper">
                     <label for="targetLang">到：</label>
                     <select id="targetLang" class="language-select">
@@ -54,30 +51,17 @@
                         <option value="es">西班牙文</option>
                         <option value="it">義大利文</option>
                         <option value="ru">俄文</option>
-                        <option value="pt">葡萄牙文</option>
-                        <option value="hi">印地文</option>
-                        <option value="ar">阿拉伯文</option>
                     </select>
                 </div>
             </div>
             
-            <div class="model-selection">
-                <label for="modelSelect">選擇模型：</label>
-                <select id="modelSelect">
-                    <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                </select>
-            </div>
-            
             <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
             <div class="button-container">
-                <button id="translateButton" class="button primary-button" disabled>翻譯</button>
-                <button id="clearCopyButton" class="button secondary-button">清除 & 複製</button>
+                <button id="translateButton" class="primary-button" disabled>翻譯</button>
             </div>
-            
-            <!-- 進度條 -->
-            <div class="progress-container">
-                <div id="progressBar" class="progress-bar"></div>
+            <div class="button-container">
+                <button id="copyTextButton" class="secondary-button">複製</button>
+                <button id="clearTextButton" class="secondary-button">清除</button>
             </div>
         </div>
 
@@ -90,23 +74,24 @@
             </div>
             <canvas id="imageCanvas" class="image-canvas"></canvas>
             <div class="button-container">
-                <button id="extractTextButton" class="button primary-button" disabled>擷取文字</button>
-                <button id="translateExtractedButton" class="button primary-button" disabled>翻譯擷取文字</button>
+                <button id="extractTextButton" class="primary-button" disabled>擷取文字</button>
+                <button id="translateExtractedButton" class="primary-button" disabled>翻譯擷取文字</button>
             </div>
             <div id="extractedText" class="extracted-text"></div>
         </div>
 
-        <!-- 獨立翻譯結果區 -->
+        <!-- 翻譯結果區 -->
         <div class="result-container">
             <h2>翻譯結果</h2>
             <div id="result" class="result-box"></div>
-            <div class="button-container result-actions">
-                <button id="copyResultButton" class="button secondary-button">複製結果</button>
+            <div class="button-container">
+                <button id="copyResultButton" class="secondary-button">複製</button>
+                <button id="clearResultButton" class="secondary-button">清除</button>
             </div>
         </div>
         
         <footer class="footer">
-            <p>© 2025 詮能翻譯 - 以人工智能提供多語言翻譯服務</p>
+            <p>© 2025 詮語翻譯 - 以人工智能提供多語言翻譯服務</p>
         </footer>
     </div>
     <script src="app.js"></script>
