@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
@@ -59,10 +59,17 @@
                 </select>
             </div>
             
-            <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
+            <div class="input-container">
+                <textarea id="inputText" placeholder="輸入要翻譯的文字..."></textarea>
+                <div class="action-buttons">
+                    <button id="clearTextButton" class="circle-button clear-button" title="清除文字">
+                        <span class="icon">✕</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="button-container">
                 <button id="translateButton" class="button primary-button" disabled>翻譯</button>
-                <button id="clearTextButton" class="button secondary-button">清除</button>
             </div>
             
             <!-- 進度條 -->
@@ -73,6 +80,38 @@
 
         <!-- 圖片翻譯區 -->
         <div id="imageTab" class="tab-content">
+            <div class="language-selectors">
+                <div class="select-wrapper">
+                    <label for="imgSourceLang">從：</label>
+                    <select id="imgSourceLang" class="language-select">
+                        <option value="中文">中文</option>
+                        <option value="英文">英文</option>
+                        <option value="日文">日文</option>
+                        <option value="韓文">韓文</option>
+                        <option value="法文">法文</option>
+                        <option value="德文">德文</option>
+                        <option value="西班牙文">西班牙文</option>
+                        <option value="義大利文">義大利文</option>
+                        <option value="俄文">俄文</option>
+                    </select>
+                </div>
+                <button id="imgSwapLang" class="button swap-button" title="交換語言">⇄</button>
+                <div class="select-wrapper">
+                    <label for="imgTargetLang">到：</label>
+                    <select id="imgTargetLang" class="language-select">
+                        <option value="英文">英文</option>
+                        <option value="中文">中文</option>
+                        <option value="日文">日文</option>
+                        <option value="韓文">韓文</option>
+                        <option value="法文">法文</option>
+                        <option value="德文">德文</option>
+                        <option value="西班牙文">西班牙文</option>
+                        <option value="義大利文">義大利文</option>
+                        <option value="俄文">俄文</option>
+                    </select>
+                </div>
+            </div>
+
             <input type="file" id="imageInput" accept="image/*" hidden>
             <div class="image-drop-area" id="imageDropArea">
                 <div class="drop-icon">📷</div>
@@ -88,12 +127,18 @@
 
         <!-- 獨立翻譯結果區 -->
         <div class="result-container">
-            <h2>翻譯結果</h2>
-            <div id="result" class="result-box"></div>
-            <div class="button-container result-actions">
-                <button id="copyResultButton" class="button secondary-button">複製結果</button>
-                <button id="clearResultButton" class="button secondary-button">清除結果</button>
+            <div class="result-header">
+                <h2>翻譯結果</h2>
+                <div class="result-actions">
+                    <button id="copyResultButton" class="circle-button copy-button" title="複製結果">
+                        <span class="icon">📋</span>
+                    </button>
+                    <button id="clearResultButton" class="circle-button clear-button" title="清除結果">
+                        <span class="icon">✕</span>
+                    </button>
+                </div>
             </div>
+            <div id="result" class="result-box"></div>
         </div>
         
         <footer class="footer">
