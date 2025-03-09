@@ -429,6 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
             "gpt-4": 8192,
             "gpt-4-32k": 32768,
             "gpt-4-turbo": 128000
+            "gpt-4o-mini": 128000
         };
        async function translateText(text, sourceLang, targetLang, model) {
         try {
