@@ -279,6 +279,18 @@ select:focus {
 
 .model-selection {
     margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.model-selection label {
+    font-weight: 500;
+    color: var(--primary-dark);
+    min-width: 80px;
+}
+
+.model-selection select {
+    flex-grow: 1;
 }
 
 /* 添加錯誤樣式 */
