@@ -16,6 +16,7 @@
         <div class="tabs">
             <button class="tab-button active" data-tab="textTab">文本翻譯</button>
             <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
+            <button class="tab-button" data-tab="voiceTab">語音翻譯</button>
         </div>
 
         <!-- 文本翻譯區 -->
@@ -88,7 +89,7 @@
                 <div class="select-wrapper">
                     <label for="ocrLanguageSelect">OCR語言:</label>
                     <select id="ocrLanguageSelect" class="language-select">
-                        <option value="auto">自動檢測</option>
+                        <option value="chi_tra+eng">中文+英文</option>
                         <option value="chi_tra">繁體中文</option>
                         <option value="chi_sim">簡體中文</option>
                         <option value="eng">英文</option>
@@ -122,19 +123,37 @@
             </div>
             
             <!-- OCR進度顯示 -->
-            <div id="ocrProgressContainer" class="ocr-progress-container">
+            <div id="ocrProgressContainer" class="ocr-progress-container" style="display: none;">
                 <div id="ocrProgressBar" class="ocr-progress-bar"></div>
                 <div id="ocrStatusText" class="ocr-status-text">處理中...</div>
             </div>
             
             <!-- 檢測到的語言顯示 -->
-            <div id="detectedLanguage" class="detected-language"></div>
+            <div id="detectedLanguage" class="detected-language" style="display: none;"></div>
             
             <div id="extractedText" class="extracted-text"></div>
-            
-            <!-- 提取文本編輯按鈕 -->
-            <div class="extracted-text-actions">
-                <button id="editExtractedButton" class="button secondary-button" style="display: none;">編輯提取文本</button>
+        </div>
+
+        <!-- 語音翻譯區 -->
+        <div id="voiceTab" class="tab-content">
+            <div class="voice-container">
+                <div class="voice-controls">
+                    <button id="startVoiceBtn" class="button primary-button">開始錄音</button>
+                    <button id="stopVoiceBtn" class="button secondary-button" disabled>停止錄音</button>
+                    <button id="useVoiceTextBtn" class="button primary-button" disabled>使用識別文本</button>
+                    <button id="clearVoiceBtn" class="button secondary-button">清除</button>
+                </div>
+                
+                <div class="voice-visualizer-container">
+                    <div id="voiceVisualizer" class="voice-visualizer"></div>
+                    <div class="voice-size-controls">
+                        <button id="expandVoiceBtn" class="button secondary-button small-button">+</button>
+                        <button id="shrinkVoiceBtn" class="button secondary-button small-button">-</button>
+                    </div>
+                </div>
+                
+                <div id="voiceRecordingStatus" class="voice-status">準備就緒</div>
+                <div id="voiceTranscript" class="voice-transcript"></div>
             </div>
         </div>
 
