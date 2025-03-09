@@ -12,6 +12,7 @@
 <body>
     <div class="container">
         <h1>詮語翻譯</h1>
+        <button id="themeToggle" class="theme-toggle" title="切換主題模式">🌓</button>
         <div class="tabs">
             <button class="tab-button active" data-tab="textTab">文本翻譯</button>
             <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
@@ -56,6 +57,8 @@
                 <select id="modelSelect">
                     <option value="gpt-4o-mini">GPT-4o Mini</option>
                     <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    <option value="helsinki-quick">Helsinki快速翻譯</option>
+                    <option value="qwen-advanced">Qwen高級翻譯</option>
                 </select>
             </div>
             
@@ -63,6 +66,7 @@
             <div class="button-container">
                 <button id="translateButton" class="button primary-button" disabled>翻譯</button>
                 <button id="clearTextButton" class="button secondary-button">清除</button>
+                <button id="clearAllButton" class="button secondary-button">清除全部</button>
             </div>
             
             <!-- 進度條 -->
@@ -78,12 +82,60 @@
                 <div class="drop-icon">📷</div>
                 <div class="drop-text">拖放圖片或點擊上傳</div>
             </div>
+            
+            <!-- OCR語言選擇 -->
+            <div class="ocr-options">
+                <div class="select-wrapper">
+                    <label for="ocrLanguageSelect">OCR語言:</label>
+                    <select id="ocrLanguageSelect" class="language-select">
+                        <option value="auto">自動檢測</option>
+                        <option value="chi_tra">繁體中文</option>
+                        <option value="chi_sim">簡體中文</option>
+                        <option value="eng">英文</option>
+                        <option value="jpn">日文</option>
+                        <option value="kor">韓文</option>
+                        <option value="fra">法文</option>
+                        <option value="deu">德文</option>
+                        <option value="spa">西班牙文</option>
+                        <option value="ita">義大利文</option>
+                        <option value="rus">俄文</option>
+                    </select>
+                </div>
+                <div class="ocr-help">
+                    <button id="ocrHelpButton" class="button secondary-button" title="OCR幫助">?</button>
+                </div>
+            </div>
+            
+            <!-- 圖片處理工具 -->
+            <div class="image-processing-tools">
+                <button id="enhanceContrastButton" class="button secondary-button image-tool-button" disabled>增強對比度</button>
+                <button id="grayscaleButton" class="button secondary-button image-tool-button" disabled>轉為灰階</button>
+                <button id="resetImageButton" class="button secondary-button image-tool-button" disabled>重置圖片</button>
+            </div>
+            
             <canvas id="imageCanvas" class="image-canvas"></canvas>
+            
             <div class="button-container">
                 <button id="extractTextButton" class="button primary-button" disabled>擷取文字</button>
                 <button id="translateExtractedButton" class="button primary-button" disabled>翻譯擷取文字</button>
+                <button id="clearImageButton" class="button secondary-button">清除圖片</button>
             </div>
+            
+            <!-- OCR進度顯示 -->
+            <div id="ocrProgressContainer" class="ocr-progress-container">
+                <div id="ocrProgressBar" class="ocr-progress-bar"></div>
+                <div id="ocrStatusText" class="ocr-status-text">處理中...</div>
+            </div>
+            
+            <!-- 檢測到的語言顯示 -->
+            <div id="detectedLanguage" class="detected-language"></div>
+            
             <div id="extractedText" class="extracted-text"></div>
+            
+            <!-- 提取文本編輯按鈕 -->
+            <div class="extracted-text-actions">
+                <button id="editExtractedButton" class="button secondary-button" style="display: none;">編輯提取文本</button>
+            </div>
         </div>
 
         <!-- 獨立翻譯結果區 -->
