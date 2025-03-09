@@ -6,18 +6,6 @@ document.addEventListener("DOMContentLoaded", () => {
         TIMEOUT: 15000
     };
 
-    const LANGUAGE_CODES = {
-        "中文": "chi_tra",
-        "英文": "eng",
-        "日文": "jpn",
-        "韓文": "kor",
-        "法文": "fra",
-        "德文": "deu",
-        "西班牙文": "spa",
-        "義大利文": "ita",
-        "俄文": "rus"
-    };
-
     // 獲取 DOM 元素
     const dom = {
         tabs: document.querySelectorAll(".tab-button"),
@@ -27,12 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
         result: document.getElementById("result"),
         sourceLang: document.getElementById("sourceLang"),
         targetLang: document.getElementById("targetLang"),
-        imageSourceLang: document.getElementById("imageSourceLang"),
-        imageTargetLang: document.getElementById("imageTargetLang"),
-        imageSwapLang: document.getElementById("imageSwapLang"),
+        imgSourceLang: document.getElementById("imgSourceLang"),
+        imgTargetLang: document.getElementById("imgTargetLang"),
         swapLang: document.getElementById("swapLang"),
+        imgSwapLang: document.getElementById("imgSwapLang"),
         modelSelect: document.getElementById("modelSelect"),
-        imageModelSelect: document.getElementById("imageModelSelect"),
         progressBar: document.getElementById("progressBar"),
         imageInput: document.getElementById("imageInput"),
         imageCanvas: document.getElementById("imageCanvas"),
@@ -43,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clearTextButton: document.getElementById("clearTextButton"),
         copyResultButton: document.getElementById("copyResultButton"),
         clearResultButton: document.getElementById("clearResultButton"),
-        imageTab: document.getElementById("imageTab")
+        imageTab: document.getElementById("imageTab") 
     };
 
     function init() {
@@ -52,49 +39,64 @@ document.addEventListener("DOMContentLoaded", () => {
         initImageTranslation();
         initDragAndDrop();
         initButtons();
-        // 同步兩個頁面的語言選擇
-        syncLanguageSelections();
+        initLanguageSelects();
+        
         // 初始檢查翻譯按鈕狀態
         validateTranslationInput();
-        validateImageTranslationInput();
-        // 設置文本區域高度
-        dom.inputText.style.height = "150px";
+        validateImageLangSelections();
+        
         // 默認禁用圖片相關按鈕
         dom.extractTextBtn.disabled = true;
         dom.translateExtractedBtn.disabled = true;
     }
 
-    function syncLanguageSelections() {
-        // 當文本翻譯的語言選項改變時也改變圖片翻譯的語言選項
-        dom.sourceLang.addEventListener('change', () => {
-            dom.imageSourceLang.value = dom.sourceLang.value;
-            validateImageTranslationInput();
-        });
-        
-        dom.targetLang.addEventListener('change', () => {
-            dom.imageTargetLang.value = dom.targetLang.value;
-            validateImageTranslationInput();
+    function initLanguageSelects() {
+        // 為每個語言選擇器設置同語言禁用功能
+        disableSameLanguageOptions(dom.sourceLang, dom.targetLang);
+        disableSameLanguageOptions(dom.imgSourceLang, dom.imgTargetLang);
+    }
+
+    function disableSameLanguageOptions(sourceSelect, targetSelect) {
+        // 當源語言改變時更新目標語言的禁用選項
+        sourceSelect.addEventListener("change", () => {
+            updateDisabledOptions(sourceSelect, targetSelect);
         });
 
-        // 當圖片翻譯的語言選項改變時也改變文本翻譯的語言選項
-        dom.imageSourceLang.addEventListener('change', () => {
-            dom.sourceLang.value = dom.imageSourceLang.value;
-            validateTranslationInput();
+        // 當目標語言改變時更新源語言的禁用選項
+        targetSelect.addEventListener("change", () => {
+            updateDisabledOptions(targetSelect, sourceSelect);
+        });
+
+        // 初始設置禁用
+        updateDisabledOptions(sourceSelect, targetSelect);
+        updateDisabledOptions(targetSelect, sourceSelect);
+    }
+
+    function updateDisabledOptions(select1, select2) {
+        const selectedValue = select1.value;
+        
+        // 重置所有選項
+        Array.from(select2.options).forEach(option => {
+            option.disabled = false;
         });
         
-        dom.imageTargetLang.addEventListener('change', () => {
-            dom.targetLang.value = dom.imageTargetLang.value;
-            validateTranslationInput();
-        });
+        // 禁用相同語言的選項
+        const sameOption = Array.from(select2.options).find(option => option.value === selectedValue);
+        if (sameOption) {
+            sameOption.disabled = true;
+        }
         
-        // 同步模型選擇
-        dom.modelSelect.addEventListener('change', () => {
-            dom.imageModelSelect.value = dom.modelSelect.value;
-        });
-        
-        dom.imageModelSelect.addEventListener('change', () => {
-            dom.modelSelect.value = dom.imageModelSelect.value;
-        });
+        // 如果當前選中的選項被禁用，則選擇第一個非禁用選項
+        if (select2.value === selectedValue) {
+            const firstEnabledOption = Array.from(select2.options).find(option => !option.disabled);
+            if (firstEnabledOption) {
+                select2.value = firstEnabledOption.value;
+            }
+        }
+
+        // 更新翻譯按鈕狀態
+        validateTranslationInput();
+        validateImageLangSelections();
     }
 
     function initButtons() {
@@ -109,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (dom.result.textContent) {
                 navigator.clipboard.writeText(dom.result.textContent)
                     .then(() => showToast("已複製到剪貼簿"))
-                    .catch(err => showToast("複製失敗: " + err, true));
+                    .catch(err => showToast("複製失敗: " + err));
             }
         });
         
@@ -131,538 +133,420 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function initTextTranslation() {
-        // 修正: 不直接傳遞事件對象，而是使用箭頭函數
-        dom.translateBtn.addEventListener("click", () => handleTranslation());
-        dom.swapLang.addEventListener("click", () => swapLanguages(dom.sourceLang, dom.targetLang));
+        dom.translateBtn.addEventListener("click", async () => {
+            const text = dom.inputText.value.trim();
+            const sourceLang = dom.sourceLang.value;
+            const targetLang = dom.targetLang.value;
+            const model = dom.modelSelect.value;
+            
+            if (text) {
+                // 開始翻譯前的UI更新
+                dom.translateBtn.disabled = true;
+                dom.result.textContent = "翻譯中...";
+                document.querySelector(".progress-container").style.display = "block";
+                updateProgress(10);
+                
+                try {
+                    const translatedText = await translateText(text, sourceLang, targetLang, model);
+                    updateProgress(100);
+                    
+                    // 顯示翻譯結果
+                    dom.result.textContent = translatedText;
+                    showToast("翻譯完成");
+                } catch (error) {
+                    dom.result.textContent = `翻譯出錯: ${error.message}`;
+                    showToast("翻譯失敗");
+                } finally {
+                    // 恢復UI狀態
+                    dom.translateBtn.disabled = false;
+                    setTimeout(() => {
+                        document.querySelector(".progress-container").style.display = "none";
+                        updateProgress(0);
+                    }, 500);
+                }
+            }
+        });
+        
+        // 在輸入框變化時檢查翻譯按鈕狀態
         dom.inputText.addEventListener("input", validateTranslationInput);
         
-        // 語言選擇改變時檢查翻譯按鈕狀態
-        dom.sourceLang.addEventListener("change", validateTranslationInput);
-        dom.targetLang.addEventListener("change", validateTranslationInput);
+        // 語言交換按鈕
+        dom.swapLang.addEventListener("click", () => {
+            const tempLang = dom.sourceLang.value;
+            dom.sourceLang.value = dom.targetLang.value;
+            dom.targetLang.value = tempLang;
+            
+            // 更新禁用選項
+            updateDisabledOptions(dom.sourceLang, dom.targetLang);
+            updateDisabledOptions(dom.targetLang, dom.sourceLang);
+        });
     }
-
-    function swapLanguages(sourceSelect, targetSelect) {
-        [sourceSelect.value, targetSelect.value] = [targetSelect.value, sourceSelect.value];
-        validateTranslationInput();
-        validateImageTranslationInput();
-    }
-
+    
     function validateTranslationInput() {
-        const textInput = dom.inputText.value.trim();
+        const text = dom.inputText.value.trim();
         const sourceLang = dom.sourceLang.value;
         const targetLang = dom.targetLang.value;
         
-        // 檢查輸入是否為空以及源語言和目標語言是否相同
-        const sameLanguage = sourceLang === targetLang;
+        // 檢查文本是否為空以及源語言和目標語言是否相同
+        const isValid = text.length > 0 && sourceLang !== targetLang;
+        dom.translateBtn.disabled = !isValid;
         
-        // 如果源語言和目標語言相同，禁用翻譯按鈕
-        if (sameLanguage) {
-            dom.translateBtn.disabled = true;
-            // 可以添加提示信息
-            dom.translateBtn.title = "源語言和目標語言不能相同";
-            
-            // 如果需要，可以添加視覺提示
+        // 如果語言相同，突出顯示選擇器
+        if (sourceLang === targetLang) {
+            dom.sourceLang.classList.add("error-select");
             dom.targetLang.classList.add("error-select");
-        } else {
-            // 正常檢查輸入是否為空
-            dom.translateBtn.disabled = !textInput;
-            dom.translateBtn.title = textInput ? "" : "請輸入要翻譯的內容";
-            
-            // 移除可能的錯誤樣式
-            dom.targetLang.classList.remove("error-select");
+            setTimeout(() => {
+                dom.sourceLang.classList.remove("error-select");
+                dom.targetLang.classList.remove("error-select");
+            }, 1000);
         }
+        
+        return isValid;
     }
-
-    function validateImageTranslationInput() {
-        const sourceLang = dom.imageSourceLang.value;
-        const targetLang = dom.imageTargetLang.value;
+    
+    function validateImageLangSelections() {
+        const sourceLang = dom.imgSourceLang.value;
+        const targetLang = dom.imgTargetLang.value;
         
         // 檢查源語言和目標語言是否相同
-        const sameLanguage = sourceLang === targetLang;
+        const isValid = sourceLang !== targetLang;
         
-        // 如果源語言和目標語言相同，禁用翻譯按鈕
-        if (sameLanguage) {
-            dom.translateExtractedBtn.disabled = true;
-            dom.translateExtractedBtn.title = "源語言和目標語言不能相同";
-            dom.imageTargetLang.classList.add("error-select");
-        } else {
-            const hasExtractedText = dom.extractedText && dom.extractedText.textContent && 
-                                    !dom.extractedText.textContent.includes("識別中...") && 
-                                    !dom.extractedText.textContent.includes("識別失敗") && 
-                                    !dom.extractedText.textContent.includes("未能識別出文字");
-            
-            dom.translateExtractedBtn.disabled = !hasExtractedText;
-            dom.translateExtractedBtn.title = hasExtractedText ? "" : "請先識別圖片文字";
-            
-            // 移除可能的錯誤樣式
-            dom.imageTargetLang.classList.remove("error-select");
-        }
-    }
-
-    async function handleTranslation(extractedText = null) {
-        // 確保 extractedText 是字符串而不是事件對象
-        if (extractedText && typeof extractedText === 'object' && extractedText.type === 'click') {
-            extractedText = null; // 如果是事件對象，設為 null，使用輸入框中的文本
-        }
+        // 如果有擷取的文字且語言選擇有效，啟用翻譯按鈕
+        dom.translateExtractedBtn.disabled = !(isValid && dom.extractedText.textContent.trim().length > 0);
         
-        // 判斷是從哪個標籤頁調用的，並選擇相應的語言和模型
-        const isFromImageTab = dom.tabs[1].classList.contains('active');
-        
-        const text = extractedText || dom.inputText.value.trim();
-        if (!text) {
-            showToast("請輸入要翻譯的內容", true);
-            return;
-        }
-        
-        const sourceLang = isFromImageTab ? dom.imageSourceLang.value : dom.sourceLang.value;
-        const targetLang = isFromImageTab ? dom.imageTargetLang.value : dom.targetLang.value;
-        const model = isFromImageTab ? dom.imageModelSelect.value : dom.modelSelect.value;
-        
-        // 再次檢查源語言和目標語言是否相同
+        // 如果語言相同，突出顯示選擇器
         if (sourceLang === targetLang) {
-            showToast("源語言和目標語言不能相同", true);
-            return;
-        }
-    
-        dom.result.textContent = "翻譯中...";
-        showProgressBar();
-    
-        try {
-            let translatedText;
-            
-            // 如果是 DeepL 翻譯
-            if (model === "deepl") {
-                translatedText = await translateWithDeepL(text, sourceLang, targetLang);
-            } else {
-                // 原有的 GPT 翻譯
-                translatedText = await translateWithGPT(text, sourceLang, targetLang, model);
-            }
-            
-            dom.result.textContent = translatedText;
-        } catch (error) {
-            dom.result.textContent = `請求失敗：${error.message}`;
-        } finally {
-            hideProgressBar();
-        }
-    }
-    
-    // 添加 DeepL 翻譯函數
-    async function translateWithDeepL(text, sourceLang, targetLang) {
-        // 将中文、英文等翻譯成 DeepL 的語言代碼
-        const langMap = {
-            "中文": "ZH",
-            "英文": "EN",
-            "日文": "JA",
-            "韓文": "KO",
-            "法文": "FR",
-            "德文": "DE",
-            "西班牙文": "ES",
-            "義大利文": "IT",
-            "俄文": "RU"
-        };
-        
-        const sourceCode = langMap[sourceLang] || "AUTO";
-        const targetCode = langMap[targetLang];
-        
-        if (!targetCode) {
-            throw new Error("不支持的目標語言");
+            dom.imgSourceLang.classList.add("error-select");
+            dom.imgTargetLang.classList.add("error-select");
+            setTimeout(() => {
+                dom.imgSourceLang.classList.remove("error-select");
+                dom.imgTargetLang.classList.remove("error-select");
+            }, 1000);
         }
         
-        const response = await fetch(API_CONFIG.DEEPL_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                text: text,
-                source_lang: sourceCode,
-                target_lang: targetCode
-            }),
-            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
-        });
-    
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-    
-        const data = await response.json();
-        return data.data;
+        return isValid;
     }
     
-    // 原有的 GPT 翻譯函数抽離出來
-    async function translateWithGPT(text, sourceLang, targetLang, model) {
-        const response = await fetch(API_CONFIG.URL, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${API_CONFIG.KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [{
-                    role: "user",
-                    content: `請專業地將以下 ${sourceLang} 文本翻譯成 ${targetLang}，保持原文格式：\n\n${text}`
-                }],
-                timeout: API_CONFIG.TIMEOUT
-            }),
-            signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
-        });
-    
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-    
-        const data = await response.json();
-        return data.choices?.[0]?.message?.content || "翻譯失敗";
-    } catch (error) {
-            dom.result.textContent = `請求失敗：${error.message}`;
-        } finally {
-            hideProgressBar();
-        }
-    }
-
-    function showProgressBar() {
-        // 重置並顯示進度條
-        dom.progressBar.style.width = "0%";
-        dom.progressBar.parentElement.style.display = "block";
-        
-        // 開始進度條動畫
-        let progress = 0;
-        progressInterval = setInterval(() => {
-            progress += 5;
-            if (progress > 90) {
-                clearInterval(progressInterval);
-            }
-            dom.progressBar.style.width = `${progress}%`;
-        }, 300);
-    }
-
-    function hideProgressBar() {
-        if (progressInterval) {
-            clearInterval(progressInterval);
-        }
-        dom.progressBar.style.width = "100%";
-        setTimeout(() => {
-            dom.progressBar.parentElement.style.display = "none";
-            dom.progressBar.style.width = "0%";
-        }, 500);
-    }
-
     function initImageTranslation() {
-        dom.imageInput.addEventListener("change", handleImageUpload);
-        dom.extractTextBtn.addEventListener("click", extractTextFromImage);
-        dom.translateExtractedBtn.addEventListener("click", () => {
-            if (dom.extractedText && dom.extractedText.textContent) {
-                translateExtractedText();
+        // 圖片下拉區域點擊事件
+        dom.imageDropArea.addEventListener("click", () => {
+            dom.imageInput.click();
+        });
+        
+        // 文件選擇變更事件
+        dom.imageInput.addEventListener("change", handleImageSelection);
+        
+        // 語言交換按鈕
+        dom.imgSwapLang.addEventListener("click", () => {
+            const tempLang = dom.imgSourceLang.value;
+            dom.imgSourceLang.value = dom.imgTargetLang.value;
+            dom.imgTargetLang.value = tempLang;
+            
+            // 更新禁用選項
+            updateDisabledOptions(dom.imgSourceLang, dom.imgTargetLang);
+            updateDisabledOptions(dom.imgTargetLang, dom.imgSourceLang);
+        });
+        
+        // 擷取文字按鈕
+        dom.extractTextBtn.addEventListener("click", async () => {
+            const canvas = dom.imageCanvas;
+            if (canvas.style.display === "block") {
+                dom.extractTextBtn.disabled = true;
+                dom.extractTextBtn.textContent = "擷取中...";
+                dom.extractedText.textContent = "正在處理圖片...";
+                dom.extractedText.style.display = "block";
+                
+                try {
+                    const lang = getTesseractLangCode(dom.imgSourceLang.value);
+                    const text = await extractTextFromCanvas(canvas, lang);
+                    dom.extractedText.textContent = text;
+                    
+                    // 啟用翻譯按鈕，如果有擷取的文字且語言選擇有效
+                    dom.translateExtractedBtn.disabled = !(text.trim().length > 0 && validateImageLangSelections());
+                    
+                    showToast("文字擷取完成");
+                } catch (error) {
+                    dom.extractedText.textContent = `文字擷取失敗: ${error.message}`;
+                    showToast("文字擷取失敗");
+                } finally {
+                    dom.extractTextBtn.textContent = "擷取文字";
+                    dom.extractTextBtn.disabled = false;
+                }
             }
         });
         
-        // 圖片標籤頁的語言切換
-        dom.imageSwapLang.addEventListener("click", () => {
-            swapLanguages(dom.imageSourceLang, dom.imageTargetLang);
+        // 翻譯擷取文字按鈕
+        dom.translateExtractedBtn.addEventListener("click", async () => {
+            const text = dom.extractedText.textContent.trim();
+            const sourceLang = dom.imgSourceLang.value;
+            const targetLang = dom.imgTargetLang.value;
+            const model = dom.modelSelect.value;
+            
+            if (text && validateImageLangSelections()) {
+                // 開始翻譯前的UI更新
+                dom.translateExtractedBtn.disabled = true;
+                dom.result.textContent = "翻譯中...";
+                document.querySelector(".progress-container").style.display = "block";
+                updateProgress(10);
+                
+                try {
+                    const translatedText = await translateText(text, sourceLang, targetLang, model);
+                    updateProgress(100);
+                    
+                    // 顯示翻譯結果
+                    dom.result.textContent = translatedText;
+                    showToast("翻譯完成");
+                } catch (error) {
+                    dom.result.textContent = `翻譯出錯: ${error.message}`;
+                    showToast("翻譯失敗");
+                } finally {
+                    // 恢復UI狀態
+                    dom.translateExtractedBtn.disabled = false;
+                    setTimeout(() => {
+                        document.querySelector(".progress-container").style.display = "none";
+                        updateProgress(0);
+                    }, 500);
+                }
+            }
         });
         
-        // 圖片標籤頁的語言選擇器事件
-        dom.imageSourceLang.addEventListener("change", validateImageTranslationInput);
-        dom.imageTargetLang.addEventListener("change", validateImageTranslationInput);
+        // 語言選擇變更事件
+        dom.imgSourceLang.addEventListener("change", validateImageLangSelections);
+        dom.imgTargetLang.addEventListener("change", validateImageLangSelections);
     }
-
+    
     function initDragAndDrop() {
+        // 拖放區域事件
         const dropArea = dom.imageDropArea;
         
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
         });
-
+        
         function preventDefaults(e) {
             e.preventDefault();
             e.stopPropagation();
         }
-
+        
         ['dragenter', 'dragover'].forEach(eventName => {
             dropArea.addEventListener(eventName, () => {
                 dropArea.classList.add('highlight');
             }, false);
         });
-
+        
         ['dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, () => {
                 dropArea.classList.remove('highlight');
             }, false);
         });
-
+        
         dropArea.addEventListener('drop', (e) => {
             const dt = e.dataTransfer;
-            const file = dt.files[0];
-            if (file && file.type.startsWith('image/')) {
-                dom.imageInput.files = dt.files;
-                processImageFile(file);
+            const files = dt.files;
+            if (files.length > 0 && files[0].type.match('image.*')) {
+                handleImageFile(files[0]);
             } else {
-                showToast("請上傳圖片文件", true);
+                showToast("請選擇有效的圖片檔案");
             }
         }, false);
-
-        dropArea.addEventListener('click', () => {
-            dom.imageInput.click();
-        });
     }
-
-    function handleImageUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            showToast("請上傳圖片文件", true);
+    
+    // 處理圖片選擇
+    function handleImageSelection(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            handleImageFile(files[0]);
+        }
+    }
+    
+    // 處理圖片文件
+    function handleImageFile(file) {
+        if (!file.type.match('image.*')) {
+            showToast("請選擇有效的圖片檔案");
             return;
         }
-
-        processImageFile(file);
-    }
-
-    function processImageFile(file) {
+        
         const reader = new FileReader();
+        
         reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
                 const canvas = dom.imageCanvas;
-                canvas.style.display = "block";
+                const ctx = canvas.getContext('2d');
                 
-                // 調整畫布尺寸，保持比例但不超過容器
-                const maxWidth = canvas.parentElement.clientWidth - 20;
-                const maxHeight = 400; // 限制最大高度
+                // 調整畫布大小，保持原始比例但最大寬度為容器寬度
+                const maxWidth = dom.imageTab.clientWidth;
                 let width = img.width;
                 let height = img.height;
                 
-                const ratio = Math.min(maxWidth / width, maxHeight / height);
-                if (ratio < 1) {
-                    width = width * ratio;
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width = maxWidth;
                     height = height * ratio;
                 }
                 
                 canvas.width = width;
                 canvas.height = height;
-                
-                const ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, width, height);
+                
+                // 顯示畫布並啟用擷取按鈕
+                canvas.style.display = "block";
                 dom.extractTextBtn.disabled = false;
-                
-                // 圖片載入後，隱藏拖放區域以節省空間
-                dom.imageDropArea.style.display = "none";
-                
-                // 添加清除圖片的按鈕
-                if (!document.getElementById("clearImageButton")) {
-                    const clearButton = document.createElement("button");
-                    clearButton.id = "clearImageButton";
-                    clearButton.className = "button secondary-button";
-                    clearButton.textContent = "清除圖片";
-                    clearButton.addEventListener("click", clearImage);
-                    
-                    const buttonContainer = canvas.parentElement.querySelector(".button-container");
-                    buttonContainer.appendChild(clearButton);
-                }
+                dom.extractedText.style.display = "none"; // 重置擷取結果
+                dom.translateExtractedBtn.disabled = true;
             };
-            img.onerror = () => showToast("圖片載入失敗，請使用其他圖片", true);
             img.src = e.target.result;
         };
+        
         reader.readAsDataURL(file);
     }
     
-    function clearImage() {
-        // 清除畫布
-        const canvas = dom.imageCanvas;
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.style.display = "none";
-        
-        // 重置文件輸入
-        dom.imageInput.value = "";
-        
-        // 重新顯示拖放區域
-        dom.imageDropArea.style.display = "flex";
-        
-        // 清除提取的文本
-        if (dom.extractedText) {
-            dom.extractedText.textContent = "";
-            dom.extractedText.style.display = "none";
-        }
-        
-        // 禁用按鈕
-        dom.extractTextBtn.disabled = true;
-        dom.translateExtractedBtn.disabled = true;
-        
-        // 移除清除圖片按鈕
-        const clearButton = document.getElementById("clearImageButton");
-        if (clearButton) {
-            clearButton.remove();
-        }
-    }
-
-    async function extractTextFromImage() {
-        dom.extractTextBtn.disabled = true;
-        dom.translateExtractedBtn.disabled = true;
-        
-        // 檢查是否有圖片
-        if (!dom.imageCanvas.width) {
-            showToast("請先上傳圖片", true);
-            dom.extractTextBtn.disabled = false;
-            return;
-        }
-        
-        // 創建或獲取 extractedText 元素
-        if (!dom.extractedText) {
-            dom.extractedText = document.createElement("div");
-            dom.extractedText.id = "extractedText";
-            dom.extractedText.className = "extracted-text";
-            dom.imageTab.appendChild(dom.extractedText);
-        }
-        
-        dom.extractedText.textContent = "識別中...";
-        dom.extractedText.style.display = "block";
-
-        try {
-            // 顯示進度條
-            const progressContainer = document.createElement("div");
-            progressContainer.className = "ocr-progress-container";
-            const progressBar = document.createElement("div");
-            progressBar.className = "ocr-progress-bar";
-            progressContainer.appendChild(progressBar);
-            dom.imageTab.appendChild(progressContainer);
-
-            // 獲取當前選擇的語言
-            const sourceLang = dom.imageSourceLang.value;
-            let langCode = LANGUAGE_CODES[sourceLang] || "eng";
-            
-            // 對於中文，可能需要添加英文支持以提高準確性
-            if (langCode === "chi_tra") {
-                langCode = "chi_tra+eng";
-            }
-
-            // 通過預處理增強圖片識別
-            const preprocessedCanvas = preprocessImage(dom.imageCanvas);
-
-            // 設置 Tesseract 進度回調
-            const { createWorker } = Tesseract;
-            const worker = await createWorker({
-                logger: progress => {
-                    if (progress.status === 'recognizing text') {
-                        progressBar.style.width = `${progress.progress * 100}%`;
+    // 從畫布擷取文字 (OCR)
+    async function extractTextFromCanvas(canvas, lang) {
+        return new Promise((resolve, reject) => {
+            Tesseract.recognize(
+                canvas,
+                lang,
+                {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const progress = m.progress * 100;
+                            updateProgress(progress);
+                        }
                     }
                 }
+            ).then(({ data: { text } }) => {
+                resolve(text.trim());
+            }).catch(err => {
+                reject(err);
             });
-
-            await worker.loadLanguage(langCode);
-            await worker.initialize(langCode);
+        });
+    }
+    
+    // 翻譯文字 API
+        const MODEL_CONTEXT_LIMITS = {
+            "gpt-3.5-turbo": 4096,
+            "gpt-4": 8192,
+            "gpt-4-32k": 32768,
+            "gpt-4-turbo": 128000
+            "gpt-4o-mini": 128000
+        };
+       async function translateText(text, sourceLang, targetLang, model) {
+        try {
+            updateProgress(30);
             
-            // 設置更多的OCR引擎參數以提高準確性
-            const { data } = await worker.recognize(preprocessedCanvas, {
-                tessedit_pageseg_mode: 6, // 假定一個统一的块型文本
-                tessedit_ocr_engine_mode: 3, // 使用LSTM引擎
-                preserve_interword_spaces: '1', // 保留單詞之間的空格
-                user_defined_dpi: '300' // 設置較高的DPI以提高準確性
+            const prompt = `請將以下${sourceLang}文本翻譯成${targetLang}...`;
+            const maxContext = MODEL_CONTEXT_LIMITS[model] || 4096;
+            const estimatedInputTokens = Math.ceil(text.length * 2); // 修改后的估算方式
+            const maxTokens = Math.max(512, maxContext - estimatedInputTokens);
+
+            const response = await fetch(API_CONFIG.URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_CONFIG.KEY}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.2,
+                    max_tokens: maxTokens
+                }),
+                signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
+            });
+    async function translateText(text, sourceLang, targetLang, model) {
+        try {
+            updateProgress(30);
+            
+            const prompt = `請將以下${sourceLang}文本翻譯成${targetLang}，只需要輸出翻譯結果，不要加任何解釋或說明：\n\n${text}`;
+            const maxContext = MODEL_CONTEXT_LIMITS[model] || 4096;
+            const estimatedInputTokens = Math.ceil(text.length * 1.5);
+            const maxTokens = Math.max(512, maxContext - estimatedInputTokens);
+
+            const response = await fetch(API_CONFIG.URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_CONFIG.KEY}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.2,
+                    max_tokens: maxTokens
+                }),
+                signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
             });
             
-            await worker.terminate();
-
-            // 移除進度條
-            progressContainer.remove();
-
-            // 清理文本：合併多個換行，去除首尾空格
-            const cleanedText = data.text.replace(/(\r\n|\n|\r){2,}/gm, "\n").trim();
+            updateProgress(70);
             
-            dom.extractedText.textContent = cleanedText || "未能識別出文字";
-            dom.translateExtractedBtn.disabled = !cleanedText;
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || "API 請求失敗");
+            }
             
-            // 檢查翻譯按鈕狀態
-            validateImageTranslationInput();
+            const data = await response.json();
+            const translatedText = data.choices[0].message.content.trim();
+            
+            return translatedText;
         } catch (error) {
-            dom.extractedText.textContent = `識別失敗：${error.message}`;
-        } finally {
-            dom.extractTextBtn.disabled = false;
+            if (error.name === "AbortError") {
+                throw new Error("請求超時，請稍後再試");
+            }
+            throw error;
         }
-    }
-
-    // 圖片預處理以提高OCR效果
-    function preprocessImage(canvas) {
-        const ctx = canvas.getContext("2d");
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
-        
-        // 創建一個新的畫布用於預處理後的圖像
-        const processedCanvas = document.createElement("canvas");
-        processedCanvas.width = canvas.width;
-        processedCanvas.height = canvas.height;
-        const processedCtx = processedCanvas.getContext("2d");
-        
-        // 圖像二值化處理
-        for (let i = 0; i < data.length; i += 4) {
-            const brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-            const threshold = 150;
-            
-            // 二值化處理
-            const value = brightness > threshold ? 255 : 0;
-            data[i] = data[i + 1] = data[i + 2] = value;
-        }
-        
-        processedCtx.putImageData(imgData, 0, 0);
-        
-        // 進行銳化處理
-        processedCtx.filter = 'contrast(1.4) saturate(0) brightness(1.1)';
-        processedCtx.drawImage(canvas, 0, 0);
-        
-        return processedCanvas;
     }
     
-    async function translateExtractedText() {
-        if (!dom.extractedText) {
-            showToast("請先識別圖片文字", true);
-            return;
-        }
-
-        const extractedText = dom.extractedText.textContent.trim();
-        if (!extractedText || extractedText === "識別中..." || extractedText.startsWith("識別失敗") || extractedText === "未能識別出文字") {
-            showToast("沒有可翻譯的文字", true);
-            return;
-        }
-
-        // 圖片翻譯也需要檢查源語言和目標語言是否相同
-        if (dom.imageSourceLang.value === dom.imageTargetLang.value) {
-            showToast("源語言和目標語言不能相同", true);
-            return;
-        }
-
-        // 確保我們傳遞的是文本而不是事件
-        await handleTranslation(extractedText);
+    // 獲取 Tesseract 語言代碼
+    function getTesseractLangCode(language) {
+        const langMap = {
+            "中文": "chi_tra",
+            "英文": "eng",
+            "日文": "jpn",
+            "韓文": "kor",
+            "法文": "fra",
+            "德文": "deu",
+            "西班牙文": "spa",
+            "義大利文": "ita",
+            "俄文": "rus"
+        };
+        
+        return langMap[language] || "eng";
     }
     
-    // 顯示提示消息
-    function showToast(message, isError = false) {
-        // 檢查是否已有toast，如果有，先移除它
-        const existingToast = document.querySelector('.toast');
-        if (existingToast) {
-            existingToast.remove();
+    // 更新進度條
+    function updateProgress(percent) {
+        dom.progressBar.style.width = `${percent}%`;
+    }
+    
+    // 顯示 Toast 提示
+    function showToast(message) {
+        let toast = document.querySelector(".toast");
+        
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.className = "toast";
+            document.body.appendChild(toast);
         }
         
-        const toast = document.createElement('div');
-        toast.className = `toast ${isError ? 'toast-error' : 'toast-success'}`;
         toast.textContent = message;
-        document.body.appendChild(toast);
+        toast.classList.add("show");
         
-        // 顯示動畫
         setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-        
-        // 3秒後消失
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
+            toast.classList.remove("show");
         }, 3000);
     }
-
-    // 全局變量存儲進度條定時器
-    let progressInterval;
     
+    // 初始化應用
     init();
 });
