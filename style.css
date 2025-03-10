@@ -1,34 +1,76 @@
 :root {
     /* 亮色模式 - 咖啡色主題 */
-    --primary-color: #8B5A2B;
+    --primary-color: #8B4513;
     --primary-light: #B89B8C;
     --primary-dark: #5A3921;
-    --secondary-color: #D2B48C;
+    --secondary-color: #D2691E;
     --secondary-light: #E6D7C3;
-    --background-color: #FFF8F0;
+    --background-color: #FFF8DC;
     --card-background: #FFFFFF;
-    --text-color: #3C3C3C;
+    --text-color: #333;
     --text-secondary: #666666;
-    --border-color: #DCD0C0;
+    --border-color: #DEB887;
     --button-radius: 4px;
     --container-radius: 8px;
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     --error-color: #cc3333;
+    --success-color: #4CAF50;
+    --button-text-color: #fff;
+    --input-background: #fff;
+    --input-border: #DEB887;
+    --result-background: #fff;
+    --result-border: #DEB887;
+    --progress-bar-bg: #f0f0f0;
+    --progress-bar-fill: #8B4513;
+    --tab-active-color: #8B4513;
+    --tab-hover-color: #A0522D;
+    --voice-visualizer-bg: #f5f5f5;
+    --voice-bar-color: #8B4513;
+    --voice-bar-active-color: #D2691E;
+    --voice-container-bg: #fff;
+    --voice-transcript-bg: #f9f9f9;
+    --voice-status-color: #666;
+    --voice-recording-color: #cc3333;
+    --huggingface-container-bg: #fff;
+    --huggingface-info-color: #666;
+    --iframe-border: #DEB887;
 }
 
 .dark-theme {
     /* 深色模式 - 純灰色主題 */
-    --primary-color: #6c6c6c;
+    --primary-color: #D2691E;
     --primary-light: #8a8a8a;
     --primary-dark: #4a4a4a;
-    --secondary-color: #9e9e9e;
+    --secondary-color: #CD853F;
     --secondary-light: #c1c1c1;
-    --background-color: #2c2c2c;
+    --background-color: #1a1a1a;
     --card-background: #3c3c3c;
     --text-color: #e0e0e0;
     --text-secondary: #b0b0b0;
-    --border-color: #5a5a5a;
+    --border-color: #404040;
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    --hover-color: #FF8C00;
+    --error-color: #ff6666;
+    --success-color: #66bb6a;
+    --button-text-color: #fff;
+    --input-background: #2d2d2d;
+    --input-border: #404040;
+    --result-background: #2d2d2d;
+    --result-border: #404040;
+    --progress-bar-bg: #404040;
+    --progress-bar-fill: #D2691E;
+    --tab-active-color: #D2691E;
+    --tab-hover-color: #FF8C00;
+    --voice-visualizer-bg: #2d2d2d;
+    --voice-bar-color: #D2691E;
+    --voice-bar-active-color: #FF8C00;
+    --voice-container-bg: #2d2d2d;
+    --voice-transcript-bg: #1a1a1a;
+    --voice-status-color: #B0B0B0;
+    --voice-recording-color: #ff6666;
+    --huggingface-container-bg: #2d2d2d;
+    --huggingface-info-color: #B0B0B0;
+    --iframe-border: #404040;
 }
 
 * {
@@ -661,4 +703,67 @@ textarea {
 
 .notification.info {
     background-color: #17a2b8;
+}
+
+/* 系統偏好深色模式自動切換 */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light-theme) {
+        --primary-color: #D2691E;
+        --secondary-color: #CD853F;
+        --background-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #404040;
+        --hover-color: #FF8C00;
+        --error-color: #ff6666;
+        --success-color: #66bb6a;
+        --button-text-color: #fff;
+        --input-background: #2d2d2d;
+        --input-border: #404040;
+        --result-background: #2d2d2d;
+        --result-border: #404040;
+        --progress-bar-bg: #404040;
+        --progress-bar-fill: #D2691E;
+        --tab-active-color: #D2691E;
+        --tab-hover-color: #FF8C00;
+        --voice-visualizer-bg: #2d2d2d;
+        --voice-bar-color: #D2691E;
+        --voice-bar-active-color: #FF8C00;
+        --voice-container-bg: #2d2d2d;
+        --voice-transcript-bg: #1a1a1a;
+        --voice-status-color: #B0B0B0;
+        --voice-recording-color: #ff6666;
+        --huggingface-container-bg: #2d2d2d;
+        --huggingface-info-color: #B0B0B0;
+        --iframe-border: #404040;
+    }
+}
+
+/* Hugging Face iframe 樣式 */
+.huggingface-container {
+    background-color: var(--huggingface-container-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.huggingface-info {
+    color: var(--huggingface-info-color);
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.iframe-container {
+    border: 1px solid var(--iframe-border);
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--input-background);
+}
+
+/* 深色模式下的 iframe 樣式 */
+.dark-theme .iframe-container {
+    background-color: var(--input-background);
+}
+
+.dark-theme .iframe-container iframe {
+    background-color: var(--input-background);
 }
