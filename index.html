@@ -7,7 +7,6 @@
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1"></script>
 </head>
 <body>
     <div class="container">
@@ -17,28 +16,10 @@
         <!-- 標籤頁按鈕 -->
         <div class="tabs">
             <button class="tab-button active" data-tab="textTab">文本翻譯</button>
-            <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
             <button class="tab-button" data-tab="voiceTab">語音翻譯</button>
-            <button class="tab-button" data-tab="huggingfaceTab">18禁專區🔞</button>
+            <button class="tab-button" data-tab="huggingfaceTab">18禁翻譯區🔞</button>  
         </div>
 
-        <!-- Hugging Face 翻譯區 -->
-        <div id="huggingfaceTab" class="tab-content">
-            <div class="huggingface-container">
-                <p class="huggingface-info">各種一般翻譯不了的東西看這裡👀</p>
-                <div class="iframe-container">
-                    <iframe src="https://qwerty10218-gary-translate.hf.space" 
-                            frameborder="0" 
-                            width="100%" 
-                            height="650px"
-                            id="huggingfaceFrame"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
-                    </iframe>
-                </div>
-            </div>
-        </div>
-        
         <!-- 文本翻譯區 -->
         <div id="textTab" class="tab-content active">
             <div class="language-selectors">
@@ -47,13 +28,6 @@
                     <select id="sourceLang" class="language-select">
                         <option value="中文">中文</option>
                         <option value="英文">英文</option>
-                        <option value="日文">日文</option>
-                        <option value="韓文">韓文</option>
-                        <option value="法文">法文</option>
-                        <option value="德文">德文</option>
-                        <option value="西班牙文">西班牙文</option>
-                        <option value="義大利文">義大利文</option>
-                        <option value="俄文">俄文</option>
                     </select>
                 </div>
                 <button id="swapLang" class="button swap-button" title="交換語言">⇄</button>
@@ -62,13 +36,6 @@
                     <select id="targetLang" class="language-select">
                         <option value="英文">英文</option>
                         <option value="中文">中文</option>
-                        <option value="日文">日文</option>
-                        <option value="韓文">韓文</option>
-                        <option value="法文">法文</option>
-                        <option value="德文">德文</option>
-                        <option value="西班牙文">西班牙文</option>
-                        <option value="義大利文">義大利文</option>
-                        <option value="俄文">俄文</option>
                     </select>
                 </div>
             </div>
@@ -78,8 +45,6 @@
                 <select id="modelSelect">
                     <option value="gpt-4o-mini">GPT-4o Mini</option>
                     <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                    <option value="helsinki-quick">Helsinki快速翻譯</option>
-                    <option value="qwen-advanced">Qwen高級翻譯</option>
                 </select>
             </div>
             
@@ -94,64 +59,6 @@
             <div class="progress-container">
                 <div id="progressBar" class="progress-bar"></div>
             </div>
-        </div>
-
-        <!-- 圖片翻譯區 -->
-        <div id="imageTab" class="tab-content">
-            <input type="file" id="imageInput" accept="image/*" hidden>
-            <div class="image-drop-area" id="imageDropArea">
-                <div class="drop-icon">📷</div>
-                <div class="drop-text">拖放圖片或點擊上傳</div>
-            </div>
-            
-            <!-- OCR語言選擇 -->
-            <div class="ocr-options">
-                <div class="select-wrapper">
-                    <label for="ocrLanguageSelect">OCR語言:</label>
-                    <select id="ocrLanguageSelect" class="language-select">
-                        <option value="chi_tra+eng">中文+英文</option>
-                        <option value="chi_tra">繁體中文</option>
-                        <option value="chi_sim">簡體中文</option>
-                        <option value="eng">英文</option>
-                        <option value="jpn">日文</option>
-                        <option value="kor">韓文</option>
-                        <option value="fra">法文</option>
-                        <option value="deu">德文</option>
-                        <option value="spa">西班牙文</option>
-                        <option value="ita">義大利文</option>
-                        <option value="rus">俄文</option>
-                    </select>
-                </div>
-                <div class="ocr-help">
-                    <button id="ocrHelpButton" class="button secondary-button" title="OCR幫助">?</button>
-                </div>
-            </div>
-            
-            <!-- 圖片處理工具 -->
-            <div class="image-processing-tools">
-                <button id="enhanceContrastButton" class="button secondary-button image-tool-button" disabled>增強對比度</button>
-                <button id="grayscaleButton" class="button secondary-button image-tool-button" disabled>轉為灰階</button>
-                <button id="resetImageButton" class="button secondary-button image-tool-button" disabled>重置圖片</button>
-            </div>
-            
-            <canvas id="imageCanvas" class="image-canvas"></canvas>
-            
-            <div class="button-container">
-                <button id="extractTextButton" class="button primary-button" disabled>擷取文字</button>
-                <button id="translateExtractedButton" class="button primary-button" disabled>翻譯擷取文字</button>
-                <button id="clearImageButton" class="button secondary-button">清除圖片</button>
-            </div>
-            
-            <!-- OCR進度顯示 -->
-            <div id="ocrProgressContainer" class="ocr-progress-container" style="display: none;">
-                <div id="ocrProgressBar" class="ocr-progress-bar"></div>
-                <div id="ocrStatusText" class="ocr-status-text">處理中...</div>
-            </div>
-            
-            <!-- 檢測到的語言顯示 -->
-            <div id="detectedLanguage" class="detected-language" style="display: none;"></div>
-            
-            <div id="extractedText" class="extracted-text"></div>
         </div>
 
         <!-- 語音翻譯區 -->
@@ -174,6 +81,23 @@
                 
                 <div id="voiceRecordingStatus" class="voice-status">準備就緒</div>
                 <div id="voiceTranscript" class="voice-transcript"></div>
+            </div>
+        </div>
+
+        <!-- Hugging Face 翻譯區 -->
+        <div id="huggingfaceTab" class="tab-content">
+            <div class="huggingface-container">
+                <p class="huggingface-info">以下是直接嵌入的 Hugging Face 翻譯界面</p>
+                <div class="iframe-container">
+                    <iframe src="https://qwerty10218-gary-translate.hf.space" 
+                            frameborder="0" 
+                            width="100%" 
+                            height="650px"
+                            id="huggingfaceFrame"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                    </iframe>
+                </div>
             </div>
         </div>
 
