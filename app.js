@@ -606,45 +606,47 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // 新增 MyMemory API 翻譯方法 (針對 R18 內容)
-        async translateWithMyMemory(inputText, sourceLang, targetLang) {
-            console.log("使用 MyMemory API 翻譯...");
+        async translateWithMyMemory(text, sourceLang, targetLang) {
+            console.log("使用 MyMemory API 翻譯");
             
             try {
-                const source = sourceLang.toLowerCase();
-                const target = targetLang.toLowerCase();
+                // 構建 API URL
+                const apiUrl = new URL("https://api.mymemory.translated.net/get");
+                apiUrl.searchParams.append("q", text);
+                apiUrl.searchParams.append("langpair", `${sourceLang}|${targetLang}`);
+                apiUrl.searchParams.append("de", "your-email@example.com");
                 
-                const apiUrl = new URL(API_CONFIG.mymemory.url);
-                apiUrl.searchParams.append('q', inputText);
-                apiUrl.searchParams.append('langpair', `${source}|${target}`);
-                apiUrl.searchParams.append('de', 'translation@app.com');
+                // 添加延遲以避免過快請求
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
-                await new Promise(resolve => setTimeout(resolve, API_CONFIG.mymemory.delay));
-                
+                // 發送請求
                 const response = await fetch(apiUrl.toString());
                 
+                // 檢查HTTP錯誤
                 if (!response.ok) {
-                    throw new Error(`MyMemory API HTTP 錯誤! 狀態: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
+                // 解析響應
                 const data = await response.json();
                 
-                if (data.responseStatus !== 200 || !data.responseData) {
-                    throw new Error(`MyMemory API 錯誤: ${data.responseStatus}`);
+                // 檢查API響應是否包含翻譯結果
+                if (!data || !data.responseData || !data.responseData.translatedText) {
+                    throw new Error("翻譯API未返回有效結果");
                 }
                 
-                // 確保輸出使用繁體中文
                 let translatedText = data.responseData.translatedText;
-                if (target === 'zh') {
-                    translatedText = translatedText.replace(/简/g, '簡')
-                                               .replace(/复/g, '複')
-                                               .replace(/么/g, '麼')
-                                               .replace(/着/g, '著');
+                
+                // 如果目標語言是中文，確保使用繁體中文
+                if (targetLang === 'zh') {
+                    translatedText = simplifiedToTraditional(translatedText);
                 }
                 
                 return translatedText;
             } catch (error) {
-                console.error("MyMemory 翻譯失敗:", error);
-                throw error;
+                console.error("MyMemory API 翻譯錯誤:", error);
+                // 返回錯誤信息而不是undefined
+                return `翻譯錯誤: ${error.message}`;
             }
         }
 
@@ -936,85 +938,84 @@ document.addEventListener("DOMContentLoaded", () => {
         validateTranslationInput();
     }
 
-    function validateTranslationInput(isSpecial = false) {
-        const input = isSpecial ? dom.r18InputText : dom.inputText;
-        const sourceLang = isSpecial ? dom.r18SourceLang : dom.sourceLang;
-        const targetLang = isSpecial ? dom.r18TargetLang : dom.targetLang;
-        const translateBtn = isSpecial ? dom.r18TranslateButton : dom.translateButton;
-
-        const textInput = input.value.trim();
-        const sameLanguage = sourceLang.value === targetLang.value;
-
-        translateBtn.disabled = !textInput || sameLanguage;
-        translateBtn.title = sameLanguage ? "源語言和目標語言不能相同" : 
-                           !textInput ? "請輸入要翻譯的內容" : "";
+    function validateTranslationInput(isR18 = false) {
+        // 獲取相應的DOM元素
+        const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
+        const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
+        const inputText = isR18 ? dom.r18InputText.value.trim() : dom.inputText.value.trim();
+        const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
+        
+        // 檢查輸入是否為空
+        const isInputEmpty = inputText.length === 0;
+        
+        // 檢查源語言和目標語言是否相同
+        const isSameLang = sourceLang === targetLang;
+        
+        // 禁用或啟用翻譯按鈕
+        translateButton.disabled = isInputEmpty || isSameLang;
+        
+        // 如果語言相同，顯示警告
+        if (isSameLang && !isInputEmpty) {
+            showNotification("源語言和目標語言不能相同", "warning");
+        }
+        
+        // 返回驗證結果
+        return !isInputEmpty && !isSameLang;
     }
 
-    async function handleTranslation(isSpecial = false) {
-        // 獲取相應元素
-        const inputElement = isSpecial ? dom.r18InputText : dom.inputText;
-        const resultElement = isSpecial ? dom.r18Result : dom.result;
-        const sourceLangElement = isSpecial ? dom.r18SourceLang : dom.sourceLang;
-        const targetLangElement = isSpecial ? dom.r18TargetLang : dom.targetLang;
-        const translateButton = isSpecial ? dom.r18TranslateButton : dom.translateButton;
-        
-        // 檢查輸入
-        const inputText = inputElement.value.trim();
-        if (!inputText) {
-            showNotification("請輸入要翻譯的文字", "error");
-            return;
-        }
-        
-        // 檢查源語言和目標語言
-        const sourceLang = sourceLangElement.value;
-        const targetLang = targetLangElement.value;
-        if (sourceLang === targetLang) {
-            showNotification("源語言和目標語言不能相同", "error");
-            return;
-        }
-        
-        // 禁用翻譯按鈕，顯示翻譯中狀態
-        translateButton.disabled = true;
-        translateButton.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
-        resultElement.textContent = "翻譯中...";
-        
-        // 獲取 R18 內容類型選項
-        let contentTypes = {};
-        if (isSpecial) {
-            contentTypes = {
-                adult: dom.adultContent.checked,
-                violence: dom.violenceContent.checked,
-                slang: dom.slangContent.checked
-            };
-        }
-        
-        // 使用 translateWithFallback 方法進行翻譯
-        translationManager.translateWithFallback(inputText, sourceLang, targetLang, isSpecial)
-            .then(result => {
-                resultElement.textContent = result;
+    async function handleTranslation(isR18 = false) {
+        try {
+            // 獲取輸入文本和語言設置
+            const inputText = isR18 ? dom.r18InputText.value.trim() : dom.inputText.value.trim();
+            const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
+            const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
+            const resultElement = isR18 ? dom.r18Result : dom.result;
+            
+            // 驗證輸入
+            if (!inputText) {
+                showNotification("請輸入要翻譯的文本", "warning");
+                return;
+            }
+            
+            // 顯示加載狀態
+            resultElement.textContent = "翻譯中...";
+            
+            // 根據是否為R18內容選擇不同的翻譯方法
+            let translatedText;
+            try {
+                if (isR18) {
+                    const model = dom.r18ModelSelect.value;
+                    if (model === "mymemory") {
+                        translatedText = await translateWithMyMemory(inputText, sourceLang, targetLang);
+                    } else if (model === "libretranslate") {
+                        translatedText = await translateWithLibreTranslate(inputText, sourceLang, targetLang);
+                    }
+                } else {
+                    translatedText = await translateWithFallback(inputText, sourceLang, targetLang);
+                }
+                
+                // 確保翻譯結果不是undefined
+                if (!translatedText) {
+                    throw new Error("翻譯結果為空");
+                }
+                
+                // 顯示翻譯結果
+                resultElement.textContent = translatedText;
                 
                 // 添加到歷史記錄
-                addToHistory({
-                    timestamp: new Date().toISOString(),
-                    sourceText: inputText,
-                    targetText: result,
-                    sourceLang: sourceLang,
-                    targetLang: targetLang,
-                    isSpecial: isSpecial
-                });
+                addToHistory(inputText, translatedText, sourceLang, targetLang, isR18);
                 
+                // 顯示成功通知
                 showNotification("翻譯完成", "success");
-            })
-            .catch(error => {
-                console.error("翻譯錯誤:", error);
-                resultElement.textContent = `翻譯失敗: ${error.message}`;
-                showNotification(`翻譯失敗: ${error.message}`, "error");
-            })
-            .finally(() => {
-                // 恢復按鈕狀態
-                translateButton.disabled = false;
-                translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
-            });
+            } catch (error) {
+                console.error("翻譯過程中發生錯誤:", error);
+                resultElement.textContent = `翻譯錯誤: ${error.message}`;
+                showNotification("翻譯失敗: " + error.message, "error");
+            }
+        } catch (error) {
+            console.error("處理翻譯請求時發生錯誤:", error);
+            showNotification("處理翻譯請求時發生錯誤: " + error.message, "error");
+        }
     }
 
     function initImageTranslation() {
@@ -1392,12 +1393,76 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        if (dom.sourceLang.value === dom.targetLang.value) {
+        const sourceLanguage = document.getElementById('imageSourceLang');
+        const targetLanguage = document.getElementById('imageTargetLang');
+        
+        if (!sourceLanguage || !targetLanguage) {
+            alert("無法獲取語言選擇元素");
+            return;
+        }
+        
+        if (sourceLanguage.value === targetLanguage.value) {
             alert("源語言和目標語言不能相同");
             return;
         }
-
-        await handleTranslation(false);
+        
+        // 設置進度條
+        let progressBar = null;
+        if (translationManager) {
+            progressBar = translationManager.createProgressBar();
+        }
+        
+        try {
+            dom.translateExtractedButton.disabled = true;
+            dom.translateExtractedButton.textContent = "翻譯中...";
+            
+            // 使用圖片翻譯模型
+            const model = document.getElementById('imageModelSelect') ? 
+                          document.getElementById('imageModelSelect').value : 
+                          'gpt-3.5-turbo';
+                          
+            if (translationManager) {
+                translationManager.setModel(model);
+            }
+            
+            const result = await translationManager.translate(
+                extractedText,
+                sourceLanguage.value,
+                targetLanguage.value
+            );
+            
+            if (!result || result.trim() === '') {
+                throw new Error("翻譯結果為空");
+            }
+            
+            // 顯示結果
+            dom.result.innerHTML = result;
+            // 定位到主文字翻譯標籤頁
+            document.querySelector('.tab-button[data-tab="textTab"]').click();
+            // 滾動到結果區域
+            dom.result.scrollIntoView({ behavior: 'smooth' });
+            
+            showNotification("翻譯完成", "success");
+            
+        } catch (error) {
+            console.error("圖片翻譯錯誤:", error);
+            showNotification(`翻譯失敗: ${error.message}`, "error");
+            
+            // 設置一個溫和的錯誤提示而不是undefined
+            dom.result.innerHTML = `<div class="error-message">翻譯過程中出現問題。請再試一次，或嘗試不同的圖片。</div>`;
+        } finally {
+            dom.translateExtractedButton.disabled = false;
+            dom.translateExtractedButton.innerHTML = '<span class="button-icon">🔄</span>翻譯擷取文字';
+            
+            // 進度條處理
+            if (progressBar) {
+                progressBar.style.width = '100%';
+                progressBar.classList.add('complete');
+                setTimeout(() => {
+                    progressBar.parentElement.remove();
+                }, 1000);
+            }
+        }
     }
 
     function clearImageData() {
@@ -1546,8 +1611,102 @@ document.addEventListener("DOMContentLoaded", () => {
         
         recognition.continuous = true;
         recognition.interimResults = true;
-        // 使用自動語言識別
-        recognition.lang = 'auto';
+        
+        // 定義語言映射表
+        const languageMapping = {
+            'zh': 'zh-TW', // 繁體中文
+            'en': 'en-US', // 英文
+            'ja': 'ja-JP', // 日文
+            'ko': 'ko-KR'  // 韓文
+        };
+        
+        // 獲取當前選擇的源語言
+        function getCurrentLanguage() {
+            // 獲取當前激活的標籤頁
+            const activeTab = document.querySelector('.tab-content.active');
+            
+            if (!activeTab) return 'zh-TW'; // 默認繁體中文
+            
+            // 根據當前標籤頁獲取相應的語言選擇框
+            let sourceLanguageSelect;
+            
+            if (activeTab.id === 'textTab') {
+                sourceLanguageSelect = document.getElementById('sourceLang');
+            } else if (activeTab.id === 'imageTab') {
+                sourceLanguageSelect = document.getElementById('imageSourceLang');
+            } else if (activeTab.id === 'r18Tab') {
+                sourceLanguageSelect = document.getElementById('r18SourceLang');
+            } else {
+                return 'zh-TW'; // 默認繁體中文
+            }
+            
+            // 獲取選擇的語言代碼並映射到語音API支持的格式
+            const selectedLang = sourceLanguageSelect ? sourceLanguageSelect.value : 'zh';
+            return languageMapping[selectedLang] || 'zh-TW';
+        }
+        
+        // 為所有語言選擇器添加變更事件監聽
+        function addLanguageChangeListeners() {
+            const selectors = [
+                document.getElementById('sourceLang'),
+                document.getElementById('imageSourceLang'),
+                document.getElementById('r18SourceLang')
+            ];
+            
+            selectors.forEach(selector => {
+                if (selector) {
+                    selector.addEventListener('change', () => {
+                        // 如果正在錄音，停止並重新開始以應用新語言
+                        if (isRecording) {
+                            const activeFloatingPanel = document.querySelector('.voice-floating-panel:not(.hidden)');
+                            if (activeFloatingPanel) {
+                                const status = activeFloatingPanel.querySelector('.voice-floating-status');
+                                const startBtn = activeFloatingPanel.querySelector('.voice-floating-start');
+                                const stopBtn = activeFloatingPanel.querySelector('.voice-floating-stop');
+                                const useBtn = activeFloatingPanel.querySelector('.voice-floating-use');
+                                
+                                stopVoiceRecognition(status, startBtn, stopBtn, useBtn);
+                                setTimeout(() => {
+                                    startVoiceRecognition(
+                                        activeFloatingPanel.querySelector('.voice-floating-visualizer'),
+                                        status,
+                                        activeFloatingPanel.querySelector('.voice-floating-transcript'),
+                                        startBtn,
+                                        stopBtn,
+                                        useBtn
+                                    );
+                                }, 500);
+                            } else if (document.getElementById('voiceTab').classList.contains('active')) {
+                                stopVoiceRecognition(voiceStatus, startVoiceBtn, stopVoiceBtn, useVoiceTextBtn);
+                                setTimeout(() => {
+                                    startVoiceRecognition(
+                                        voiceVisualizer,
+                                        voiceStatus,
+                                        voiceTranscript,
+                                        startVoiceBtn,
+                                        stopVoiceBtn,
+                                        useVoiceTextBtn
+                                    );
+                                }, 500);
+                            }
+                        }
+                        
+                        // 顯示通知
+                        const newLang = getCurrentLanguage();
+                        const langNames = {
+                            'zh-TW': '繁體中文',
+                            'en-US': '英文',
+                            'ja-JP': '日文',
+                            'ko-KR': '韓文'
+                        };
+                        showNotification(`語音識別已切換為: ${langNames[newLang] || newLang}`, "info");
+                    });
+                }
+            });
+        }
+        
+        // 初始化時添加語言變更監聽器
+        addLanguageChangeListeners();
         
         let audioContext;
         let analyser;
@@ -1733,7 +1892,11 @@ document.addEventListener("DOMContentLoaded", () => {
         function startVoiceRecognition(visualizer, status, transcript, startBtn, stopBtn, useBtn) {
             try {
                 if (!isRecording) {
-                    // 自動語言識別
+                    // 設置語音識別語言
+                    recognition.lang = getCurrentLanguage();
+                    console.log("語音識別使用語言:", recognition.lang);
+                    
+                    // 啟動語音識別
                     recognition.start();
                     
                     isRecording = true;
@@ -2152,7 +2315,17 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function addToHistory(entry) {
+    function addToHistory(sourceText, translatedText, sourceLang, targetLang, isR18 = false) {
+        // 創建歷史記錄條目
+        const entry = {
+            timestamp: new Date().toISOString(),
+            sourceText: sourceText,
+            targetText: translatedText,
+            sourceLang: sourceLang,
+            targetLang: targetLang,
+            isSpecial: isR18
+        };
+        
         let history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
         history.unshift(entry);
         if (history.length > 100) history.pop(); // 限制歷史記錄數量
@@ -2216,6 +2389,15 @@ document.addEventListener("DOMContentLoaded", () => {
             dom.r18Result.textContent = "";
         });
         
+        // 添加R18語言切換按鈕事件監聽器
+        if (dom.r18SwapLangButton) {
+            dom.r18SwapLangButton.addEventListener("click", () => {
+                [dom.r18SourceLang.value, dom.r18TargetLang.value] = 
+                [dom.r18TargetLang.value, dom.r18SourceLang.value];
+                validateTranslationInput(true);
+            });
+        }
+        
         // 更新 R18 模型選擇下拉選單説明
         const r18ModelSelect = dom.r18ModelSelect;
         if (r18ModelSelect) {
@@ -2250,41 +2432,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function copyToClipboard(text) {
-        if (!text) return;
-        
-        // 添加一個臨時文本區域元素
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.style.position = "fixed";  // 防止對頁面佈局造成影響
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
+    async function copyToClipboard(text) {
+        // 確保文本不是undefined或null
+        if (!text) {
+            showNotification("沒有可複製的文本", "warning");
+            return;
+        }
         
         try {
-            // 嘗試使用新API
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text)
-                    .then(() => showNotification("已複製到剪貼簿", "success"))
-                    .catch(err => {
-                        // 如果新API失敗，使用舊方法
-                        document.execCommand("copy");
-                        showNotification("已複製到剪貼簿", "success");
-                    });
-            } else {
-                // 使用舊方法
+            // 嘗試使用現代Clipboard API
+            await navigator.clipboard.writeText(text);
+            showNotification("已複製到剪貼板", "success");
+        } catch (err) {
+            // 如果Clipboard API失敗，使用傳統方法
+            console.warn("Clipboard API失敗，使用備用方法", err);
+            
+            // 創建臨時textarea元素
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            
+            // 設置樣式使其不可見
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            textarea.style.pointerEvents = "none";
+            
+            // 添加到DOM，選中並複製
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
                 const successful = document.execCommand("copy");
                 if (successful) {
-                    showNotification("已複製到剪貼簿", "success");
+                    showNotification("已複製到剪貼板", "success");
                 } else {
-                    showNotification("複製失敗，請手動複製", "error");
+                    throw new Error("複製命令失敗");
                 }
+            } catch (err) {
+                console.error("複製失敗:", err);
+                showNotification("複製失敗: " + err.message, "error");
+            } finally {
+                // 清理DOM
+                document.body.removeChild(textarea);
             }
-        } catch (err) {
-            showNotification("複製失敗: " + err, "error");
-        } finally {
-            // 清理
-            document.body.removeChild(textarea);
         }
     }
 
@@ -2443,6 +2632,86 @@ document.addEventListener("DOMContentLoaded", () => {
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(canvas.originalImage, 0, 0, canvas.width, canvas.height);
+    }
+
+    // 簡體中文轉繁體中文
+    function simplifiedToTraditional(text) {
+        if (!text) return '';
+        
+        // 常見簡繁對照
+        const simplifiedChars = '习乐宁东买卖产业丑严与丢两严丧个临为举么义乐习乡书买乱争于亏云亚产亲亿仅从仑仓仪们价众优伙会伟传伤伦休伟体余处备党务传位低住佛作体余佣佥侠侣侥侦侧侨侩佣侵促俭修信保俦侥俩俭债俪值側偿优偓傥傧储傤僭儿儿党兰关兴兹养兽冢决况冷冻凄凉处净凑减凤凫凭凯击凿则准刘刚创删别刹刽刿剀剂剐剑剧劝办务动励劲劳势勋勐勚匀匦却厅厉厍厘厦厨厩參发参侧叁团园困囱围国图团圆國圣圾坏块坚坛坜址坝坞坟坠垄垅坛垦垧垩垴垵垒垆垄埘埙埚实埯塆墙壤壮声壤壳壶处备复够妆姗姹娄娅娆娇娈娱娲娴婳婴婶媪嫒媪嫔嬷嬿孙学孪孙宁宝实宠审宪宫宽宾寝对寻导寿将尔尘尝尧尽层居屆屉届屋屏屡孱岁岂峄峡峣困巨巢巽帅师帐帜带帧席帮常长帻仓厍广庄庆库应庙庞废庼廪开异弃强归归录彦彻员丽彻征径径织绕绘絷经战荡结给络继绥绿网彘徵德徽齿恒恶悦悬参悭惊恶惩惫惬惭涌淀凄愤愦慑慓栅栆校样哓核根栖栋栏树栅栈栖标栈桡桢业桥桦桧档桩梦梼梾梿检棁栋棱栾棵椁椭楼榄榇榈榉楼荣槚槛槟槠横樯柽欧欤欢欣欸欻款歼殁殇残杀殒殓殚殡殴毁毂毕毙毡气气氢汉汤汹沟没泞泪泪泼泽泾洁洒洼浃浅浆浇浈浊测浍济浏浐浑浒浓浔浕涂涛涝涞涟涠渎渐渑渔渝渐温湿湼渍渖渗沟温溆滞满滚漕沪漤汤潆潇潍沥潜澜澧澹澳激沟火灭灯灾灿炀炉炖炜炝点炼炀烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
+        const traditionalChars = '習樂寧東買賣產業醜嚴與丟兩嚴喪個臨為舉麼義樂習鄉書買亂爭於虧雲亞產親億僅從崙倉儀們價眾優夥會偉傳傷倫休偉體餘處備黨務傳位低住佛作體餘傭僉俠侶僥偵側僑儈傭侵促儉修信保儔僥倆儉債儷值側償優嫿儻儐儲儓僭兒兒黨蘭關興茲養獸塚決況冷凍淒涼處淨湊減鳳鳧憑凱擊鑿則準劉剛創刪別剎劊劌剴劑剮劍劇勸辦務動勵勁勞勢勛猛勩勻匭卻廳厲厙釐廈廚廄參發參側叄團園困囪圍國圖團圓國聖圾壞塊堅壇壢址壩塢墳墜壟壠壇墾壧礡塏壪壘壙壟塒塤堝實塱壆牆壤壯聲壤殼壺處備複夠妝姍媯婁婭嬈嬌孌娛媧嫺嫿嬰嬸媼嬡媼嬪嬤孌孫學孿孫寧寶實寵審憲宮寬賓寢對尋導壽將爾塵嚐堯盡層居屆屜屆屋屏屢孱歲豈嶧峽嶢困鉅巢巽帥師帳幟帶幀席幫常長幬倉厙廣莊慶庫應廟龐廢廎廩開異棄強歸歸錄彥徹員麗徹征徑徑織紆繪縶經戰蕩結給絡繼綏綠網彘徵德徽齒恆惡悅懸參慳驚惡懲憊惬慚湧淀淒憤僨懾慄柵棓校樣嘵核根棲棟欄樹柵棧棲標棧橈楨業橋樺檜檔樁夢檉檢樅檁棟稜欒棵槨橢樓欖櫬櫚櫪樓榮檣檉歐漚懽欣啊咦款殲歿殤殘殺殞殮殫殯毆毀轂畢斃氈氣氣氫漢湯洶溝沒濘淚淚潑澤涇潔灑窪浹淺漿澆湞濁測滸濟瀏滻渾滸濃潯濜塗濤澇淶漣潎瀆漸澮漁渝漸溫溼瀎涅滙滬瀋湯漭瀟濰瀝潛瀾灄躁滿滾漕滬灢湯瀠灩濰溝溫漊滯滿滾漕滬灤湯潆潇潍泄潜澜潾澹澳激沟火灭灯灾灿炀炉炖炜炝点炼烊烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
+        
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const index = simplifiedChars.indexOf(char);
+            if (index > -1) {
+                result += traditionalChars[index];
+            } else {
+                result += char;
+            }
+        }
+        return result;
+    }
+
+    async function translateWithLibreTranslate(text, sourceLang, targetLang) {
+        console.log("使用 LibreTranslate API 翻譯");
+        
+        try {
+            // 轉換語言代碼為LibreTranslate格式
+            sourceLang = convertToLibreFormat(sourceLang);
+            targetLang = convertToLibreFormat(targetLang);
+            
+            // 輪流使用不同的LibreTranslate端點
+            const endpoints = [
+                "https://libretranslate.com/translate",
+                "https://translate.argosopentech.com/translate"
+            ];
+            
+            const endpoint = endpoints[libreEndpointIndex];
+            libreEndpointIndex = (libreEndpointIndex + 1) % endpoints.length;
+            
+            // 構建請求
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    q: text,
+                    source: sourceLang,
+                    target: targetLang,
+                    format: "text"
+                })
+            });
+            
+            // 檢查HTTP錯誤
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // 解析響應
+            const data = await response.json();
+            
+            // 檢查API響應是否包含翻譯結果
+            if (!data || !data.translatedText) {
+                throw new Error("LibreTranslate API未返回有效結果");
+            }
+            
+            let translatedText = data.translatedText;
+            
+            // 如果目標語言是中文，確保使用繁體中文
+            if (targetLang === 'zh') {
+                translatedText = simplifiedToTraditional(translatedText);
+            }
+            
+            return translatedText;
+        } catch (error) {
+            console.error("LibreTranslate API 翻譯錯誤:", error);
+            // 返回錯誤信息而不是undefined
+            return `翻譯錯誤: ${error.message}`;
+        }
     }
 
     init();
