@@ -1604,14 +1604,14 @@ Target ({targetLang}):
         const history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
         
         historyList.innerHTML = history.map(entry => `
-            <div class="history-item ${entry.isSpecial ? 'special' : ''}">
+            <div class="history-item ${entry.isSpecial ? 'special' : ''} ${entry.useLibre ? 'libre' : ''}">
                 <div class="history-meta">
                     <span>${new Date(entry.timestamp).toLocaleString()}</span>
                     <span>${entry.sourceLang} → ${entry.targetLang}</span>
                 </div>
                 <div class="history-content">
-                    <div class="history-source">${entry.source}</div>
-                    <div class="history-target">${entry.target}</div>
+                    <div class="history-source">${entry.sourceText}</div>
+                    <div class="history-target">${entry.targetText}</div>
                 </div>
             </div>
         `).join('');
