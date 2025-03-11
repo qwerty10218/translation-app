@@ -21,6 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
         textgen: {
             url: "http://localhost:7860/api/v1/generate",
             quota: Infinity
+        },
+        gpt: {
+            url: "https://free.v36.cm",
+            key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
+            quota: Infinity
         }
     };
 
@@ -98,17 +103,26 @@ Target (${targetLang}):
         }
 
         async translate(text, sourceLang, targetLang, isSpecial = false, contentTypes = {}) {
-            const api = this.apiBalancer.getNextAPI(isSpecial);
-            
             try {
-                if (isSpecial) {
-                    return await this.handleSpecialTranslation(text, sourceLang, targetLang, contentTypes);
-                } else {
-                    return await this.handleNormalTranslation(api, text, sourceLang, targetLang);
-                }
+                // 優先使用 GPT API
+                return await translateWithGPT(text, sourceLang, targetLang);
             } catch (error) {
-                console.error(`${api} 翻譯失敗:`, error);
-                throw error;
+                console.error("GPT 翻譯失敗:", error);
+                showNotification("GPT 翻譯失敗，切換到備用 API", "error");
+                
+                // 如果 GPT API 失敗，使用其他 API
+                const api = this.apiBalancer.getNextAPI(isSpecial);
+                
+                try {
+                    if (isSpecial) {
+                        return await this.handleSpecialTranslation(text, sourceLang, targetLang, contentTypes);
+                    } else {
+                        return await this.handleNormalTranslation(api, text, sourceLang, targetLang);
+                    }
+                } catch (error) {
+                    console.error(`${api} 翻譯失敗:`, error);
+                    throw error;
+                }
             }
         }
 
@@ -247,6 +261,41 @@ Target (${targetLang}):
             const data = await response.json();
             return data.generated_text;
         }
+
+        // 使用 OpenAI API 進行翻譯
+        async translateWithGPT(text, sourceLang, targetLang) {
+            const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}：\n\n${text}`;
+            
+            const response = await fetch(`${API_CONFIG.gpt.url}/v1/chat/completions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_CONFIG.gpt.key}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-3.5-turbo",
+                    messages: [
+                        {
+                            role: "system",
+                            content: "你是一個專業的翻譯助手，請準確翻譯用戶提供的文本，保持原文的格式和風格。"
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.3
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`GPT API 錯誤: ${errorData.error?.message || response.status}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content.trim();
+        }
     }
 
     // 初始化翻譯管理器
@@ -254,58 +303,68 @@ Target (${targetLang}):
 
     // DOM元素
     const dom = {
-        // 文字翻譯
+        inputText: document.getElementById("inputText"),
+        result: document.getElementById("result"),
+        translateButton: document.getElementById("translateButton"),
+        clearTextButton: document.getElementById("clearTextButton"),
+        clearResultButton: document.getElementById("clearResultButton"),
+        copyResultButton: document.getElementById("copyResultButton"),
         sourceLang: document.getElementById("sourceLang"),
         targetLang: document.getElementById("targetLang"),
-        inputText: document.getElementById("inputText"),
-        translateBtn: document.getElementById("translateButton"),
-        result: document.getElementById("result"),
-        copyResultBtn: document.getElementById("copyResultButton"),
-        clearResultBtn: document.getElementById("clearResultButton"),
-        
-        // 圖片翻譯
+        swapLangButton: document.getElementById("swapLang"),
+        imageDropArea: document.getElementById("imageDropArea"),
         imageInput: document.getElementById("imageInput"),
         imageCanvas: document.getElementById("imageCanvas"),
-        imageDropArea: document.getElementById("imageDropArea"),
-        enhanceContrastBtn: document.getElementById("enhanceContrastButton"),
-        grayscaleBtn: document.getElementById("grayscaleButton"),
-        resetImageBtn: document.getElementById("resetImageButton"),
-        clearImageBtn: document.getElementById("clearImageButton"),
-        extractTextBtn: document.getElementById("extractTextButton"),
-        translateExtractedBtn: document.getElementById("translateExtractedButton"),
+        enhanceContrastButton: document.getElementById("enhanceContrastButton"),
+        grayscaleButton: document.getElementById("grayscaleButton"),
+        resetImageButton: document.getElementById("resetImageButton"),
+        clearImageButton: document.getElementById("clearImageButton"),
+        extractTextButton: document.getElementById("extractTextButton"),
         extractedText: document.getElementById("extractedText"),
+        translateExtractedButton: document.getElementById("translateExtractedButton"),
         ocrLanguageSelect: document.getElementById("ocrLanguageSelect"),
-        
-        // 語音翻譯
         startVoiceBtn: document.getElementById("startVoiceBtn"),
         stopVoiceBtn: document.getElementById("stopVoiceBtn"),
+        voiceVisualizer: document.getElementById("voiceVisualizer"),
+        voiceRecordingStatus: document.getElementById("voiceRecordingStatus"),
+        voiceTranscript: document.getElementById("voiceTranscript"),
         useVoiceTextBtn: document.getElementById("useVoiceTextBtn"),
         clearVoiceBtn: document.getElementById("clearVoiceBtn"),
-        voiceVisualizer: document.getElementById("voiceVisualizer"),
-        voiceStatus: document.getElementById("voiceRecordingStatus"),
-        voiceTranscript: document.getElementById("voiceTranscript"),
         expandVoiceBtn: document.getElementById("expandVoiceBtn"),
         shrinkVoiceBtn: document.getElementById("shrinkVoiceBtn"),
-        
-        // R18 翻譯
-        r18SourceLang: document.getElementById("r18SourceLang"),
-        r18TargetLang: document.getElementById("r18TargetLang"),
-        r18InputText: document.getElementById("r18InputText"),
-        r18TranslateBtn: document.getElementById("r18TranslateButton"),
-        r18Result: document.getElementById("r18Result"),
-        r18CopyBtn: document.getElementById("r18CopyButton"),
-        r18ClearBtn: document.getElementById("r18ClearButton"),
-        
-        // 通用
+        specialInputText: document.getElementById("r18InputText"),
+        specialResult: document.getElementById("r18Result"),
+        specialTranslateButton: document.getElementById("r18TranslateButton"),
+        specialClearButton: document.getElementById("r18ClearButton"),
+        specialCopyButton: document.getElementById("r18CopyButton"),
+        specialClearResultButton: document.getElementById("r18ClearResultButton"),
+        specialSourceLang: document.getElementById("r18SourceLang"),
+        specialTargetLang: document.getElementById("r18TargetLang"),
+        specialSwapLangButton: document.getElementById("r18SwapLang"),
+        historyList: document.getElementById("historyList"),
+        clearHistoryBtn: document.getElementById("clearHistoryBtn"),
+        exportHistoryBtn: document.getElementById("exportHistoryBtn"),
+        textTab: document.getElementById("textTab"),
+        imageTab: document.getElementById("imageTab"),
+        voiceTab: document.getElementById("voiceTab"),
+        r18Tab: document.getElementById("r18Tab"),
+        historyTab: document.getElementById("historyTab"),
         tabs: document.querySelectorAll(".tab-button"),
         tabContents: document.querySelectorAll(".tab-content"),
         themeToggle: document.querySelector(".theme-toggle"),
         apiKeyInput: document.querySelector(".api-key-input"),
         modelSelect: document.querySelector(".model-select"),
-        apiSettingsToggle: document.querySelector(".api-settings-toggle")
+        apiSettingsToggle: document.querySelector(".api-settings-toggle"),
+        progressBar: null,
+        progressContainer: null,
+        specialProgressBar: null,
+        specialProgressContainer: null
     };
 
     function init() {
+        // 創建進度條元素
+        createProgressBars();
+        
         initTheme();
         initTabs();
         initTranslation();
@@ -314,6 +373,31 @@ Target (${targetLang}):
         initR18Translation();
         initAPISettings();
         initHistory();
+    }
+    
+    // 創建進度條元素
+    function createProgressBars() {
+        // 普通翻譯進度條
+        const progressContainer = document.createElement("div");
+        progressContainer.className = "progress-container";
+        const progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+        progressContainer.appendChild(progressBar);
+        dom.textTab.querySelector(".result-container").insertBefore(progressContainer, dom.result);
+        
+        dom.progressContainer = progressContainer;
+        dom.progressBar = progressBar;
+        
+        // 特殊翻譯進度條
+        const specialProgressContainer = document.createElement("div");
+        specialProgressContainer.className = "progress-container";
+        const specialProgressBar = document.createElement("div");
+        specialProgressBar.className = "progress-bar";
+        specialProgressContainer.appendChild(specialProgressBar);
+        dom.r18Tab.querySelector(".result-container").insertBefore(specialProgressContainer, dom.specialResult);
+        
+        dom.specialProgressContainer = specialProgressContainer;
+        dom.specialProgressBar = specialProgressBar;
     }
 
     function initButtons() {
@@ -362,7 +446,7 @@ Target (${targetLang}):
 
     function initTranslation() {
         let lastTranslationTime = 0;
-        dom.translateBtn.addEventListener("click", async () => {
+        dom.translateButton.addEventListener("click", async () => {
             const now = Date.now();
             if (now - lastTranslationTime < 3000) {
                 alert("請稍等片刻再進行下一次翻譯請求");
@@ -371,7 +455,7 @@ Target (${targetLang}):
             lastTranslationTime = now;
             await handleTranslation(false);
         });
-        dom.swapLang.addEventListener("click", swapLanguages);
+        dom.swapLangButton.addEventListener("click", swapLanguages);
         dom.inputText.addEventListener("input", () => validateTranslationInput(false));
         
         dom.sourceLang.addEventListener("change", () => validateTranslationInput(false));
@@ -387,7 +471,7 @@ Target (${targetLang}):
         const input = isSpecial ? dom.specialInputText : dom.inputText;
         const sourceLang = isSpecial ? dom.specialSourceLang : dom.sourceLang;
         const targetLang = isSpecial ? dom.specialTargetLang : dom.targetLang;
-        const translateBtn = isSpecial ? dom.specialTranslateBtn : dom.translateBtn;
+        const translateBtn = isSpecial ? dom.specialTranslateButton : dom.translateButton;
 
         const textInput = input.value.trim();
         const sameLanguage = sourceLang.value === targetLang.value;
@@ -403,20 +487,29 @@ Target (${targetLang}):
         const targetLang = isSpecial ? dom.specialTargetLang : dom.targetLang;
         const result = isSpecial ? dom.specialResult : dom.result;
         const progressBar = isSpecial ? dom.specialProgressBar : dom.progressBar;
+        const progressContainer = isSpecial ? dom.specialProgressContainer : dom.progressContainer;
 
         const text = input.value.trim();
         if (!text) return;
 
         result.textContent = "翻譯中...";
         progressBar.style.width = "0%";
-        progressBar.parentElement.style.display = "block";
+        progressContainer.style.display = "block";
 
         try {
+            // 模擬進度條動畫
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress > 90) clearInterval(progressInterval);
+                progressBar.style.width = `${progress}%`;
+            }, 100);
+
             // 獲取內容類型設置
             const contentTypes = isSpecial ? {
-                adult: document.getElementById('adultContent').checked,
-                violence: document.getElementById('violenceContent').checked,
-                slang: document.getElementById('slangContent').checked
+                adult: document.getElementById('adultContent')?.checked || true,
+                violence: document.getElementById('violenceContent')?.checked || false,
+                slang: document.getElementById('slangContent')?.checked || false
             } : {};
 
             const translation = await translator.translate(
@@ -427,6 +520,7 @@ Target (${targetLang}):
                 contentTypes
             );
 
+            clearInterval(progressInterval);
             result.textContent = translation;
             
             // 添加到歷史記錄
@@ -445,15 +539,15 @@ Target (${targetLang}):
         } finally {
             progressBar.style.width = "100%";
             setTimeout(() => {
-                progressBar.parentElement.style.display = "none";
+                progressContainer.style.display = "none";
             }, 1000);
         }
     }
 
     function initImageTranslation() {
         dom.imageInput.addEventListener("change", handleImageUpload);
-        dom.extractTextBtn.addEventListener("click", extractTextFromImage);
-        dom.translateExtractedBtn.addEventListener("click", () => {
+        dom.extractTextButton.addEventListener("click", extractTextFromImage);
+        dom.translateExtractedButton.addEventListener("click", () => {
             if (dom.extractedText && dom.extractedText.textContent) {
                 translateExtractedText();
             }
@@ -542,7 +636,7 @@ Target (${targetLang}):
                 
                 initSelectionArea(canvas);
                 
-                dom.extractTextBtn.disabled = false;
+                dom.extractTextButton.disabled = false;
             };
             img.onerror = () => alert("圖片載入失敗，請使用其他圖片。");
             img.src = e.target.result;
@@ -657,12 +751,12 @@ Target (${targetLang}):
     }
 
     async function extractTextFromImage() {
-        dom.extractTextBtn.disabled = true;
-        dom.translateExtractedBtn.disabled = true;
+        dom.extractTextButton.disabled = true;
+        dom.translateExtractedButton.disabled = true;
         
         if (!dom.imageCanvas.width) {
             alert("請先上傳圖片");
-            dom.extractTextBtn.disabled = false;
+            dom.extractTextButton.disabled = false;
             return;
         }
         
@@ -740,7 +834,7 @@ Target (${targetLang}):
                     .trim();
                 
                 dom.extractedText.textContent = recognizedText;
-                dom.translateExtractedBtn.disabled = false;
+                dom.translateExtractedButton.disabled = false;
                 
                 if (!document.getElementById('editExtractedButton')) {
                     const editButton = document.createElement('button');
@@ -780,12 +874,12 @@ Target (${targetLang}):
                 
                 dom.extractedText.after(directTranslateInfo);
                 
-                dom.translateExtractedBtn.focus();
+                dom.translateExtractedButton.focus();
             }
         } catch (error) {
             dom.extractedText.textContent = `識別失敗：${error.message}`;
         } finally {
-            dom.extractTextBtn.disabled = false;
+            dom.extractTextButton.disabled = false;
         }
     }
 
@@ -821,8 +915,8 @@ Target (${targetLang}):
             dom.extractedText.textContent = "";
         }
         
-        dom.extractTextBtn.disabled = true;
-        dom.translateExtractedBtn.disabled = true;
+        dom.extractTextButton.disabled = true;
+        dom.translateExtractedButton.disabled = true;
         
         dom.imageInput.value = "";
     }
@@ -1009,7 +1103,7 @@ Target (${targetLang}):
                 
                 validateTranslationInput();
                 
-                dom.translateBtn.focus();
+                dom.translateButton.focus();
             }
         });
         
@@ -1110,7 +1204,7 @@ Target (${targetLang}):
             dom.extractedText.textContent = editedText;
             if (editButton) editButton.style.display = 'inline-block';
             
-            dom.translateExtractedBtn.disabled = !editedText;
+            dom.translateExtractedButton.disabled = !editedText;
         });
         
         cancelButton.addEventListener('click', () => {
@@ -1175,18 +1269,65 @@ Target (${targetLang}):
         }
     }
 
-    function showNotification(message, type = "info") {
+    function showNotification(message, type = "info", duration = 3000) {
         const notification = document.createElement("div");
         notification.className = `notification ${type}`;
-        notification.textContent = message;
+        
+        // 根據類型添加圖標
+        const icon = document.createElement("span");
+        icon.className = "notification-icon";
+        notification.appendChild(icon);
+        
+        const textContent = document.createElement("span");
+        textContent.className = "notification-text";
+        textContent.textContent = message;
+        notification.appendChild(textContent);
+        
+        // 添加關閉按鈕
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "notification-close";
+        closeBtn.innerHTML = "×";
+        closeBtn.onclick = () => {
+            notification.classList.remove("show");
+            setTimeout(() => notification.remove(), 300);
+        };
+        notification.appendChild(closeBtn);
+        
+        // 檢查是否已有相同內容的通知
+        const existingNotifications = document.querySelectorAll('.notification');
+        for (let existing of existingNotifications) {
+            if (existing.querySelector('.notification-text').textContent === message) {
+                existing.remove();
+            }
+        }
         
         document.body.appendChild(notification);
         
-        setTimeout(() => notification.classList.add("show"), 10);
-        setTimeout(() => {
-            notification.classList.remove("show");
-            setTimeout(() => document.body.removeChild(notification), 300);
-        }, 3000);
+        // 添加動畫效果
+        requestAnimationFrame(() => {
+            notification.classList.add("show");
+        });
+        
+        // 自動關閉
+        if (duration > 0) {
+            setTimeout(() => {
+                notification.classList.remove("show");
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+        
+        // 添加滑鼠懸停暫停自動關閉功能
+        let timeoutId;
+        notification.addEventListener('mouseenter', () => {
+            clearTimeout(timeoutId);
+        });
+        
+        notification.addEventListener('mouseleave', () => {
+            timeoutId = setTimeout(() => {
+                notification.classList.remove("show");
+                setTimeout(() => notification.remove(), 300);
+            }, 1000);
+        });
     }
 
     function addToHistory(entry) {
@@ -1243,11 +1384,11 @@ Target (${targetLang}):
     }
 
     function initR18Translation() {
-        dom.r18TranslateBtn.addEventListener("click", () => handleTranslation(true));
-        dom.r18CopyBtn.addEventListener("click", () => copyToClipboard(dom.r18Result.textContent));
-        dom.r18ClearBtn.addEventListener("click", () => {
-            dom.r18InputText.value = "";
-            dom.r18Result.textContent = "";
+        dom.specialTranslateButton.addEventListener("click", () => handleTranslation(true));
+        dom.specialCopyButton.addEventListener("click", () => copyToClipboard(dom.specialResult.textContent));
+        dom.specialClearButton.addEventListener("click", () => {
+            dom.specialInputText.value = "";
+            dom.specialResult.textContent = "";
         });
     }
 
@@ -1311,9 +1452,20 @@ Target (${targetLang}):
     function updateApiStatus(isConnected) {
         const indicator = document.querySelector(".api-status-indicator");
         const statusText = document.querySelector(".api-status-text");
+        const statusContainer = document.querySelector(".api-status");
         
         indicator.classList.toggle("connected", isConnected);
         statusText.textContent = isConnected ? "已連接" : "未連接";
+        
+        // 添加動畫效果
+        statusContainer.classList.add("updating");
+        setTimeout(() => statusContainer.classList.remove("updating"), 1000);
+        
+        // 顯示通知
+        showNotification(
+            isConnected ? "API 連接成功" : "API 連接失敗",
+            isConnected ? "success" : "error"
+        );
     }
 
     function updateModelInfo(model) {
@@ -1328,6 +1480,31 @@ Target (${targetLang}):
             選擇的模型：${model}<br>
             預估費用：${costs[model] || "費用未知"}
         `;
+    }
+
+    // 更新翻譯進度條的動畫
+    function updateTranslationProgress(progressBar, progress) {
+        if (progress <= 0) {
+            progressBar.style.width = "0%";
+            return;
+        }
+        
+        if (progress >= 100) {
+            progressBar.style.width = "100%";
+            progressBar.classList.add("complete");
+            setTimeout(() => {
+                progressBar.classList.remove("complete");
+            }, 1000);
+            return;
+        }
+        
+        progressBar.style.width = `${progress}%`;
+        
+        // 添加脈動效果
+        progressBar.classList.add("pulse");
+        setTimeout(() => {
+            progressBar.classList.remove("pulse");
+        }, 500);
     }
 
     init();
