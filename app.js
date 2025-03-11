@@ -1,8 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
     // API配置
     const API_CONFIG = {
+        openrouter: {
+            url: "https://openrouter.ai/api/v1/chat/completions",
+            model: "deepseek/deepseek-chat-r1",
+            key: "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",
+            quota: Infinity
+        },
+        gpt: {
+            url: "https://free.v36.cm",
+            model: "gpt-3.5-turbo",
+            key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
+            quota: Infinity
+        },
         deepseek: {
             url: "https://api.siliconflow.cn/v1/chat/completions",
+            model: "deepseek-ai/DeepSeek-R1",
             key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
             quota: Infinity
         },
@@ -25,11 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         textgen: {
             url: "http://localhost:7860/api/v1/generate",
-            quota: Infinity
-        },
-        gpt: {
-            url: "https://free.v36.cm",
-            key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
             quota: Infinity
         }
     };
@@ -112,43 +120,126 @@ Target ({targetLang}):
             this.apiBalancer = new APIBalancer();
             this.apiStatus = {};
             this.apiResponseTimes = {};
+            this.selectedModel = "openrouter"; // 預設使用 OpenRouter
+        }
+
+        // 設置所選模型
+        setModel(model) {
+            this.selectedModel = model;
         }
 
         async translate(text, sourceLang, targetLang, isSpecial = false, contentTypes = {}) {
-            try {
-                // 優先使用 DeepSeek API
-                return await this.translateWithDeepSeek(text, sourceLang, targetLang);
-            } catch (error) {
-                console.error("DeepSeek 翻譯失敗:", error);
-                showNotification("DeepSeek 翻譯失敗，切換到備用 API", "error");
-                
-                // 如果 DeepSeek API 失敗，使用其他 API
-                const api = this.apiBalancer.getNextAPI(isSpecial);
-                
+            if (this.selectedModel === "openrouter") {
                 try {
-                    if (isSpecial) {
-                        return await this.handleSpecialTranslation(text, sourceLang, targetLang, contentTypes);
-                    } else {
-                        return await this.handleNormalTranslation(api, text, sourceLang, targetLang);
-                    }
+                    return await this.translateWithOpenRouter(text, sourceLang, targetLang);
                 } catch (error) {
-                    console.error(`${api} 翻譯失敗:`, error);
-                    throw error;
+                    console.error("OpenRouter DeepSeek R1 翻譯失敗:", error);
+                    showNotification("DeepSeek R1 翻譯失敗，切換到 GPT API", "warning");
+                    
+                    try {
+                        return await this.translateWithGPT(text, sourceLang, targetLang);
+                    } catch (gptError) {
+                        console.error("所有 API 翻譯失敗", gptError);
+                        showNotification("翻譯失敗，請稍後再試", "error");
+                        throw gptError;
+                    }
+                }
+            } else if (this.selectedModel === "gpt") {
+                try {
+                    return await this.translateWithGPT(text, sourceLang, targetLang);
+                } catch (error) {
+                    console.error("GPT 翻譯失敗:", error);
+                    showNotification("GPT 翻譯失敗，切換到 DeepSeek R1", "warning");
+                    
+                    try {
+                        return await this.translateWithOpenRouter(text, sourceLang, targetLang);
+                    } catch (deepseekError) {
+                        console.error("所有 API 翻譯失敗", deepseekError);
+                        showNotification("翻譯失敗，請稍後再試", "error");
+                        throw deepseekError;
+                    }
                 }
             }
         }
 
-        async translateWithDeepSeek(text, sourceLang, targetLang) {
+        async translateWithOpenRouter(text, sourceLang, targetLang) {
             const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}：\n\n${text}`;
             
-            const response = await fetch(API_CONFIG.deepseek.url, {
+            // 創建進度條
+            const progressBar = createProgressBar("translation-progress", "翻譯進度");
+            document.querySelector(".action-panel").appendChild(progressBar);
+            updateTranslationProgress(progressBar, 10);
+            
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch(API_CONFIG.openrouter.url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_CONFIG.openrouter.key}`,
+                        "HTTP-Referer": window.location.href,
+                        "X-Title": "詮語翻譯"
+                    },
+                    body: JSON.stringify({
+                        model: API_CONFIG.openrouter.model,
+                        messages: [
+                            {
+                                role: "system",
+                                content: "你是一個專業的翻譯助手，請準確翻譯用戶提供的文本，保持原文的格式和風格。"
+                            },
+                            {
+                                role: "user",
+                                content: prompt
+                            }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 2000
+                    })
+                });
+                
+                updateTranslationProgress(progressBar, 50);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`OpenRouter API 錯誤: ${errorData.error?.message || response.status}`);
+                }
+
+                const data = await response.json();
+                
+                updateTranslationProgress(progressBar, 100);
+                
+                // 更新 API 回應時間
+                this.apiResponseTimes['openrouter'] = Date.now() - startTime;
+                this.apiStatus['openrouter'] = true;
+                
+                // 移除進度條
+                setTimeout(() => {
+                    progressBar.remove();
+                }, 1000);
+                
+                return data.choices[0].message.content.trim();
+            } catch (error) {
+                this.apiStatus['openrouter'] = false;
+                
+                // 移除進度條
+                progressBar.remove();
+                
+                throw error;
+            }
+        }
+
+        async translateWithGPT(text, sourceLang, targetLang) {
+            const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}：\n\n${text}`;
+            
+            const response = await fetch(API_CONFIG.gpt.url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${API_CONFIG.deepseek.key}`
+                    "Authorization": `Bearer ${API_CONFIG.gpt.key}`
                 },
                 body: JSON.stringify({
-                    model: "deepseek-ai/DeepSeek-V3",
+                    model: API_CONFIG.gpt.model,
                     messages: [
                         {
                             role: "system",
@@ -160,16 +251,13 @@ Target ({targetLang}):
                         }
                     ],
                     temperature: 0.3,
-                    max_tokens: 1000,
-                    top_p: 0.7,
-                    frequency_penalty: 0.5,
-                    n: 1
+                    max_tokens: 1000
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`DeepSeek API 錯誤: ${errorData.error?.message || response.status}`);
+                throw new Error(`GPT API 錯誤: ${errorData.error?.message || response.status}`);
             }
 
             const data = await response.json();
@@ -326,41 +414,6 @@ Target ({targetLang}):
             const data = await response.json();
             return data.generated_text;
         }
-
-        // 使用 OpenAI API 進行翻譯
-        async translateWithGPT(text, sourceLang, targetLang) {
-            const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}：\n\n${text}`;
-            
-            const response = await fetch(`${API_CONFIG.gpt.url}/v1/chat/completions`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${API_CONFIG.gpt.key}`
-                },
-                body: JSON.stringify({
-                    model: "gpt-3.5-turbo",
-                    messages: [
-                        {
-                            role: "system",
-                            content: "你是一個專業的翻譯助手，請準確翻譯用戶提供的文本，保持原文的格式和風格。"
-                        },
-                        {
-                            role: "user",
-                            content: prompt
-                        }
-                    ],
-                    temperature: 0.3
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`GPT API 錯誤: ${errorData.error?.message || response.status}`);
-            }
-
-            const data = await response.json();
-            return data.choices[0].message.content.trim();
-        }
     }
 
     // 初始化翻譯管理器
@@ -438,6 +491,7 @@ Target ({targetLang}):
         initR18Translation();
         initAPISettings();
         initHistory();
+        initSettings(); // 添加設置初始化
     }
     
     // 創建進度條元素
@@ -511,6 +565,39 @@ Target ({targetLang}):
 
     function initTranslation() {
         let lastTranslationTime = 0;
+        const translationManager = new TranslationManager();
+        
+        // 初始化模型選擇器
+        const modelSelect = document.getElementById("modelSelect");
+        const r18ModelSelect = document.getElementById("r18ModelSelect");
+        
+        if (modelSelect) {
+            modelSelect.addEventListener("change", (e) => {
+                translationManager.setModel(e.target.value);
+                localStorage.setItem("selectedModel", e.target.value);
+                showNotification(`已切換到 ${e.target.value === "openrouter" ? "DeepSeek R1" : "GPT-3.5"} 模型`, "info");
+            });
+            
+            // 從本地存儲中讀取之前選擇的模型
+            const savedModel = localStorage.getItem("selectedModel");
+            if (savedModel) {
+                modelSelect.value = savedModel;
+                translationManager.setModel(savedModel);
+            }
+        }
+        
+        if (r18ModelSelect) {
+            r18ModelSelect.addEventListener("change", (e) => {
+                translationManager.setModel(e.target.value);
+                localStorage.setItem("selectedModel", e.target.value);
+                showNotification(`已切換到 ${e.target.value === "openrouter" ? "DeepSeek R1" : "GPT-3.5"} 模型`, "info");
+            });
+            
+            // 同步兩個選擇器的值
+            if (modelSelect) {
+                r18ModelSelect.value = modelSelect.value;
+            }
+        }
         
         // 確保頁面載入時執行驗證
         validateTranslationInput(false);
@@ -522,7 +609,43 @@ Target ({targetLang}):
                 return;
             }
             lastTranslationTime = now;
-            await handleTranslation(false);
+            
+            const text = dom.inputText.value.trim();
+            const sourceLang = dom.sourceLang.value;
+            const targetLang = dom.targetLang.value;
+            
+            if (!text) {
+                showNotification("請輸入要翻譯的文字", "warning");
+                return;
+            }
+            
+            try {
+                dom.translateButton.disabled = true;
+                dom.translateButton.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
+                
+                const translatedText = await translationManager.translate(text, sourceLang, targetLang);
+                
+                dom.result.textContent = translatedText;
+                
+                // 添加到歷史記錄
+                addToHistory({
+                    timestamp: new Date().toISOString(),
+                    sourceText: text,
+                    targetText: translatedText,
+                    sourceLang: sourceLang,
+                    targetLang: targetLang,
+                    isSpecial: false
+                });
+                
+                showNotification("翻譯完成", "success");
+            } catch (error) {
+                console.error("翻譯失敗:", error);
+                dom.result.textContent = `翻譯失敗: ${error.message}`;
+                showNotification(`翻譯失敗: ${error.message}`, "error");
+            } finally {
+                dom.translateButton.disabled = false;
+                dom.translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
+            }
         });
         
         dom.swapLangButton.addEventListener("click", swapLanguages);
@@ -1500,6 +1623,102 @@ Target ({targetLang}):
         setTimeout(() => {
             progressBar.classList.remove("pulse");
         }, 500);
+    }
+
+    // 添加 API 狀態檢查
+    async function checkAPIStatus() {
+        const openrouterStatus = document.getElementById("openrouterStatus");
+        const gptStatus = document.getElementById("gptStatus");
+        
+        // 檢查 OpenRouter API
+        try {
+            const response = await fetch(API_CONFIG.openrouter.url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_CONFIG.openrouter.key}`,
+                    "HTTP-Referer": window.location.href,
+                    "X-Title": "詮語翻譯"
+                },
+                body: JSON.stringify({
+                    model: API_CONFIG.openrouter.model,
+                    messages: [
+                        {role: "user", content: "test"}
+                    ]
+                })
+            });
+            
+            if (response.ok) {
+                if (openrouterStatus) {
+                    openrouterStatus.classList.add("connected");
+                    openrouterStatus.parentElement.querySelector(".api-status-text").textContent = "已連接";
+                }
+            } else {
+                if (openrouterStatus) {
+                    openrouterStatus.classList.remove("connected");
+                    openrouterStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
+                }
+            }
+        } catch (error) {
+            if (openrouterStatus) {
+                openrouterStatus.classList.remove("connected");
+                openrouterStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
+            }
+        }
+        
+        // 檢查 GPT API
+        try {
+            const response = await fetch(API_CONFIG.gpt.url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_CONFIG.gpt.key}`
+                },
+                body: JSON.stringify({
+                    model: API_CONFIG.gpt.model,
+                    messages: [
+                        {role: "user", content: "test"}
+                    ]
+                })
+            });
+            
+            if (response.ok) {
+                if (gptStatus) {
+                    gptStatus.classList.add("connected");
+                    gptStatus.parentElement.querySelector(".api-status-text").textContent = "已連接";
+                }
+            } else {
+                if (gptStatus) {
+                    gptStatus.classList.remove("connected");
+                    gptStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
+                }
+            }
+        } catch (error) {
+            if (gptStatus) {
+                gptStatus.classList.remove("connected");
+                gptStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
+            }
+        }
+    }
+
+    // 添加設置標籤頁初始化
+    function initSettings() {
+        const clearLocalStorageBtn = document.getElementById("clearLocalStorage");
+        
+        if (clearLocalStorageBtn) {
+            clearLocalStorageBtn.addEventListener("click", () => {
+                if (confirm("確定要清除所有本地數據嗎？這將刪除所有設置和歷史記錄。")) {
+                    localStorage.clear();
+                    showNotification("所有本地數據已清除", "success");
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
+            });
+        }
+        
+        // 檢查 API 狀態
+        checkAPIStatus();
     }
 
     init();
