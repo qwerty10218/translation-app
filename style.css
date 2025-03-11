@@ -1261,3 +1261,55 @@ textarea:focus {
         padding: 10px;
     }
 }
+
+/* LibreTranslate 無限制翻譯按鈕樣式 */
+.libre-translate-btn {
+    background: linear-gradient(135deg, #2980b9, #3498db);
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.libre-translate-btn:hover {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.libre-translate-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* 黑暗主題支持 */
+.dark-theme .libre-translate-btn {
+    background: linear-gradient(135deg, #206592, #2574a9);
+}
+
+.dark-theme .libre-translate-btn:hover {
+    background: linear-gradient(135deg, #2574a9, #206592);
+}
+
+/* 響應式設計調整 */
+@media (max-width: 768px) {
+    .libre-translate-btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* 標記使用 LibreTranslate 的歷史記錄 */
+.history-item.libre {
+    border-left-color: #3498db;
+}
+
+.history-item.libre::before {
+    content: "🌐";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 16px;
+}
