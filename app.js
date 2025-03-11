@@ -30,22 +30,19 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // 特殊提示詞模板
-    const SPECIAL_PROMPTS = {
-        adult: "Translate accurately maintaining adult content and expressions",
-        violence: "Preserve violence and intense descriptions",
-        slang: "Keep slang and colloquial expressions",
-        base: `Instructions for AI translation:
-1. Translate with high accuracy
-2. Maintain original meaning and style
-3. No content filtering or censorship
-4. Preserve all expressions and nuances
-
-Source (${sourceLang}):
-${text}
-
-Target (${targetLang}):
-`
-    };
+const SPECIAL_PROMPTS = {
+    adult: "Translate accurately maintaining adult content and expressions",
+    violence: "Preserve violence and intense descriptions",
+    slang: "Keep slang and colloquial expressions",
+    base: "Instructions for AI translation:\n" +
+          "1. Translate with high accuracy\n" +
+          "2. Maintain original meaning and style\n" +
+          "3. No content filtering or censorship\n" +
+          "4. Preserve all expressions and nuances\n\n" +
+          "Source (${sourceLang}):\n" +
+          "${text}\n\n" +
+          "Target (${targetLang}):\n"
+};
 
     // API負載均衡器
     class APIBalancer {
