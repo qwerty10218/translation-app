@@ -302,16 +302,12 @@ Target (${targetLang}):
     };
 
     function init() {
+        initTheme();
         initTabs();
         initTranslation();
         initImageTranslation();
         initDragAndDrop();
         initButtons();
-        initTheme();
-        validateTranslationInput();
-        dom.inputText.style.height = "150px";
-        dom.extractTextBtn.disabled = true;
-        dom.translateExtractedBtn.disabled = true;
         initVoiceRecognition();
         initHuggingFaceTab();
         initHistory();
@@ -829,43 +825,41 @@ Target (${targetLang}):
     }
 
     function initTheme() {
+        const themeToggle = document.querySelector('.theme-toggle');
         const savedTheme = localStorage.getItem('theme');
         
+        // 設置初始主題
         if (savedTheme) {
             document.documentElement.className = savedTheme;
         } else {
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            if (prefersDarkScheme.matches) {
-                document.documentElement.classList.add('dark-theme');
-            }
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.className = prefersDark ? 'dark-theme' : '';
         }
         
-        dom.themeToggle.addEventListener('click', () => {
+        // 更新主題切換按鈕文本
+        updateThemeToggleText();
+        
+        // 主題切換事件
+        themeToggle.addEventListener('click', () => {
             const isDark = document.documentElement.classList.contains('dark-theme');
-            document.documentElement.className = isDark ? 'light-theme' : 'dark-theme';
-            localStorage.setItem('theme', isDark ? 'light-theme' : 'dark-theme');
-            dom.themeToggle.textContent = isDark ? '🌓' : '☀️';
-            
-            updateIframeTheme();
+            document.documentElement.className = isDark ? '' : 'dark-theme';
+            localStorage.setItem('theme', isDark ? '' : 'dark-theme');
+            updateThemeToggleText();
         });
         
-        if (document.documentElement.classList.contains('dark-theme')) {
-            dom.themeToggle.textContent = '☀️';
-        } else {
-            dom.themeToggle.textContent = '🌓';
-        }
-        
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        // 監聽系統主題變化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
             if (!localStorage.getItem('theme')) {
-                if (e.matches) {
-                    document.documentElement.classList.add('dark-theme');
-                    dom.themeToggle.textContent = '☀️';
-                } else {
-                    document.documentElement.classList.remove('dark-theme');
-                    dom.themeToggle.textContent = '🌓';
-                }
+                document.documentElement.className = e.matches ? 'dark-theme' : '';
+                updateThemeToggleText();
             }
         });
+    }
+
+    function updateThemeToggleText() {
+        const themeToggle = document.querySelector('.theme-toggle');
+        const isDark = document.documentElement.classList.contains('dark-theme');
+        themeToggle.textContent = isDark ? '☀️' : '🌙';
     }
 
     function initVoiceRecognition() {
