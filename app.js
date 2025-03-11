@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // API配置
     const API_CONFIG = {
         openrouter: {
-            url: "https://openrouter.ai/api",
+            url: "https://openrouter.ai/api/v1/chat/completions",
             model: "deepseek/deepseek-chat-r1",
             key: "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",
             quota: Infinity
