@@ -95,7 +95,10 @@
         <!-- 特殊翻譯區 -->
         <div id="specialTab" class="tab-content">
             <div class="translation-panel">
-                <!-- 與一般翻譯區相同的結構，但使用不同的模型選項 -->
+                <div class="warning-banner">
+                    ⚠️ 特殊內容翻譯區 - 無內容限制
+                </div>
+                
                 <div class="language-control-panel">
                     <div class="language-selectors">
                         <div class="select-wrapper">
@@ -120,9 +123,27 @@
                     <div class="model-selection">
                         <label for="specialModelSelect">翻譯模型：</label>
                         <select id="specialModelSelect">
-                            <option value="kobold">KoboldAI (無審核)</option>
-                            <option value="textgen">Text-generation-webui (本地)</option>
+                            <option value="horde">Stable Horde (無限制)</option>
+                            <option value="kobold">KoboldAI (本地)</option>
                         </select>
+                    </div>
+
+                    <div class="content-type-selection">
+                        <label>內容類型：</label>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="adultContent" checked>
+                                成人內容
+                            </label>
+                            <label>
+                                <input type="checkbox" id="violenceContent" checked>
+                                暴力內容
+                            </label>
+                            <label>
+                                <input type="checkbox" id="slangContent" checked>
+                                俚語/粗話
+                            </label>
+                        </div>
                     </div>
                 </div>
 
