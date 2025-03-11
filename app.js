@@ -970,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
             const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
             const resultElement = isR18 ? dom.r18Result : dom.result;
+            const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
             
             // 驗證輸入
             if (!inputText) {
@@ -977,8 +978,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             
+            // 禁用翻譯按鈕，顯示翻譯中狀態
+            translateButton.disabled = true;
+            translateButton.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
+            
             // 顯示加載狀態
             resultElement.textContent = "翻譯中...";
+            
+            // 創建進度條
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            const progressIndicator = document.createElement('div');
+            progressIndicator.className = 'progress-indicator';
+            progressBar.appendChild(progressIndicator);
+            
+            // 添加進度條到結果區域上方
+            const resultContainer = resultElement.parentElement;
+            resultContainer.insertBefore(progressBar, resultElement);
+            
+            // 更新進度條
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress > 90) progress = 90; // 最多到90%，剩下的10%留給實際完成時
+                updateTranslationProgress(progressIndicator, progress);
+            }, 300);
             
             // 根據是否為R18內容選擇不同的翻譯方法
             let translatedText;
@@ -986,18 +1010,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (isR18) {
                     const model = dom.r18ModelSelect.value;
                     if (model === "mymemory") {
-                        translatedText = await translateWithMyMemory(inputText, sourceLang, targetLang);
+                        translatedText = await translationManager.translateWithMyMemory(inputText, sourceLang, targetLang);
                     } else if (model === "libretranslate") {
                         translatedText = await translateWithLibreTranslate(inputText, sourceLang, targetLang);
                     }
                 } else {
-                    translatedText = await translateWithFallback(inputText, sourceLang, targetLang);
+                    translatedText = await translationManager.translateWithFallback(inputText, sourceLang, targetLang);
                 }
                 
                 // 確保翻譯結果不是undefined
                 if (!translatedText) {
                     throw new Error("翻譯結果為空");
                 }
+                
+                // 完成進度條
+                clearInterval(progressInterval);
+                updateTranslationProgress(progressIndicator, 100);
                 
                 // 顯示翻譯結果
                 resultElement.textContent = translatedText;
@@ -1008,14 +1036,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 // 顯示成功通知
                 showNotification("翻譯完成", "success");
             } catch (error) {
+                // 出錯時停止進度條
+                clearInterval(progressInterval);
+                progressBar.remove();
+                
                 console.error("翻譯過程中發生錯誤:", error);
                 resultElement.textContent = `翻譯錯誤: ${error.message}`;
                 showNotification("翻譯失敗: " + error.message, "error");
+            } finally {
+                // 恢復按鈕狀態
+                translateButton.disabled = false;
+                translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
+                
+                // 延遲移除進度條
+                setTimeout(() => {
+                    if (progressBar.parentElement) {
+                        progressBar.remove();
+                    }
+                }, 1000);
             }
         } catch (error) {
             console.error("處理翻譯請求時發生錯誤:", error);
             showNotification("處理翻譯請求時發生錯誤: " + error.message, "error");
         }
+    }
+    
+    // 更新翻譯進度條
+    function updateTranslationProgress(progressIndicator, progress) {
+        progressIndicator.style.width = `${progress}%`;
     }
 
     function initImageTranslation() {
@@ -1620,11 +1668,64 @@ document.addEventListener("DOMContentLoaded", () => {
             'ko': 'ko-KR'  // 韓文
         };
         
-        // 獲取當前選擇的源語言
-        function getCurrentLanguage() {
-            // 獲取當前激活的標籤頁
-            const activeTab = document.querySelector('.tab-content.active');
+        // 創建語音語言選擇器
+        const voiceTabContent = document.getElementById('voiceTab');
+        if (voiceTabContent && !document.getElementById('voiceLanguageSelector')) {
+            const languageSelector = document.createElement('div');
+            languageSelector.id = 'voiceLanguageSelector';
+            languageSelector.className = 'voice-language-selector';
             
+            const label = document.createElement('label');
+            label.textContent = '語音識別語言：';
+            
+            const select = document.createElement('select');
+            select.id = 'voiceLanguageSelect';
+            
+            // 添加語言選項
+            const options = [
+                { value: 'zh-TW', text: '繁體中文' },
+                { value: 'en-US', text: '英文' },
+                { value: 'ja-JP', text: '日文' },
+                { value: 'ko-KR', text: '韓文' }
+            ];
+            
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.text;
+                select.appendChild(optionElement);
+            });
+            
+            languageSelector.appendChild(label);
+            languageSelector.appendChild(select);
+            
+            // 插入到語音控制區域
+            const voiceControls = voiceTabContent.querySelector('.voice-controls');
+            if (voiceControls) {
+                voiceControls.appendChild(languageSelector);
+            }
+            
+            // 添加事件監聽器
+            select.addEventListener('change', function() {
+                // 如果正在錄音，停止並重新開始以應用新語言
+                if (isRecording) {
+                    stopVoiceRecognition(voiceStatus, startVoiceBtn, stopVoiceBtn, useVoiceTextBtn);
+                    setTimeout(() => {
+                        startVoiceRecognition(voiceVisualizer, voiceStatus, voiceTranscript, startVoiceBtn, stopVoiceBtn, useVoiceTextBtn);
+                    }, 500);
+                }
+            });
+        }
+        
+        // 獲取當前選擇的語音語言
+        function getCurrentLanguage() {
+            const voiceLanguageSelect = document.getElementById('voiceLanguageSelect');
+            if (voiceLanguageSelect) {
+                return voiceLanguageSelect.value;
+            }
+            
+            // 如果沒有語音語言選擇器，則使用源語言
+            const activeTab = document.querySelector('.tab-content.active');
             if (!activeTab) return 'zh-TW'; // 默認繁體中文
             
             // 根據當前標籤頁獲取相應的語言選擇框
@@ -1644,69 +1745,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const selectedLang = sourceLanguageSelect ? sourceLanguageSelect.value : 'zh';
             return languageMapping[selectedLang] || 'zh-TW';
         }
-        
-        // 為所有語言選擇器添加變更事件監聽
-        function addLanguageChangeListeners() {
-            const selectors = [
-                document.getElementById('sourceLang'),
-                document.getElementById('imageSourceLang'),
-                document.getElementById('r18SourceLang')
-            ];
-            
-            selectors.forEach(selector => {
-                if (selector) {
-                    selector.addEventListener('change', () => {
-                        // 如果正在錄音，停止並重新開始以應用新語言
-                        if (isRecording) {
-                            const activeFloatingPanel = document.querySelector('.voice-floating-panel:not(.hidden)');
-                            if (activeFloatingPanel) {
-                                const status = activeFloatingPanel.querySelector('.voice-floating-status');
-                                const startBtn = activeFloatingPanel.querySelector('.voice-floating-start');
-                                const stopBtn = activeFloatingPanel.querySelector('.voice-floating-stop');
-                                const useBtn = activeFloatingPanel.querySelector('.voice-floating-use');
-                                
-                                stopVoiceRecognition(status, startBtn, stopBtn, useBtn);
-                                setTimeout(() => {
-                                    startVoiceRecognition(
-                                        activeFloatingPanel.querySelector('.voice-floating-visualizer'),
-                                        status,
-                                        activeFloatingPanel.querySelector('.voice-floating-transcript'),
-                                        startBtn,
-                                        stopBtn,
-                                        useBtn
-                                    );
-                                }, 500);
-                            } else if (document.getElementById('voiceTab').classList.contains('active')) {
-                                stopVoiceRecognition(voiceStatus, startVoiceBtn, stopVoiceBtn, useVoiceTextBtn);
-                                setTimeout(() => {
-                                    startVoiceRecognition(
-                                        voiceVisualizer,
-                                        voiceStatus,
-                                        voiceTranscript,
-                                        startVoiceBtn,
-                                        stopVoiceBtn,
-                                        useVoiceTextBtn
-                                    );
-                                }, 500);
-                            }
-                        }
-                        
-                        // 顯示通知
-                        const newLang = getCurrentLanguage();
-                        const langNames = {
-                            'zh-TW': '繁體中文',
-                            'en-US': '英文',
-                            'ja-JP': '日文',
-                            'ko-KR': '韓文'
-                        };
-                        showNotification(`語音識別已切換為: ${langNames[newLang] || newLang}`, "info");
-                    });
-                }
-            });
-        }
-        
-        // 初始化時添加語言變更監聽器
-        addLanguageChangeListeners();
         
         let audioContext;
         let analyser;
@@ -1743,20 +1781,25 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         };
         
-        function createBars() {
-            voiceVisualizer.innerHTML = '';
-            const barCount = 50;
+        function createBars(visualizer) {
+            // 清空現有內容
+            visualizer.innerHTML = '';
             
+            // 創建條形
+            const barCount = 30; // 較少的條更好看
             for (let i = 0; i < barCount; i++) {
                 const bar = document.createElement('div');
-                bar.className = 'voice-bar';
-                voiceVisualizer.appendChild(bar);
-                bars.push(bar);
+                bar.className = 'bar';
+                visualizer.appendChild(bar);
             }
         }
         
+        // 更新可視化效果
         function updateVisualizer(dataArray) {
-            if (!isRecording) return;
+            const visualizer = document.querySelector('.voice-visualizer');
+            if (!visualizer) return;
+            
+            const bars = visualizer.querySelectorAll('.bar');
             
             for (let i = 0; i < bars.length; i++) {
                 const index = Math.floor(i * (dataArray.length / bars.length));
@@ -1764,87 +1807,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 const height = Math.max(5, value * 100);
                 bars[i].style.height = `${height}px`;
             }
-            
-            animationId = requestAnimationFrame(() => updateVisualizer(dataArray));
         }
         
         // 在文字翻譯頁面添加語音按鈕
         function addVoiceButtonToTextTab() {
-            const actionPanel = document.querySelector('#textTab .action-panel');
-            if (!actionPanel) return;
+            // 不再在文字翻譯頁面添加語音按鈕
+            // 改為在語音區域添加更明確的說明
             
-            // 檢查是否已存在
-            if (document.getElementById('textTabVoiceBtn')) return;
+            const voiceContainer = document.querySelector('#voiceTab .voice-container');
+            if (!voiceContainer) return;
             
-            const voiceButton = document.createElement('button');
-            voiceButton.id = 'textTabVoiceBtn';
-            voiceButton.className = 'secondary-button voice-button';
-            voiceButton.innerHTML = '<span class="button-icon">🎤</span>語音輸入';
-            actionPanel.appendChild(voiceButton);
-            
-            voiceButton.addEventListener('click', () => {
-                // 切換到文字輸入標籤頁
-                document.querySelector('.tab-button[data-tab="textTab"]').click();
-                // 打開語音輸入浮動窗口
-                openVoicePanel();
-            });
-            
-            // 創建語音浮動面板
-            if (!document.getElementById('voiceFloatingPanel')) {
-                const floatingPanel = document.createElement('div');
-                floatingPanel.id = 'voiceFloatingPanel';
-                floatingPanel.className = 'voice-floating-panel hidden';
-                
-                floatingPanel.innerHTML = `
-                    <div class="voice-floating-header">
-                        <span class="voice-floating-title">語音識別</span>
-                        <button class="voice-floating-close">×</button>
-                    </div>
-                    <div class="voice-floating-visualizer"></div>
-                    <div class="voice-floating-status">準備就緒</div>
-                    <div class="voice-floating-transcript"></div>
-                    <div class="voice-floating-controls">
-                        <button class="voice-floating-start">開始錄音</button>
-                        <button class="voice-floating-stop" disabled>停止錄音</button>
-                        <button class="voice-floating-use" disabled>使用文字</button>
-                    </div>
+            // 添加說明文字
+            if (!document.querySelector('.voice-instructions')) {
+                const instructions = document.createElement('div');
+                instructions.className = 'voice-instructions';
+                instructions.innerHTML = `
+                    <p>使用語音識別功能將您的語音轉換為文字。</p>
+                    <p>點擊"開始錄音"按鈕，說話後點擊"停止錄音"，然後可以使用識別的文字。</p>
+                    <p>支持多種語言，會自動使用當前選擇的源語言。</p>
                 `;
                 
-                document.body.appendChild(floatingPanel);
-                
-                // 添加事件處理
-                const closeBtn = floatingPanel.querySelector('.voice-floating-close');
-                const startBtn = floatingPanel.querySelector('.voice-floating-start');
-                const stopBtn = floatingPanel.querySelector('.voice-floating-stop');
-                const useBtn = floatingPanel.querySelector('.voice-floating-use');
-                
-                closeBtn.addEventListener('click', closeVoicePanel);
-                
-                startBtn.addEventListener('click', () => {
-                    startVoiceRecognition(
-                        floatingPanel.querySelector('.voice-floating-visualizer'),
-                        floatingPanel.querySelector('.voice-floating-status'),
-                        floatingPanel.querySelector('.voice-floating-transcript'),
-                        startBtn,
-                        stopBtn,
-                        useBtn
-                    );
-                });
-                
-                stopBtn.addEventListener('click', () => {
-                    stopVoiceRecognition(
-                        floatingPanel.querySelector('.voice-floating-status'),
-                        startBtn,
-                        stopBtn,
-                        useBtn
-                    );
-                });
-                
-                useBtn.addEventListener('click', () => {
-                    const text = floatingPanel.querySelector('.voice-floating-transcript').textContent;
-                    useRecognizedText(text);
-                    closeVoicePanel();
-                });
+                // 插入到voiceContainer的開頭
+                voiceContainer.insertBefore(instructions, voiceContainer.firstChild);
             }
         }
         
@@ -1890,68 +1874,90 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         function startVoiceRecognition(visualizer, status, transcript, startBtn, stopBtn, useBtn) {
+            if (isRecording) return;
+            
+            isRecording = true;
+            transcript.textContent = '';
+            status.textContent = '正在聆聽...';
+            status.style.color = '#33cc33';
+            
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            useBtn.disabled = true;
+            
+            // 獲取當前選擇的語言
+            const language = getCurrentLanguage();
+            recognition.lang = language;
+            
             try {
-                if (!isRecording) {
-                    // 設置語音識別語言
-                    recognition.lang = getCurrentLanguage();
-                    console.log("語音識別使用語言:", recognition.lang);
-                    
-                    // 啟動語音識別
-                    recognition.start();
-                    
-                    isRecording = true;
-                    status.textContent = "正在錄音...";
-                    status.style.color = "#4CAF50";
-                    
-                    startBtn.disabled = true;
-                    stopBtn.disabled = false;
-                    useBtn.disabled = true;
-                    
-                    if (!audioContext) {
-                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                        analyser = audioContext.createAnalyser();
-                        analyser.fftSize = 256;
-                    }
-                    
-                    // 設置可視化圖
-                    visualizer.innerHTML = '';
-                    const barCount = 30; // 較少的條更好看
-                    bars = [];
-                    
-                    for (let i = 0; i < barCount; i++) {
-                        const bar = document.createElement('div');
-                        bar.className = 'voice-floating-bar';
-                        visualizer.appendChild(bar);
-                        bars.push(bar);
-                    }
-                    
-                    navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                        .then(stream => {
-                            microphone = audioContext.createMediaStreamSource(stream);
-                            microphone.connect(analyser);
-                            
-                            const bufferLength = analyser.frequencyBinCount;
-                            const dataArray = new Uint8Array(bufferLength);
-                            
-                            function updateVisualizerLoop() {
-                                if (!isRecording) return;
-                                
-                                analyser.getByteFrequencyData(dataArray);
-                                updateVisualizer(dataArray);
-                            }
-                            
-                            updateVisualizerLoop();
-                        })
-                        .catch(err => {
-                            console.error("麥克風訪問錯誤:", err);
-                            status.textContent = "無法訪問麥克風";
-                            status.style.color = "#cc3333";
-                        });
+                recognition.start();
+                console.log(`語音識別已啟動，語言: ${language}`);
+                
+                // 顯示通知
+                const langNames = {
+                    'zh-TW': '繁體中文',
+                    'en-US': '英文',
+                    'ja-JP': '日文',
+                    'ko-KR': '韓文'
+                };
+                showNotification(`語音識別已啟動: ${langNames[language] || language}`, "info");
+                
+                // 初始化音頻可視化
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 }
-            } catch (error) {
-                console.error("語音識別啟動錯誤:", error);
-                status.textContent = `語音識別錯誤: ${error.message}`;
-                status.style.color = "#cc3333";
+                
+                if (!analyser) {
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+                }
+                
+                if (!dataArray) {
+                    dataArray = new Uint8Array(analyser.frequencyBinCount);
+                }
+                
+                // 獲取麥克風輸入
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        if (mediaStream) {
+                            mediaStream.getTracks().forEach(track => track.stop());
+                        }
+                        
+                        mediaStream = stream;
+                        const source = audioContext.createMediaStreamSource(stream);
+                        source.connect(analyser);
+                        
+                        // 創建可視化條
+                        if (!visualizer.querySelector('.bar')) {
+                            createBars(visualizer);
+                        }
+                        
+                        // 更新可視化
+                        function updateVisualizerLoop() {
+                            if (!isRecording) return;
+                            
+                            analyser.getByteFrequencyData(dataArray);
+                            updateVisualizer(dataArray);
+                            requestAnimationFrame(updateVisualizerLoop);
+                        }
+                        
+                        updateVisualizerLoop();
+                    })
+                    .catch(err => {
+                        console.error('獲取麥克風失敗:', err);
+                        status.textContent = '無法訪問麥克風';
+                        status.style.color = '#cc3333';
+                        isRecording = false;
+                        startBtn.disabled = false;
+                        stopBtn.disabled = true;
+                    });
+            } catch (err) {
+                console.error('啟動語音識別失敗:', err);
+                status.textContent = '啟動語音識別失敗';
+                status.style.color = '#cc3333';
+                isRecording = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
             }
         }
         
@@ -2485,42 +2491,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // 更新翻譯進度條的動畫
-    function updateTranslationProgress(progressBar, progress) {
-        if (!progressBar) return;
-        
-        // 確保進度條可見
-        progressBar.parentElement.style.display = "block";
-        
-        if (progress === 0) {
-            progressBar.style.width = "0%";
-            progressBar.classList.remove("complete");
-            progressBar.classList.remove("pulse");
-        } else if (progress === 100) {
-            progressBar.style.width = "100%";
-            progressBar.classList.add("complete");
-            progressBar.classList.remove("pulse");
-            
-            // 稍後隱藏進度條
-            setTimeout(() => {
-                progressBar.parentElement.style.display = "none";
-            }, 1000);
-        } else {
-            progressBar.classList.remove("complete");
-            // 平滑動畫轉換
-            progressBar.style.transition = "width 0.5s ease-in-out";
-            progressBar.style.width = `${progress}%`;
-            
-            // 添加脈動效果
-            progressBar.classList.add("pulse");
-            
-            // 每隔一段時間移除脈動效果，以創造閃爍效果
-            setTimeout(() => {
-                progressBar.classList.remove("pulse");
-            }, 500);
-        }
-    }
-
     // 添加 API 狀態檢查
     async function checkAPIStatus() {
         const gptStatus = document.getElementById("gptStatus");
@@ -2639,7 +2609,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!text) return '';
         
         // 常見簡繁對照
-        const simplifiedChars = '习乐宁东买卖产业丑严与丢两严丧个临为举么义乐习乡书买乱争于亏云亚产亲亿仅从仑仓仪们价众优伙会伟传伤伦休伟体余处备党务传位低住佛作体余佣佥侠侣侥侦侧侨侩佣侵促俭修信保俦侥俩俭债俪值側偿优偓傥傧储傤僭儿儿党兰关兴兹养兽冢决况冷冻凄凉处净凑减凤凫凭凯击凿则准刘刚创删别刹刽刿剀剂剐剑剧劝办务动励劲劳势勋勐勚匀匦却厅厉厍厘厦厨厩參发参侧叁团园困囱围国图团圆國圣圾坏块坚坛坜址坝坞坟坠垄垅坛垦垧垩垴垵垒垆垄埘埙埚实埯塆墙壤壮声壤壳壶处备复够妆姗姹娄娅娆娇娈娱娲娴婳婴婶媪嫒媪嫔嬷嬿孙学孪孙宁宝实宠审宪宫宽宾寝对寻导寿将尔尘尝尧尽层居屆屉届屋屏屡孱岁岂峄峡峣困巨巢巽帅师帐帜带帧席帮常长帻仓厍广庄庆库应庙庞废庼廪开异弃强归归录彦彻员丽彻征径径织绕绘絷经战荡结给络继绥绿网彘徵德徽齿恒恶悦悬参悭惊恶惩惫惬惭涌淀凄愤愦慑慓栅栆校样哓核根栖栋栏树栅栈栖标栈桡桢业桥桦桧档桩梦梼梾梿检棁栋棱栾棵椁椭楼榄榇榈榉楼荣槚槛槟槠横樯柽欧欤欢欣欸欻款歼殁殇残杀殒殓殚殡殴毁毂毕毙毡气气氢汉汤汹沟没泞泪泪泼泽泾洁洒洼浃浅浆浇浈浊测浍济浏浐浑浒浓浔浕涂涛涝涞涟涠渎渐渑渔渝渐温湿湼渍渖渗沟温溆滞满滚漕沪漤汤潆潇潍沥潜澜澧澹澳激沟火灭灯灾灿炀炉炖炜炝点炼炀烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
+        const simplifiedChars = '习乐宁东买卖产业丑严与丢两严丧个临为举么义乐习乡书买乱争于亏云亚产亲亿仅从仑仓仪们价众优伙会伟传伤伦休伟体余处备党务传位低住佛作体余佣佥侠侣侥侦侧侨侩佣侵促俭修信保俦侥俩俭债俪值側偿优偓傥傧储傤僭儿儿党兰关兴兹养兽冢决况冷冻凄凉处净凑减凤凫凭凯击凿则准刘刚创删别刹刽刿剀剂剐剑剧劝办务动励劲劳势勋勐勚匀匦却厅厉厍厘厦厨厩參发参侧叁团园困囱围国图团圆國圣圾坏块坚坛坜址坝坞坟坠垄垅坛垦垧垩垴垵垒垆垄埘埙埚实埯塆墙壤壮声壤壳壶处备复够妆姗姹娄娅娆娇娈娱娲娴婳婴婶媪嫒媪嫔嬷嬿孙学孪孙宁宝实宠审宪宫宽宾寝对寻导寿将尔尘尝尧尽层居屆屉届屋屏屡孱岁岂峄峡峣困巨巢巽帅师帐帜带帧席帮常长帻仓厍广庄庆库应庙庞废庼廪开异弃强归归录彦彻员丽彻征径径织绕绘絷经战荡结给络继绥绿网彘徵德徽齿恒恶悦悬参悭惊恶惩惫惬惭涌淀凄愤愦慑慓栅栆校样哓核根栖栋栏树栅栈栖标栈桡桢业桥桦桧档桩梦梼梾梿检棁栋棱栾棵椁椭楼榄榇榈榉楼荣槚槛槟槠横樯柽欧欤欢欣欸欻款歼歿殇残杀殒殓殚殡殴毁毂毕毙毡气气氢汉汤汹沟没泞泪泪泼泽泾洁洒洼浃浅浆浇浈浊测浍济浏浐浑浒浓浔浕涂涛涝涞涟涠渎渐渑渔渝渐温湿湼渍渖渗沟温溆滞满滚漕沪漤汤潆潇潍沥潜澜澧澹澳激沟火灭灯灾灿炀炉炖炜炝点炼炀烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
         const traditionalChars = '習樂寧東買賣產業醜嚴與丟兩嚴喪個臨為舉麼義樂習鄉書買亂爭於虧雲亞產親億僅從崙倉儀們價眾優夥會偉傳傷倫休偉體餘處備黨務傳位低住佛作體餘傭僉俠侶僥偵側僑儈傭侵促儉修信保儔僥倆儉債儷值側償優嫿儻儐儲儓僭兒兒黨蘭關興茲養獸塚決況冷凍淒涼處淨湊減鳳鳧憑凱擊鑿則準劉剛創刪別剎劊劌剴劑剮劍劇勸辦務動勵勁勞勢勛猛勩勻匭卻廳厲厙釐廈廚廄參發參側叄團園困囪圍國圖團圓國聖圾壞塊堅壇壢址壩塢墳墜壟壠壇墾壧礡塏壪壘壙壟塒塤堝實塱壆牆壤壯聲壤殼壺處備複夠妝姍媯婁婭嬈嬌孌娛媧嫺嫿嬰嬸媼嬡媼嬪嬤孌孫學孿孫寧寶實寵審憲宮寬賓寢對尋導壽將爾塵嚐堯盡層居屆屜屆屋屏屢孱歲豈嶧峽嶢困鉅巢巽帥師帳幟帶幀席幫常長幬倉厙廣莊慶庫應廟龐廢廎廩開異棄強歸歸錄彥徹員麗徹征徑徑織紆繪縶經戰蕩結給絡繼綏綠網彘徵德徽齒恆惡悅懸參慳驚惡懲憊惬慚湧淀淒憤僨懾慄柵棓校樣嘵核根棲棟欄樹柵棧棲標棧橈楨業橋樺檜檔樁夢檉檢樅檁棟稜欒棵槨橢樓欖櫬櫚櫪樓榮檣檉歐漚懽欣啊咦款殲歿殤殘殺殞殮殫殯毆毀轂畢斃氈氣氣氫漢湯洶溝沒濘淚淚潑澤涇潔灑窪浹淺漿澆湞濁測滸濟瀏滻渾滸濃潯濜塗濤澇淶漣潎瀆漸澮漁渝漸溫溼瀎涅滙滬瀋湯漭瀟濰瀝潛瀾灄躁滿滾漕滬灢湯瀠灩濰溝溫漊滯滿滾漕滬灤湯潆潇潍泄潜澜潾澹澳激沟火灭灯灾灿炀炉炖炜炝点炼烊烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
         
         let result = '';
