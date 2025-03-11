@@ -78,6 +78,7 @@
     padding: 0;
     box-sizing: border-box;
     font-family: "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -85,6 +86,9 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     transition: background-color 0.3s, color 0.3s;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
@@ -92,6 +96,7 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+    flex: 1;
 }
 
 h1 {
@@ -99,6 +104,7 @@ h1 {
     color: var(--primary-color);
     margin-bottom: 20px;
     font-size: 2rem;
+    font-weight: bold;
 }
 
 h2 {
@@ -136,12 +142,16 @@ h2 {
 .tabs {
     display: flex;
     border-bottom: 2px solid var(--primary-light);
-    margin-bottom: 20px;
-    overflow-x: auto;
+    margin: 0 -20px 20px;
+    padding: 0 20px;
+    background: var(--card-background);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .tab-button {
-    padding: 10px 20px;
+    padding: 15px 20px;
     background: none;
     border: none;
     color: var(--text-secondary);
@@ -150,17 +160,27 @@ h2 {
     flex: 1;
     white-space: nowrap;
     font-size: 16px;
+    position: relative;
 }
 
-.tab-button:hover {
-    color: var(--primary-color);
+.tab-button::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--primary-color);
+    transform: scaleX(0);
+    transition: transform 0.3s;
 }
 
-.tab-button.active {
-    color: var(--primary-color);
-    font-weight: bold;
-    border-bottom: 3px solid var(--primary-color);
-    margin-bottom: -2px;
+.tab-button:hover::after {
+    transform: scaleX(0.5);
+}
+
+.tab-button.active::after {
+    transform: scaleX(1);
 }
 
 .tab-content {
@@ -173,97 +193,113 @@ h2 {
 }
 
 /* 語言選擇器 */
+.language-control-panel {
+    background: var(--card-background);
+    padding: 15px;
+    border-radius: var(--container-radius);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
 .language-selectors {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
     align-items: center;
-    margin-bottom: 15px;
 }
 
 .select-wrapper {
-    display: flex;
-    align-items: center;
-    flex: 1;
-}
-
-.select-wrapper label {
-    margin-right: 10px;
-    color: var(--text-secondary);
+    position: relative;
 }
 
 .language-select {
-    padding: 8px 10px;
+    width: 100%;
+    padding: 12px;
     border: 2px solid var(--primary-light);
     border-radius: var(--button-radius);
-    background: var(--card-background);
+    background: var(--input-background);
     color: var(--text-color);
-    min-width: 120px;
-    cursor: pointer;
     font-size: 16px;
-}
-
-.dark-theme .language-select {
-    background-color: var(--card-background);
-    border-color: var(--primary-color);
+    appearance: none;
+    cursor: pointer;
 }
 
 .swap-button {
-    margin: 0 15px;
-    padding: 5px 10px;
-    font-size: 20px;
-}
-
-/* 模型選擇 */
-.model-selection {
-    margin-bottom: 15px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: var(--button-text-color);
     display: flex;
     align-items: center;
+    justify-content: center;
+    transition: transform 0.3s;
 }
 
-.model-selection label {
-    margin-right: 10px;
-    color: var(--text-secondary);
+.swap-button:hover {
+    transform: rotate(180deg);
 }
 
-.model-selection select {
-    padding: 8px 10px;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
+/* 輸入輸出區域 */
+.translation-panel {
     background: var(--card-background);
-    color: var(--text-color);
-    cursor: pointer;
-    font-size: 16px;
-    flex: 1;
+    padding: 20px;
+    border-radius: var(--container-radius);
+    box-shadow: var(--shadow);
 }
 
-.dark-theme .model-selection select {
-    background-color: var(--card-background);
+textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--button-radius);
+    background: var(--input-background);
+    color: var(--text-color);
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+
+textarea:focus {
     border-color: var(--primary-color);
+    outline: none;
 }
 
 /* 按鈕樣式 */
-.button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: var(--button-radius);
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s;
+.action-panel {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
 }
 
 .primary-button {
-    background-color: var(--primary-color);
-    color: white;
+    flex: 1;
+    padding: 12px 24px;
+    background: var(--primary-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: var(--button-radius);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
-.primary-button:hover {
-    background-color: var(--primary-dark);
+.primary-button:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
 }
 
 .primary-button:disabled {
-    background-color: var(--primary-light);
-    opacity: 0.6;
+    background: var(--primary-light);
     cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .secondary-button {
@@ -279,24 +315,6 @@ h2 {
     display: flex;
     gap: 10px;
     margin-top: 15px;
-}
-
-/* 文本輸入區 */
-textarea {
-    width: 100%;
-    height: 150px;
-    padding: 15px;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
-    background-color: var(--card-background);
-    color: var(--text-color);
-    font-size: 16px;
-    resize: vertical;
-}
-
-.dark-theme textarea {
-    background-color: var(--card-background);
-    border-color: var(--primary-color);
 }
 
 /* 結果區域 */
@@ -606,71 +624,102 @@ textarea {
     font-weight: bold;
 }
 
-/* 響應式設計 */
+/* 響應式設計優化 */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
     }
-    
-    .language-selectors {
-        flex-direction: column;
-        gap: 10px;
+
+    h1 {
+        font-size: 1.5rem;
+        margin: 15px 0;
     }
-    
-    .swap-button {
-        margin: 10px 0;
-        width: 100%;
-    }
-    
-    .button-container {
-        flex-direction: column;
-    }
-    
-    .button-container .button {
-        width: 100%;
-    }
-    
-    .theme-toggle {
-        top: 10px;
-        right: 10px;
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
-    }
-    
+
     .tabs {
-        flex-wrap: wrap;
+        margin: 0 -10px 15px;
+        padding: 0 10px;
     }
-    
+
     .tab-button {
-        flex: none;
-        padding: 8px 15px;
+        padding: 12px;
+        font-size: 14px;
     }
-    
-    .model-selection {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+
+    .language-control-panel {
+        padding: 12px;
     }
-    
-    .model-selection select {
-        width: 100%;
+
+    .language-selectors {
+        grid-template-columns: 1fr;
     }
-    
-    .voice-controls {
-        flex-direction: column;
+
+    .swap-button {
+        margin: 10px auto;
     }
-    
-    .voice-controls button {
-        width: 100%;
+
+    .translation-panel {
+        padding: 15px;
     }
-    
-    .image-processing-tools {
-        flex-direction: column;
+
+    textarea {
+        font-size: 14px;
+        padding: 12px;
     }
-    
-    .image-processing-tools button {
-        width: 100%;
+
+    .primary-button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .notification {
+        left: 20px;
+        right: 20px;
+        transform: translateY(-150%);
+    }
+
+    .notification.show {
+        transform: translateY(0);
+    }
+}
+
+/* 觸控優化 */
+@media (hover: none) {
+    .primary-button:hover {
+        transform: none;
+    }
+
+    .swap-button:hover {
+        transform: none;
+    }
+
+    .tab-button:hover::after {
+        transform: scaleX(0);
+    }
+}
+
+/* 深色模式優化 */
+.dark-theme .translation-panel {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+}
+
+.dark-theme .language-control-panel {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+}
+
+/* 無障礙支持 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* 高對比度模式支持 */
+@media (prefers-contrast: high) {
+    :root {
+        --shadow: none;
     }
 }
 
@@ -708,14 +757,13 @@ textarea {
 /* 系統偏好深色模式自動切換 */
 @media (prefers-color-scheme: dark) {
     :root:not(.light-theme) {
-        --primary-color: #D2691E;
-        --secondary-color: #CD853F;
-        --background-color: #1a1a1a;
-        --text-color: #e0e0e0;
-        --border-color: #404040;
-        --hover-color: #FF8C00;
-        --error-color: #ff6666;
-        --success-color: #66bb6a;
+        --primary-color: #2196F3;
+        --secondary-color: #FFC107;
+        --background-color: #121212;
+        --text-color: #FFFFFF;
+        --border-color: #333333;
+        --error-color: #EF5350;
+        --success-color: #66BB6A;
         --button-text-color: #fff;
         --input-background: #2d2d2d;
         --input-border: #404040;
@@ -766,4 +814,94 @@ textarea {
 
 .dark-theme .iframe-container iframe {
     background-color: var(--input-background);
+}
+
+/* 特殊翻譯標籤頁樣式 */
+.tab-button[data-tab="specialTab"] {
+    color: var(--special-tab-color);
+    font-weight: bold;
+}
+
+.tab-button[data-tab="specialTab"]:hover,
+.tab-button[data-tab="specialTab"].active {
+    color: var(--special-tab-light);
+    border-bottom-color: var(--special-tab-color);
+}
+
+#specialTab .translation-panel {
+    border: 2px solid var(--special-tab-color);
+    border-radius: var(--container-radius);
+    padding: 20px;
+}
+
+#specialTab .primary-button {
+    background-color: var(--special-tab-color);
+}
+
+#specialTab .primary-button:hover {
+    background-color: var(--special-tab-light);
+}
+
+/* 歷史記錄樣式 */
+.history-container {
+    padding: 20px;
+}
+
+.history-controls {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.history-item {
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--container-radius);
+    padding: 15px;
+    transition: all 0.3s;
+}
+
+.history-item.special {
+    border-left: 4px solid var(--special-tab-color);
+}
+
+.history-meta {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.history-content {
+    display: grid;
+    gap: 10px;
+}
+
+.history-source {
+    color: var(--text-color);
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.history-target {
+    color: var(--primary-color);
+    padding: 10px;
+    background: rgba(33, 150, 243, 0.05);
+    border-radius: 4px;
+}
+
+.dark-theme .history-source {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .history-target {
+    background: rgba(33, 150, 243, 0.1);
 }
