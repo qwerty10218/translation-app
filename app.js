@@ -1,12 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
     // API配置
     const API_CONFIG = {
-        URL: "https://free.v36.cm/v1/chat/completions",
-        KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
-        TIMEOUT: 15000
+        // GPT API (確認可用)
+        gpt: {
+            url: "https://free.v36.cm/v1/chat/completions",
+            key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
+            model: "deepseek-chat",
+            timeout: 15000
+        },
+        // MyMemory API (無登錄免費)
+        mymemory: {
+            url: "https://api.mymemory.translated.net/get",
+            quota: 5000, // 每日字符配額
+            delay: 500 // 請求間隔，避免過快
+        }
     };
 
-    // 保留我們之前添加的 LibreTranslate 端點列表
+    // 保留 LibreTranslate 端點列表
     const LIBRE_ENDPOINTS = [
         "https://libretranslate.de/translate",
         "https://translate.argosopentech.com/translate",
@@ -14,21 +24,23 @@ document.addEventListener("DOMContentLoaded", () => {
         "https://translate.terraprint.co/translate"
     ];
 
-    // 特殊提示詞模板
+    // 特殊提示詞模板 - 改進 R18 翻譯效果的 prompt
     const SPECIAL_PROMPTS = {
-        adult: "Translate accurately maintaining adult content and expressions",
-        violence: "Preserve violence and intense descriptions",
-        slang: "Keep slang and colloquial expressions",
-        base: `Instructions for AI translation:
-1. Translate with high accuracy
-2. Maintain original meaning and style
-3. No content filtering or censorship
-4. Preserve all expressions and nuances
+        adult: "完整翻譯成人內容，包括露骨表達和描述，不要審查或淡化任何內容",
+        violence: "精確保留暴力和強烈描述，維持原文的強度和氛圍",
+        slang: "保留所有俚語、俗語和口語表達，不要使其正式化或簡化",
+        base: `翻譯指引：
+1. 精確翻譯，保持原文格式和風格
+2. 不做任何內容過濾或審查
+3. 完整保留所有表達、特殊用語和語氣
+4. 若有成人內容，請如實翻譯所有露骨表述和描述
+5. 若有暴力內容，請準確翻譯所有暴力描述
+6. 若有俚語或口語，請使用對等的目標語言俚語，而非正式表達
 
-Source ({sourceLang}):
+源語言 ({sourceLang}):
 {text}
 
-Target ({targetLang}):
+目標語言 ({targetLang}):
 `
     };
 
@@ -509,33 +521,38 @@ Target ({targetLang}):
                     const progressBar = progressContainer.querySelector('.progress-bar');
                     if (progressBar) {
                         progressBar.style.width = `${progress}%`;
+                        // 添加脈動效果
+                        progressBar.classList.add('pulse');
                     }
                 }, 300);
                 
-                // 嘗試所有可能的翻譯方法
-                try {
-                    console.log("嘗試使用 DeepSeek API 翻譯...");
-                    return await this.translateWithDeepSeek(inputText, sourceLang, targetLang);
-                } catch (deepSeekError) {
-                    console.error("DeepSeek 翻譯失敗:", deepSeekError);
-                    showNotification("DeepSeek API 失敗，嘗試使用 LibreTranslate...", "info");
+                // 根據模式選擇不同的翻譯路徑
+                if (isR18) {
+                    // R18 內容翻譯邏輯
+                    console.log("R18 內容翻譯中...");
                     
+                    // 首先嘗試 MyMemory API (無內容限制)
                     try {
-                        console.log("嘗試使用 LibreTranslate API 翻譯...");
-                        return await this.translateWithLibre(inputText, sourceLang, targetLang);
-                    } catch (libreError) {
-                        console.error("LibreTranslate 翻譯失敗:", libreError);
-                        showNotification("LibreTranslate API 失敗，嘗試使用備用 API...", "info");
+                        console.log("嘗試使用 MyMemory API 翻譯 R18 內容...");
+                        return await this.translateWithMyMemory(inputText, sourceLang, targetLang);
+                    } catch (myMemoryError) {
+                        console.error("MyMemory 翻譯失敗:", myMemoryError);
+                        showNotification("MyMemory API 失敗，嘗試使用 LibreTranslate...", "info");
                         
-                        // 最後嘗試 GPT 或其他備用 API
+                        // 最後嘗試 LibreTranslate
                         try {
-                            console.log("嘗試使用備用 API 翻譯...");
-                            return await this.translateWithBackupAPI(inputText, sourceLang, targetLang);
-                        } catch (backupError) {
-                            console.error("備用 API 翻譯失敗:", backupError);
-                            throw new Error("所有翻譯 API 均失敗");
+                            console.log("嘗試使用 LibreTranslate 翻譯 R18 內容...");
+                            return await this.translateWithLibre(inputText, sourceLang, targetLang);
+                        } catch (libreError) {
+                            console.error("LibreTranslate 翻譯失敗:", libreError);
+                            showNotification("所有 R18 翻譯 API 均失敗", "error");
+                            throw new Error("所有 R18 翻譯 API 均失敗");
                         }
                     }
+                } else {
+                    // 一般內容翻譯邏輯 - 直接使用 GPT API
+                    console.log("使用 GPT API 翻譯一般內容...");
+                    return await this.translateWithGPT(inputText, sourceLang, targetLang);
                 }
             } catch (error) {
                 console.error("翻譯過程中發生錯誤:", error);
@@ -549,6 +566,8 @@ Target ({targetLang}):
                     const progressBar = progressContainer.querySelector('.progress-bar');
                     if (progressBar) {
                         progressBar.style.width = "100%";
+                        progressBar.classList.remove('pulse');
+                        progressBar.classList.add('complete');
                     }
                     setTimeout(() => {
                         if (progressContainer.parentNode) {
@@ -559,84 +578,48 @@ Target ({targetLang}):
             }
         }
 
-        async translateWithDeepSeek(inputText, sourceLang, targetLang) {
-            console.log("發送 DeepSeek API 請求...");
+        // 新增 MyMemory API 翻譯方法 (針對 R18 內容)
+        async translateWithMyMemory(inputText, sourceLang, targetLang) {
+            console.log("使用 MyMemory API 翻譯...");
+            
             try {
-                const response = await fetch(API_CONFIG.URL, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${API_CONFIG.KEY}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "deepseek-chat",
-                        messages: [{
-                            role: "user",
-                            content: `請專業地將以下 ${getLangName(sourceLang)} 文本翻譯成 ${getLangName(targetLang)}：\n\n${inputText}`
-                        }],
-                        timeout: API_CONFIG.TIMEOUT
-                    }),
-                    signal: AbortSignal.timeout(API_CONFIG.TIMEOUT)
-                });
-
-                console.log("DeepSeek API 響應狀態:", response.status);
+                // 確保源語言和目標語言格式正確
+                const source = sourceLang.toLowerCase();
+                const target = targetLang.toLowerCase();
+                
+                // 構建 API URL
+                const apiUrl = new URL(API_CONFIG.mymemory.url);
+                apiUrl.searchParams.append('q', inputText);
+                apiUrl.searchParams.append('langpair', `${source}|${target}`);
+                apiUrl.searchParams.append('de', 'example@gmail.com'); // 可選，用於增加每日配額
+                
+                // 添加延遲，避免請求過快
+                await new Promise(resolve => setTimeout(resolve, API_CONFIG.mymemory.delay));
+                
+                // 發送 API 請求
+                const response = await fetch(apiUrl.toString());
                 
                 if (!response.ok) {
-                    throw new Error(`DeepSeek API HTTP 錯誤! 狀態: ${response.status}`);
+                    throw new Error(`MyMemory API HTTP 錯誤! 狀態: ${response.status}`);
                 }
-
+                
                 const data = await response.json();
-                console.log("DeepSeek API 響應數據:", data);
                 
-                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    throw new Error("DeepSeek API 返回的數據格式不正確");
+                if (data.responseStatus !== 200 || !data.responseData) {
+                    throw new Error(`MyMemory API 錯誤: ${data.responseStatus}`);
                 }
                 
-                return data.choices[0].message.content || "翻譯失敗";
+                return data.responseData.translatedText;
             } catch (error) {
-                console.error("DeepSeek 翻譯詳細錯誤:", error);
+                console.error("MyMemory 翻譯失敗:", error);
                 throw error;
             }
         }
 
+        // 實現備用 API 翻譯方法
         async translateWithBackupAPI(inputText, sourceLang, targetLang) {
-            try {
-                console.log("使用備用 API 翻譯...");
-                
-                // 這裡可以實現其他備用 API，比如 GPT 或其他可用的免費 API
-                // 使用類似於 DeepSeek 的方法，但使用不同的端點和 API 密鑰
-                
-                // 例如，可以實現以下方式（需要替換為實際可用的 API）
-                /*
-                const response = await fetch("https://api.openai.com/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${YOUR_API_KEY}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        model: "gpt-3.5-turbo",
-                        messages: [{
-                            role: "user",
-                            content: `請將以下 ${getLangName(sourceLang)} 文本翻譯成 ${getLangName(targetLang)}：\n\n${inputText}`
-                        }]
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`備用 API HTTP 錯誤! 狀態: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                return data.choices[0].message.content;
-                */
-                
-                // 由於我們沒有實際的備用 API，這裡拋出錯誤
-                throw new Error("備用 API 未配置");
-            } catch (error) {
-                console.error("備用 API 翻譯失敗:", error);
-                throw error;
-            }
+            // 直接使用 GPT 作為備用
+            return await this.translateWithGPT(inputText, sourceLang, targetLang);
         }
 
         // 創建進度條 - 直接從 DOM 創建而不依賴現有元素
@@ -698,15 +681,19 @@ Target ({targetLang}):
         clearVoiceBtn: document.getElementById("clearVoiceBtn"),
         expandVoiceBtn: document.getElementById("expandVoiceBtn"),
         shrinkVoiceBtn: document.getElementById("shrinkVoiceBtn"),
-        specialInputText: document.getElementById("r18InputText"),
-        specialResult: document.getElementById("r18Result"),
-        specialTranslateButton: document.getElementById("r18TranslateButton"),
-        specialClearButton: document.getElementById("r18ClearButton"),
-        specialCopyButton: document.getElementById("r18CopyButton"),
-        specialClearResultButton: document.getElementById("r18ClearResultButton"),
-        specialSourceLang: document.getElementById("r18SourceLang"),
-        specialTargetLang: document.getElementById("r18TargetLang"),
-        specialSwapLangButton: document.getElementById("r18SwapLang"),
+        r18InputText: document.getElementById("r18InputText"),
+        r18Result: document.getElementById("r18Result"),
+        r18TranslateButton: document.getElementById("r18TranslateButton"),
+        r18ClearButton: document.getElementById("r18ClearButton"),
+        r18CopyButton: document.getElementById("r18CopyButton"),
+        r18ClearResultButton: document.getElementById("r18ClearResultButton"),
+        r18SourceLang: document.getElementById("r18SourceLang"),
+        r18TargetLang: document.getElementById("r18TargetLang"),
+        r18SwapLangButton: document.getElementById("r18SwapLang"),
+        r18ModelSelect: document.getElementById("r18ModelSelect"),
+        adultContent: document.getElementById("adultContent"),
+        violenceContent: document.getElementById("violenceContent"),
+        slangContent: document.getElementById("slangContent"),
         historyList: document.getElementById("historyList"),
         clearHistoryBtn: document.getElementById("clearHistoryBtn"),
         exportHistoryBtn: document.getElementById("exportHistoryBtn"),
@@ -926,10 +913,10 @@ Target ({targetLang}):
     }
 
     function validateTranslationInput(isSpecial = false) {
-        const input = isSpecial ? dom.specialInputText : dom.inputText;
-        const sourceLang = isSpecial ? dom.specialSourceLang : dom.sourceLang;
-        const targetLang = isSpecial ? dom.specialTargetLang : dom.targetLang;
-        const translateBtn = isSpecial ? dom.specialTranslateButton : dom.translateButton;
+        const input = isSpecial ? dom.r18InputText : dom.inputText;
+        const sourceLang = isSpecial ? dom.r18SourceLang : dom.sourceLang;
+        const targetLang = isSpecial ? dom.r18TargetLang : dom.targetLang;
+        const translateBtn = isSpecial ? dom.r18TranslateButton : dom.translateButton;
 
         const textInput = input.value.trim();
         const sameLanguage = sourceLang.value === targetLang.value;
@@ -940,66 +927,70 @@ Target ({targetLang}):
     }
 
     async function handleTranslation(isSpecial = false) {
-        const input = isSpecial ? dom.specialInputText : dom.inputText;
-        const sourceLang = isSpecial ? dom.specialSourceLang : dom.sourceLang;
-        const targetLang = isSpecial ? dom.specialTargetLang : dom.targetLang;
-        const result = isSpecial ? dom.specialResult : dom.result;
-        const progressBar = isSpecial ? dom.specialProgressBar : dom.progressBar;
-        const progressContainer = isSpecial ? dom.specialProgressContainer : dom.progressContainer;
-
-        const text = input.value.trim();
-        if (!text) return;
-
-        result.textContent = "翻譯中...";
-        progressBar.style.width = "0%";
-        progressContainer.style.display = "block";
-
-        try {
-            // 模擬進度條動畫
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += 5;
-                if (progress > 90) clearInterval(progressInterval);
-                progressBar.style.width = `${progress}%`;
-            }, 100);
-
-            // 獲取內容類型設置
-            const contentTypes = isSpecial ? {
-                adult: document.getElementById('adultContent')?.checked || true,
-                violence: document.getElementById('violenceContent')?.checked || false,
-                slang: document.getElementById('slangContent')?.checked || false
-            } : {};
-
-            const translation = await translationManager.translate(
-                text,
-                sourceLang.value,
-                targetLang.value,
-                isSpecial,
-                contentTypes
-            );
-
-            clearInterval(progressInterval);
-            result.textContent = translation;
-            
-            // 添加到歷史記錄
-            addToHistory({
-                source: text,
-                target: translation,
-                sourceLang: sourceLang.value,
-                targetLang: targetLang.value,
-                isSpecial: isSpecial,
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            console.error("翻譯錯誤:", error);
-            result.textContent = `翻譯失敗: ${error.message}`;
-        } finally {
-            progressBar.style.width = "100%";
-            setTimeout(() => {
-                progressContainer.style.display = "none";
-            }, 1000);
+        // 獲取相應元素
+        const inputElement = isSpecial ? dom.r18InputText : dom.inputText;
+        const resultElement = isSpecial ? dom.r18Result : dom.result;
+        const sourceLangElement = isSpecial ? dom.r18SourceLang : dom.sourceLang;
+        const targetLangElement = isSpecial ? dom.r18TargetLang : dom.targetLang;
+        const translateButton = isSpecial ? dom.r18TranslateButton : dom.translateButton;
+        
+        // 檢查輸入
+        const inputText = inputElement.value.trim();
+        if (!inputText) {
+            showNotification("請輸入要翻譯的文字", "error");
+            return;
         }
+        
+        // 檢查源語言和目標語言
+        const sourceLang = sourceLangElement.value;
+        const targetLang = targetLangElement.value;
+        if (sourceLang === targetLang) {
+            showNotification("源語言和目標語言不能相同", "error");
+            return;
+        }
+        
+        // 禁用翻譯按鈕，顯示翻譯中狀態
+        translateButton.disabled = true;
+        translateButton.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
+        resultElement.textContent = "翻譯中...";
+        
+        // 獲取 R18 內容類型選項
+        let contentTypes = {};
+        if (isSpecial) {
+            contentTypes = {
+                adult: dom.adultContent.checked,
+                violence: dom.violenceContent.checked,
+                slang: dom.slangContent.checked
+            };
+        }
+        
+        // 使用 translateWithFallback 方法進行翻譯
+        translationManager.translateWithFallback(inputText, sourceLang, targetLang, isSpecial)
+            .then(result => {
+                resultElement.textContent = result;
+                
+                // 添加到歷史記錄
+                addToHistory({
+                    timestamp: new Date().toISOString(),
+                    sourceText: inputText,
+                    targetText: result,
+                    sourceLang: sourceLang,
+                    targetLang: targetLang,
+                    isSpecial: isSpecial
+                });
+                
+                showNotification("翻譯完成", "success");
+            })
+            .catch(error => {
+                console.error("翻譯錯誤:", error);
+                resultElement.textContent = `翻譯失敗: ${error.message}`;
+                showNotification(`翻譯失敗: ${error.message}`, "error");
+            })
+            .finally(() => {
+                // 恢復按鈕狀態
+                translateButton.disabled = false;
+                translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
+            });
     }
 
     function initImageTranslation() {
@@ -1842,73 +1833,47 @@ Target ({targetLang}):
     }
 
     function initR18Translation() {
-        dom.specialTranslateButton.addEventListener("click", () => handleTranslation(true));
-        dom.specialCopyButton.addEventListener("click", () => copyToClipboard(dom.specialResult.textContent));
-        dom.specialClearButton.addEventListener("click", () => {
-            dom.specialInputText.value = "";
-            dom.specialResult.textContent = "";
+        dom.r18TranslateButton.addEventListener("click", () => handleTranslation(true));
+        dom.r18CopyButton.addEventListener("click", () => copyToClipboard(dom.r18Result.textContent));
+        dom.r18ClearButton.addEventListener("click", () => {
+            dom.r18InputText.value = "";
+            dom.r18Result.textContent = "";
+        });
+        dom.r18ClearResultButton.addEventListener("click", () => {
+            dom.r18Result.textContent = "";
         });
         
-        // 創建 LibreTranslate 翻譯按鈕
-        const libreTranslateBtn = document.createElement('button');
-        libreTranslateBtn.className = 'primary-button libre-translate-btn';
-        libreTranslateBtn.innerHTML = '<span class="button-icon">🌐</span>LibreTranslate 無限制翻譯';
-        libreTranslateBtn.title = '使用無內容限制的 LibreTranslate API 翻譯';
-        
-        // 在原有按鈕後添加新按鈕
-        const r18ActionPanel = document.querySelector('#r18Tab .action-panel');
-        if (r18ActionPanel) {
-            r18ActionPanel.appendChild(libreTranslateBtn);
+        // 更新 R18 模型選擇下拉選單説明
+        const r18ModelSelect = dom.r18ModelSelect;
+        if (r18ModelSelect) {
+            // 清空原有選項
+            r18ModelSelect.innerHTML = '';
             
-            // 添加點擊事件
-            libreTranslateBtn.addEventListener('click', async () => {
-                const inputText = dom.specialInputText.value.trim();
-                if (!inputText) return;
-                
-                const sourceLang = dom.specialSourceLang.value;
-                const targetLang = dom.specialTargetLang.value;
-                
-                if (sourceLang === targetLang) {
-                    showNotification("源語言和目標語言不能相同", "error");
-                    return;
-                }
-                
-                libreTranslateBtn.disabled = true;
-                libreTranslateBtn.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
-                dom.specialResult.textContent = "翻譯中...";
-                
-                try {
-                    // 使用 LibreTranslate API 翻譯，帶有失敗回退機制
-                    const translation = await translationManager.translateWithFallback(
-                        inputText, 
-                        sourceLang,
-                        targetLang,
-                        true // 標記為 R18 區域
-                    );
-                    
-                    dom.specialResult.textContent = translation;
-                    
-                    // 添加到歷史記錄
-                    addToHistory({
-                        timestamp: new Date().toISOString(),
-                        sourceText: inputText,
-                        targetText: translation,
-                        sourceLang: sourceLang,
-                        targetLang: targetLang,
-                        isSpecial: true,
-                        useLibre: true
-                    });
-                    
-                    showNotification("LibreTranslate 翻譯完成", "success");
-                } catch (error) {
-                    console.error("LibreTranslate 翻譯失敗:", error);
-                    dom.specialResult.textContent = `LibreTranslate 翻譯失敗: ${error.message}`;
-                    showNotification(`LibreTranslate 翻譯失敗: ${error.message}`, "error");
-                } finally {
-                    libreTranslateBtn.disabled = false;
-                    libreTranslateBtn.innerHTML = '<span class="button-icon">🌐</span>LibreTranslate 無限制翻譯';
-                }
-            });
+            // 添加新選項
+            const myMemoryOption = document.createElement('option');
+            myMemoryOption.value = 'mymemory';
+            myMemoryOption.textContent = 'MyMemory API (純翻譯，無審查)';
+            r18ModelSelect.appendChild(myMemoryOption);
+            
+            const libreOption = document.createElement('option');
+            libreOption.value = 'libre';
+            libreOption.textContent = 'LibreTranslate (純翻譯，作為備用)';
+            r18ModelSelect.appendChild(libreOption);
+        }
+        
+        // 添加 R18 分頁的說明文字
+        const r18TabContent = document.getElementById('r18Tab');
+        if (r18TabContent) {
+            const warningBanner = r18TabContent.querySelector('.warning-banner');
+            if (warningBanner) {
+                warningBanner.innerHTML = `
+                    ⚠️ R18 內容翻譯區 - 無內容限制
+                    <p class="warning-description">
+                      此區域使用純翻譯 API 進行翻譯，不審查成人、暴力或其他敏感內容。
+                      選擇合適的選項來增強翻譯效果。翻譯時可能需要較長時間，請耐心等待。
+                    </p>
+                `;
+            }
         }
     }
 
