@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // API配置
     const API_CONFIG = {
         openrouter: {
-            url: "https://openrouter.ai/api/v1/chat/completions",
+            url: "https://openrouter.ai/api",
             model: "deepseek/deepseek-chat-r1",
             key: "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",
             quota: Infinity
@@ -33,7 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 "https://translate.mentality.rip/translate",
                 "https://libretranslate.de/translate",
                 "https://translate.astian.org/translate",
-                "https://translate.fortytwo-it.com/translate"
+                "https://translate.fortytwo-it.com/translate",
+                "https://translate.fedilab.app/translate"
             ]
         },
         lingva: {
@@ -181,30 +182,28 @@ Target ({targetLang}):
                 try {
                     return await this.translateWithOpenRouter(text, sourceLang, targetLang);
                 } catch (error) {
-                    console.error("OpenRouter DeepSeek R1 翻譯失敗:", error);
-                    showNotification("DeepSeek R1 翻譯失敗，切換到 GPT API", "warning");
+                    console.error("OpenRouter 翻譯失敗，嘗試使用備用 API:", error);
                     
+                    // 回退到 GPT
                     try {
                         return await this.translateWithGPT(text, sourceLang, targetLang);
                     } catch (gptError) {
-                        console.error("所有 API 翻譯失敗", gptError);
-                        showNotification("翻譯失敗，請稍後再試", "error");
-                        throw gptError;
+                        console.error("GPT 翻譯也失敗:", gptError);
+                        throw new Error("所有翻譯 API 均失敗");
                     }
                 }
             } else if (this.model === "gpt") {
                 try {
                     return await this.translateWithGPT(text, sourceLang, targetLang);
                 } catch (error) {
-                    console.error("GPT 翻譯失敗:", error);
-                    showNotification("GPT 翻譯失敗，切換到 DeepSeek R1", "warning");
+                    console.error("GPT 翻譯失敗，嘗試使用備用 API:", error);
                     
+                    // 回退到 OpenRouter
                     try {
                         return await this.translateWithOpenRouter(text, sourceLang, targetLang);
-                    } catch (deepseekError) {
-                        console.error("所有 API 翻譯失敗", deepseekError);
-                        showNotification("翻譯失敗，請稍後再試", "error");
-                        throw deepseekError;
+                    } catch (openrouterError) {
+                        console.error("OpenRouter 翻譯也失敗:", openrouterError);
+                        throw new Error("所有翻譯 API 均失敗");
                     }
                 }
             }
@@ -467,22 +466,197 @@ Target ({targetLang}):
             return data.generated_text;
         }
 
-        async translateWithLibre(text, sourceLang, targetLang) {
-            const response = await fetch(API_CONFIG.libre.url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    q: text,
-                    source: sourceLang,
-                    target: targetLang
-                })
-            });
+        async translateWithLibre(text, sourceLang, targetLang, isR18 = false) {
+            // 如果文本為空，直接返回
+            if (!text.trim()) return "";
 
-            if (!response.ok) throw new Error(`LibreTranslate API錯誤: ${response.status}`);
-            const data = await response.json();
-            return data.translatedText;
+            // 創建或獲取進度條
+            let progressContainer, progressBar;
+            
+            if (isR18) {
+                // 使用 R18 區域的進度條
+                progressContainer = dom.specialProgressContainer;
+                progressBar = dom.specialProgressBar;
+                progressContainer.style.display = "block";
+            } else {
+                // 一般區域使用動態創建的進度條
+                progressContainer = createProgressBar("libre-progress", "LibreTranslate 翻譯進度");
+                const actionPanel = document.querySelector(isR18 ? "#r18Tab .action-panel" : ".action-panel");
+                actionPanel.appendChild(progressContainer);
+                progressBar = progressContainer.querySelector(".progress-bar");
+            }
+            
+            updateTranslationProgress(progressBar, 10);
+
+            const endpoints = API_CONFIG.libre.endpoints || [API_CONFIG.libre.url];
+            let errorDetails = "";
+
+            // 嘗試所有端點，直到翻譯成功
+            for (let attempt = 0; attempt < endpoints.length; attempt++) {
+                try {
+                    // 選擇下一個端點並輪換
+                    const endpoint = endpoints[attempt % endpoints.length];
+                    
+                    console.log(`嘗試使用 LibreTranslate 端點: ${endpoint}`);
+                    updateTranslationProgress(progressBar, 30);
+
+                    // 使用 FormData 格式而不是 JSON
+                    const formData = new FormData();
+                    formData.append('q', text);
+                    formData.append('source', this.convertToLibreFormat(sourceLang));
+                    formData.append('target', this.convertToLibreFormat(targetLang));
+                    formData.append('format', 'text');
+                    
+                    const response = await fetch(endpoint, {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    updateTranslationProgress(progressBar, 60);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.warn(`LibreTranslate 端點 ${endpoint} 錯誤:`, errorText);
+                        errorDetails += `端點 ${endpoint}: ${response.status} | `;
+                        throw new Error(`LibreTranslate API 錯誤: ${response.status}`);
+                    }
+
+                    // 檢查響應是否為 HTML
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.includes("text/html")) {
+                        console.warn(`端點 ${endpoint} 返回了 HTML 而不是 JSON`);
+                        errorDetails += `端點 ${endpoint}: 返回了 HTML | `;
+                        throw new Error("API 返回了 HTML 而不是 JSON");
+                    }
+
+                    // 嘗試解析 JSON
+                    let responseText;
+                    try {
+                        responseText = await response.text();
+                        
+                        // 檢查 HTML 響應
+                        if (responseText.trim().toLowerCase().startsWith("<!doctype") || 
+                            responseText.trim().toLowerCase().includes("<html")) {
+                            console.warn(`端點 ${endpoint} 返回了 HTML 而不是 JSON`);
+                            errorDetails += `端點 ${endpoint}: 返回了 HTML 文檔 | `;
+                            throw new Error("API 返回了 HTML 而不是 JSON");
+                        }
+                        
+                        const data = JSON.parse(responseText);
+                        
+                        updateTranslationProgress(progressBar, 100);
+                        
+                        if (data.translatedText) {
+                            console.log(`成功使用 ${endpoint} 翻譯`);
+                            
+                            // 更新 API 狀態
+                            this.apiStatus['libre'] = true;
+                            
+                            // 處理進度條
+                            if (!isR18) {
+                                // 一般區域移除動態創建的進度條
+                                setTimeout(() => {
+                                    progressContainer.remove();
+                                }, 1000);
+                            } else {
+                                // R18區域隱藏進度條
+                                setTimeout(() => {
+                                    progressContainer.style.display = "none";
+                                }, 1000);
+                            }
+                            
+                            return data.translatedText;
+                        } else {
+                            throw new Error("翻譯結果為空");
+                        }
+                    } catch (jsonError) {
+                        console.error(`JSON 解析錯誤:`, jsonError, `原始響應:`, responseText);
+                        errorDetails += `端點 ${endpoint}: JSON 解析錯誤 | `;
+                        throw new Error(`JSON 解析錯誤: ${jsonError.message}`);
+                    }
+                } catch (error) {
+                    console.warn(`端點 ${endpoints[attempt % endpoints.length]} 翻譯失敗:`, error);
+                    // 繼續嘗試下一個端點
+                }
+            }
+            
+            // 如果所有端點都失敗
+            this.apiStatus['libre'] = false;
+            
+            // 處理進度條
+            if (!isR18) {
+                progressContainer.remove();
+            } else {
+                progressContainer.style.display = "none";
+            }
+            
+            throw new Error(`所有 LibreTranslate 端點都無法使用. 詳情: ${errorDetails}`);
+        }
+
+        // 嘗試使用 LibreTranslate 進行回退翻譯
+        async translateWithFallback(text, sourceLang, targetLang, isR18 = false) {
+            try {
+                // 首先嘗試 LibreTranslate
+                return await this.translateWithLibre(text, sourceLang, targetLang, isR18);
+            } catch (libreError) {
+                console.warn("LibreTranslate 翻譯失敗，嘗試使用備用翻譯 API", libreError);
+                
+                // 如果是 R18 內容，使用最寬鬆的 API
+                if (isR18) {
+                    try {
+                        return await this.translateWithDeepSeek(text, sourceLang, targetLang);
+                    } catch (deepseekError) {
+                        console.error("DeepSeek 翻譯也失敗:", deepseekError);
+                        
+                        // 最後嘗試 OpenRouter
+                        try {
+                            return await this.translateWithOpenRouter(text, sourceLang, targetLang);
+                        } catch (openrouterError) {
+                            console.error("所有翻譯 API 均失敗");
+                            throw new Error("無法翻譯：所有 API 均失敗");
+                        }
+                    }
+                } else {
+                    // 非 R18 內容，回退到一般翻譯方法
+                    return await this.translate(text, sourceLang, targetLang, false);
+                }
+            }
+        }
+
+        async translateWithDeepSeek(text, sourceLang, targetLang) {
+            const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}：\n\n${text}`;
+            
+            try {
+                const response = await fetch(API_CONFIG.deepseek.url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_CONFIG.deepseek.key}`
+                    },
+                    body: JSON.stringify({
+                        model: API_CONFIG.deepseek.model,
+                        messages: [
+                            {
+                                role: "user",
+                                content: prompt
+                            }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 2000
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`DeepSeek API 錯誤: ${errorData.error?.message || response.status}`);
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content.trim();
+            } catch (error) {
+                console.error("使用 DeepSeek 翻譯時出錯:", error);
+                throw error;
+            }
         }
     }
 
@@ -587,6 +761,25 @@ Target ({targetLang}):
         
         dom.specialProgressContainer = specialProgressContainer;
         dom.specialProgressBar = specialProgressBar;
+    }
+
+    // 創建單個進度條
+    function createProgressBar(id, label) {
+        const container = document.createElement("div");
+        container.className = "progress-container";
+        container.id = id + "-container";
+        
+        const labelElem = document.createElement("div");
+        labelElem.className = "progress-label";
+        labelElem.textContent = label;
+        container.appendChild(labelElem);
+        
+        const bar = document.createElement("div");
+        bar.className = "progress-bar";
+        bar.id = id;
+        container.appendChild(bar);
+        
+        return container;
     }
 
     function initButtons() {
@@ -1681,11 +1874,12 @@ Target ({targetLang}):
                 dom.specialResult.textContent = "翻譯中...";
                 
                 try {
-                    // 使用 LibreTranslate API 翻譯
-                    const translation = await translationManager.translateWithLibre(
+                    // 使用 LibreTranslate API 翻譯，帶有失敗回退機制
+                    const translation = await translationManager.translateWithFallback(
                         inputText, 
                         sourceLang,
-                        targetLang
+                        targetLang,
+                        true // 標記為 R18 區域
                     );
                     
                     dom.specialResult.textContent = translation;
