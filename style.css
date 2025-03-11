@@ -770,6 +770,8 @@ textarea:focus {
     border-radius: 3px;
     margin: 15px 0;
     overflow: hidden;
+    position: relative;
+    z-index: 10;
 }
 
 .progress-bar {
@@ -785,6 +787,7 @@ textarea:focus {
         var(--primary-dark) 75%);
     background-size: 20px 20px;
     animation: progress-glow 1.5s ease infinite;
+    transition: width 0.3s ease;
 }
 
 @keyframes progress-glow {
