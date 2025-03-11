@@ -254,51 +254,55 @@ Target (${targetLang}):
 
     // DOM元素
     const dom = {
-        // 一般翻譯
+        // 文字翻譯
         sourceLang: document.getElementById("sourceLang"),
         targetLang: document.getElementById("targetLang"),
         inputText: document.getElementById("inputText"),
         translateBtn: document.getElementById("translateButton"),
         result: document.getElementById("result"),
-        modelSelect: document.getElementById("modelSelect"),
-        progressBar: document.getElementById("progressBar"),
+        copyResultBtn: document.getElementById("copyResultButton"),
+        clearResultBtn: document.getElementById("clearResultButton"),
         
-        // 特殊翻譯
-        specialSourceLang: document.getElementById("specialSourceLang"),
-        specialTargetLang: document.getElementById("specialTargetLang"),
-        specialInputText: document.getElementById("specialInputText"),
-        specialTranslateBtn: document.getElementById("specialTranslateButton"),
-        specialResult: document.getElementById("specialResult"),
-        specialModelSelect: document.getElementById("specialModelSelect"),
-        specialProgressBar: document.getElementById("specialProgressBar"),
+        // 圖片翻譯
+        imageInput: document.getElementById("imageInput"),
+        imageCanvas: document.getElementById("imageCanvas"),
+        imageDropArea: document.getElementById("imageDropArea"),
+        enhanceContrastBtn: document.getElementById("enhanceContrastButton"),
+        grayscaleBtn: document.getElementById("grayscaleButton"),
+        resetImageBtn: document.getElementById("resetImageButton"),
+        clearImageBtn: document.getElementById("clearImageButton"),
+        extractTextBtn: document.getElementById("extractTextButton"),
+        translateExtractedBtn: document.getElementById("translateExtractedButton"),
+        extractedText: document.getElementById("extractedText"),
+        ocrLanguageSelect: document.getElementById("ocrLanguageSelect"),
+        
+        // 語音翻譯
+        startVoiceBtn: document.getElementById("startVoiceBtn"),
+        stopVoiceBtn: document.getElementById("stopVoiceBtn"),
+        useVoiceTextBtn: document.getElementById("useVoiceTextBtn"),
+        clearVoiceBtn: document.getElementById("clearVoiceBtn"),
+        voiceVisualizer: document.getElementById("voiceVisualizer"),
+        voiceStatus: document.getElementById("voiceRecordingStatus"),
+        voiceTranscript: document.getElementById("voiceTranscript"),
+        expandVoiceBtn: document.getElementById("expandVoiceBtn"),
+        shrinkVoiceBtn: document.getElementById("shrinkVoiceBtn"),
+        
+        // R18 翻譯
+        r18SourceLang: document.getElementById("r18SourceLang"),
+        r18TargetLang: document.getElementById("r18TargetLang"),
+        r18InputText: document.getElementById("r18InputText"),
+        r18TranslateBtn: document.getElementById("r18TranslateButton"),
+        r18Result: document.getElementById("r18Result"),
+        r18CopyBtn: document.getElementById("r18CopyButton"),
+        r18ClearBtn: document.getElementById("r18ClearButton"),
         
         // 通用
         tabs: document.querySelectorAll(".tab-button"),
         tabContents: document.querySelectorAll(".tab-content"),
-        themeToggle: document.getElementById("themeToggle"),
-        swapLang: document.getElementById("swapLang"),
-        imageInput: document.getElementById("imageInput"),
-        imageCanvas: document.getElementById("imageCanvas"),
-        extractTextBtn: document.getElementById("extractTextButton"),
-        translateExtractedBtn: document.getElementById("translateExtractedButton"),
-        extractedText: document.getElementById("extractedText"),
-        imageDropArea: document.getElementById("imageDropArea"),
-        clearTextButton: document.getElementById("clearTextButton"),
-        copyResultButton: document.getElementById("copyResultButton"),
-        clearResultButton: document.getElementById("clearResultButton"),
-        clearAllButton: document.getElementById("clearAllButton"),
-        clearImageButton: document.getElementById("clearImageButton"),
-        imageTab: document.getElementById("imageTab"),
-        ocrLanguageSelect: document.getElementById('ocrLanguageSelect'),
-        ocrHelpButton: document.getElementById('ocrHelpButton'),
-        ocrProgressContainer: document.getElementById('ocrProgressContainer'),
-        ocrProgressBar: document.getElementById('ocrProgressBar'),
-        ocrStatusText: document.getElementById('ocrStatusText'),
-        detectedLanguage: document.getElementById('detectedLanguage'),
-        editExtractedButton: document.getElementById('editExtractedButton'),
-        enhanceContrastButton: document.getElementById('enhanceContrastButton'),
-        grayscaleButton: document.getElementById('grayscaleButton'),
-        resetImageButton: document.getElementById('resetImageButton')
+        themeToggle: document.querySelector(".theme-toggle"),
+        apiKeyInput: document.querySelector(".api-key-input"),
+        modelSelect: document.querySelector(".model-select"),
+        apiSettingsToggle: document.querySelector(".api-settings-toggle")
     };
 
     function init() {
@@ -306,10 +310,9 @@ Target (${targetLang}):
         initTabs();
         initTranslation();
         initImageTranslation();
-        initDragAndDrop();
-        initButtons();
         initVoiceRecognition();
-        initHuggingFaceTab();
+        initR18Translation();
+        initAPISettings();
         initHistory();
     }
 
@@ -1179,15 +1182,10 @@ Target (${targetLang}):
         
         document.body.appendChild(notification);
         
-        setTimeout(() => {
-            notification.classList.add("show");
-        }, 10);
-        
+        setTimeout(() => notification.classList.add("show"), 10);
         setTimeout(() => {
             notification.classList.remove("show");
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
+            setTimeout(() => document.body.removeChild(notification), 300);
         }, 3000);
     }
 
@@ -1242,6 +1240,94 @@ Target (${targetLang}):
         });
 
         updateHistoryDisplay();
+    }
+
+    function initR18Translation() {
+        dom.r18TranslateBtn.addEventListener("click", () => handleTranslation(true));
+        dom.r18CopyBtn.addEventListener("click", () => copyToClipboard(dom.r18Result.textContent));
+        dom.r18ClearBtn.addEventListener("click", () => {
+            dom.r18InputText.value = "";
+            dom.r18Result.textContent = "";
+        });
+    }
+
+    function copyToClipboard(text) {
+        if (!text) return;
+        
+        navigator.clipboard.writeText(text)
+            .then(() => showNotification("已複製到剪貼簿", "success"))
+            .catch(err => showNotification("複製失敗: " + err, "error"));
+    }
+
+    function initAPISettings() {
+        const savedApiKey = localStorage.getItem("openai_api_key");
+        const savedModel = localStorage.getItem("openai_model") || "gpt-3.5-turbo";
+        
+        if (savedApiKey) {
+            dom.apiKeyInput.value = savedApiKey;
+            validateApiKey(savedApiKey);
+        }
+        
+        dom.modelSelect.value = savedModel;
+        updateModelInfo(savedModel);
+        
+        dom.apiSettingsToggle.addEventListener("click", () => {
+            const content = document.querySelector(".api-settings-content");
+            content.classList.toggle("show");
+        });
+        
+        dom.apiKeyInput.addEventListener("change", async (e) => {
+            const apiKey = e.target.value.trim();
+            if (apiKey) {
+                localStorage.setItem("openai_api_key", apiKey);
+                await validateApiKey(apiKey);
+            } else {
+                localStorage.removeItem("openai_api_key");
+                updateApiStatus(false);
+            }
+        });
+        
+        dom.modelSelect.addEventListener("change", (e) => {
+            const model = e.target.value;
+            localStorage.setItem("openai_model", model);
+            updateModelInfo(model);
+        });
+    }
+
+    async function validateApiKey(apiKey) {
+        try {
+            const response = await fetch("https://api.openai.com/v1/models", {
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`
+                }
+            });
+            updateApiStatus(response.ok);
+        } catch (error) {
+            updateApiStatus(false);
+            showNotification("API 金鑰驗證失敗", "error");
+        }
+    }
+
+    function updateApiStatus(isConnected) {
+        const indicator = document.querySelector(".api-status-indicator");
+        const statusText = document.querySelector(".api-status-text");
+        
+        indicator.classList.toggle("connected", isConnected);
+        statusText.textContent = isConnected ? "已連接" : "未連接";
+    }
+
+    function updateModelInfo(model) {
+        const modelInfo = document.querySelector(".model-info");
+        const costs = {
+            "gpt-4": "約 $0.03 / 1K tokens",
+            "gpt-3.5-turbo": "約 $0.002 / 1K tokens",
+            "gpt-3.5-turbo-16k": "約 $0.003 / 1K tokens"
+        };
+        
+        modelInfo.innerHTML = `
+            選擇的模型：${model}<br>
+            預估費用：${costs[model] || "費用未知"}
+        `;
     }
 
     init();
