@@ -640,7 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             return result;
-        },
+        }
         
         // 使用LibreTranslate進行翻譯
         async translateWithLibreTranslate(text, sourceLang, targetLang) {
@@ -686,7 +686,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             return result;
-        },
+        }
         
         // 簡轉繁處理
         convertToTraditionalChinese(text) {
@@ -707,13 +707,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             return result;
-        },
+        }
         
         // 實現備用 API 翻譯方法
         async translateWithBackupAPI(inputText, sourceLang, targetLang) {
             // 直接使用 GPT 作為備用
             return await this.translateWithGPT(inputText, sourceLang, targetLang);
-        },
+        }
         
         // 創建進度條
         createProgressBar() {
