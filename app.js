@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
         openrouter: {
             url: "https://openrouter.ai/api/v1/chat/completions",
             model: "deepseek/deepseek-chat-r1",
-            key: "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",
+            key: "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",
             quota: Infinity
         },
         gpt: {
@@ -26,7 +26,15 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         libre: {
             url: "https://libretranslate.de/translate",
-            quota: 1000
+            quota: 1000,
+            endpoints: [
+                "https://translate.terraprint.co/translate",
+                "https://translate.argosopentech.com/translate",
+                "https://translate.mentality.rip/translate",
+                "https://libretranslate.de/translate",
+                "https://translate.astian.org/translate",
+                "https://translate.fortytwo-it.com/translate"
+            ]
         },
         lingva: {
             url: "https://lingva.ml/api/v1/translate",
@@ -59,6 +67,27 @@ Source ({sourceLang}):
 Target ({targetLang}):
 `
     };
+
+    // 當前使用的端點索引
+    let libreEndpointIndex = 0;
+
+    // 轉換語言代碼為 LibreTranslate 格式
+    function convertToLibreFormat(langCode) {
+        const mapping = {
+            'zh': 'zh',
+            'en': 'en',
+            'ja': 'ja',
+            'ko': 'ko',
+            'fr': 'fr',
+            'de': 'de',
+            'es': 'es',
+            'it': 'it',
+            'pt': 'pt',
+            'ru': 'ru'
+            // 可根據需要添加更多語言
+        };
+        return mapping[langCode] || 'en';
+    }
 
     // API負載均衡器
     class APIBalancer {
@@ -117,19 +146,38 @@ Target ({targetLang}):
     // 翻譯管理器
     class TranslationManager {
         constructor() {
+            this.model = "openrouter";
             this.apiBalancer = new APIBalancer();
-            this.apiStatus = {};
             this.apiResponseTimes = {};
-            this.selectedModel = "openrouter"; // 預設使用 OpenRouter
+            this.apiStatus = {};
+            this.libreEndpointIndex = 0; // 當前使用的 LibreTranslate 端點索引
         }
 
         // 設置所選模型
         setModel(model) {
-            this.selectedModel = model;
+            this.model = model;
+        }
+
+        // 轉換語言代碼為 LibreTranslate 格式
+        convertToLibreFormat(langCode) {
+            const mapping = {
+                'zh': 'zh',
+                'en': 'en',
+                'ja': 'ja',
+                'ko': 'ko',
+                'fr': 'fr',
+                'de': 'de',
+                'es': 'es',
+                'it': 'it',
+                'pt': 'pt',
+                'ru': 'ru'
+                // 可根據需要添加更多語言
+            };
+            return mapping[langCode] || 'en';
         }
 
         async translate(text, sourceLang, targetLang, isSpecial = false, contentTypes = {}) {
-            if (this.selectedModel === "openrouter") {
+            if (this.model === "openrouter") {
                 try {
                     return await this.translateWithOpenRouter(text, sourceLang, targetLang);
                 } catch (error) {
@@ -144,7 +192,7 @@ Target ({targetLang}):
                         throw gptError;
                     }
                 }
-            } else if (this.selectedModel === "gpt") {
+            } else if (this.model === "gpt") {
                 try {
                     return await this.translateWithGPT(text, sourceLang, targetLang);
                 } catch (error) {
@@ -173,13 +221,20 @@ Target ({targetLang}):
             const startTime = Date.now();
             
             try {
+                console.log("開始 OpenRouter 翻譯請求:", {
+                    sourceLang,
+                    targetLang,
+                    textLength: text.length,
+                    model: API_CONFIG.openrouter.model
+                });
+                
                 const response = await fetch(API_CONFIG.openrouter.url, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${API_CONFIG.openrouter.key}`,
-                        "HTTP-Referer": window.location.href,
-                        "X-Title": "詮語翻譯"
+                        "HTTP-Referer": window.location.origin || "https://translator.app",
+                        "X-Title": "詮語翻譯工具"
                     },
                     body: JSON.stringify({
                         model: API_CONFIG.openrouter.model,
@@ -201,11 +256,21 @@ Target ({targetLang}):
                 updateTranslationProgress(progressBar, 50);
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`OpenRouter API 錯誤: ${errorData.error?.message || response.status}`);
+                    // 嘗試獲取原始響應文本
+                    const responseText = await response.text();
+                    console.error("OpenRouter 錯誤響應:", responseText);
+                    
+                    // 檢查是否是 HTML 回應
+                    if (responseText.trim().toLowerCase().startsWith("<!doctype") || 
+                        responseText.trim().toLowerCase().includes("<html")) {
+                        throw new Error("收到 HTML 響應而非 JSON。可能是 API Key 或認證問題。");
+                    }
+                    
+                    throw new Error(`OpenRouter API 錯誤: ${response.status} - ${responseText}`);
                 }
 
                 const data = await response.json();
+                console.log("OpenRouter 響應:", data);
                 
                 updateTranslationProgress(progressBar, 100);
                 
@@ -218,9 +283,14 @@ Target ({targetLang}):
                     progressBar.remove();
                 }, 1000);
                 
-                return data.choices[0].message.content.trim();
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    return data.choices[0].message.content.trim();
+                } else {
+                    throw new Error("OpenRouter 響應格式不正確");
+                }
             } catch (error) {
                 this.apiStatus['openrouter'] = false;
+                console.error("使用 OpenRouter 翻譯時出錯:", error);
                 
                 // 移除進度條
                 progressBar.remove();
@@ -353,24 +423,6 @@ Target ({targetLang}):
             return data.generations[0].text;
         }
 
-        async translateWithLibre(text, sourceLang, targetLang) {
-            const response = await fetch(API_CONFIG.libre.url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    q: text,
-                    source: sourceLang,
-                    target: targetLang
-                })
-            });
-
-            if (!response.ok) throw new Error(`Libre API錯誤: ${response.status}`);
-            const data = await response.json();
-            return data.translatedText;
-        }
-
         async translateWithLingva(text, sourceLang, targetLang) {
             const response = await fetch(`${API_CONFIG.lingva.url}/${sourceLang}/${targetLang}/${encodeURIComponent(text)}`);
 
@@ -414,10 +466,28 @@ Target ({targetLang}):
             const data = await response.json();
             return data.generated_text;
         }
+
+        async translateWithLibre(text, sourceLang, targetLang) {
+            const response = await fetch(API_CONFIG.libre.url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    q: text,
+                    source: sourceLang,
+                    target: targetLang
+                })
+            });
+
+            if (!response.ok) throw new Error(`LibreTranslate API錯誤: ${response.status}`);
+            const data = await response.json();
+            return data.translatedText;
+        }
     }
 
     // 初始化翻譯管理器
-    const translator = new TranslationManager();
+    const translationManager = new TranslationManager();
 
     // DOM元素
     const dom = {
@@ -565,7 +635,6 @@ Target ({targetLang}):
 
     function initTranslation() {
         let lastTranslationTime = 0;
-        const translationManager = new TranslationManager();
         
         // 初始化模型選擇器
         const modelSelect = document.getElementById("modelSelect");
@@ -704,7 +773,7 @@ Target ({targetLang}):
                 slang: document.getElementById('slangContent')?.checked || false
             } : {};
 
-            const translation = await translator.translate(
+            const translation = await translationManager.translate(
                 text,
                 sourceLang.value,
                 targetLang.value,
@@ -1517,7 +1586,7 @@ Target ({targetLang}):
         notification.addEventListener('mouseleave', () => {
             timeoutId = setTimeout(() => {
                 notification.classList.remove("show");
-                setTimeout(() => notification.remove(), 300);
+                setTimeout(() => notification.remove(), 1000);
             }, 1000);
         });
     }
@@ -1582,6 +1651,67 @@ Target ({targetLang}):
             dom.specialInputText.value = "";
             dom.specialResult.textContent = "";
         });
+        
+        // 創建 LibreTranslate 翻譯按鈕
+        const libreTranslateBtn = document.createElement('button');
+        libreTranslateBtn.className = 'primary-button libre-translate-btn';
+        libreTranslateBtn.innerHTML = '<span class="button-icon">🌐</span>LibreTranslate 無限制翻譯';
+        libreTranslateBtn.title = '使用無內容限制的 LibreTranslate API 翻譯';
+        
+        // 在原有按鈕後添加新按鈕
+        const r18ActionPanel = document.querySelector('#r18Tab .action-panel');
+        if (r18ActionPanel) {
+            r18ActionPanel.appendChild(libreTranslateBtn);
+            
+            // 添加點擊事件
+            libreTranslateBtn.addEventListener('click', async () => {
+                const inputText = dom.specialInputText.value.trim();
+                if (!inputText) return;
+                
+                const sourceLang = dom.specialSourceLang.value;
+                const targetLang = dom.specialTargetLang.value;
+                
+                if (sourceLang === targetLang) {
+                    showNotification("源語言和目標語言不能相同", "error");
+                    return;
+                }
+                
+                libreTranslateBtn.disabled = true;
+                libreTranslateBtn.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
+                dom.specialResult.textContent = "翻譯中...";
+                
+                try {
+                    // 使用 LibreTranslate API 翻譯
+                    const translation = await translationManager.translateWithLibre(
+                        inputText, 
+                        sourceLang,
+                        targetLang
+                    );
+                    
+                    dom.specialResult.textContent = translation;
+                    
+                    // 添加到歷史記錄
+                    addToHistory({
+                        timestamp: new Date().toISOString(),
+                        sourceText: inputText,
+                        targetText: translation,
+                        sourceLang: sourceLang,
+                        targetLang: targetLang,
+                        isSpecial: true,
+                        useLibre: true
+                    });
+                    
+                    showNotification("LibreTranslate 翻譯完成", "success");
+                } catch (error) {
+                    console.error("LibreTranslate 翻譯失敗:", error);
+                    dom.specialResult.textContent = `LibreTranslate 翻譯失敗: ${error.message}`;
+                    showNotification(`LibreTranslate 翻譯失敗: ${error.message}`, "error");
+                } finally {
+                    libreTranslateBtn.disabled = false;
+                    libreTranslateBtn.innerHTML = '<span class="button-icon">🌐</span>LibreTranslate 無限制翻譯';
+                }
+            });
+        }
     }
 
     function copyToClipboard(text) {
