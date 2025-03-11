@@ -275,353 +275,155 @@ textarea:focus {
     margin: 15px 0;
 }
 
-.primary-button {
-    flex: 1;
-    padding: 12px 24px;
-    background: var(--primary-color);
-    color: var(--button-text-color);
+/* 按鈕基礎樣式優化 */
+.action-button,
+.primary-button,
+.secondary-button,
+.tool-button {
+    min-width: 120px;
+    height: 40px;
+    padding: 8px 16px;
     border: none;
     border-radius: var(--button-radius);
     font-size: 16px;
     cursor: pointer;
-    transition: all 0.3s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    transition: all 0.3s ease;
 }
 
-.primary-button:hover:not(:disabled) {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-}
-
-.primary-button:disabled {
-    background: var(--primary-light);
-    cursor: not-allowed;
-    opacity: 0.7;
+.primary-button {
+    background: var(--primary-color);
+    color: var(--button-text-color);
 }
 
 .secondary-button {
-    background-color: var(--secondary-color);
-    color: var(--primary-dark);
+    background: var(--secondary-color);
+    color: var(--button-text-color);
 }
 
-.secondary-button:hover {
-    background-color: var(--secondary-light);
+.tool-button {
+    background: var(--primary-light);
+    color: var(--button-text-color);
+    min-width: 100px;
 }
 
-.button-container {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
+.action-button {
+    background: var(--primary-light);
+    color: var(--button-text-color);
+    min-width: 100px;
 }
 
-/* 結果區域 */
+/* 按鈕懸停效果 */
+.primary-button:hover,
+.secondary-button:hover,
+.tool-button:hover,
+.action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 按鈕圖標 */
+.button-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* R18 標籤頁特殊樣式 */
+.tab-button.special {
+    color: #ff4081;
+    font-weight: bold;
+}
+
+.tab-button.special:hover,
+.tab-button.special.active {
+    color: #ff4081;
+    border-bottom-color: #ff4081;
+}
+
+/* 結果容器優化 */
 .result-container {
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 .result-box {
     width: 100%;
-    min-height: 100px;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
+    min-height: 150px;
     padding: 15px;
-    background-color: var(--card-background);
-    color: var(--text-color);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-}
-
-.dark-theme .result-box {
-    background-color: var(--card-background);
-    border-color: var(--primary-color);
+    border: 2px solid var(--border-color);
+    border-radius: var(--container-radius);
+    background: var(--card-background);
+    margin-bottom: 10px;
 }
 
 .result-actions {
+    display: flex;
+    gap: 10px;
     justify-content: flex-end;
 }
 
-/* 進度條 */
-.progress-container {
-    width: 100%;
-    height: 4px;
-    background-color: var(--secondary-light);
-    margin-top: 20px;
-    border-radius: 2px;
-    overflow: hidden;
-    display: none;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0;
-    background-color: var(--primary-color);
-    transition: width 0.3s;
-}
-
-/* 圖片拖放區域 */
-.image-drop-area {
-    width: 100%;
-    height: 150px;
-    border: 3px dashed var(--primary-light);
-    border-radius: var(--button-radius);
+/* 圖片處理工具優化 */
+.image-tools {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-bottom: 20px;
-}
-
-.image-drop-area:hover {
-    background-color: rgba(184, 155, 140, 0.1);
-}
-
-.dark-theme .image-drop-area {
-    border-color: var(--primary-color);
-}
-
-.dark-theme .image-drop-area:hover {
-    background-color: rgba(108, 108, 108, 0.1);
-}
-
-.drop-icon {
-    font-size: 32px;
-    margin-bottom: 10px;
-    color: var(--primary-color);
-}
-
-.drop-text {
-    color: var(--text-secondary);
-}
-
-.image-drop-area.highlight {
-    border-color: var(--primary-color);
-    background-color: rgba(184, 155, 140, 0.2);
-}
-
-.dark-theme .image-drop-area.highlight {
-    background-color: rgba(108, 108, 108, 0.2);
-}
-
-/* 圖片畫布 */
-.image-canvas {
-    width: 100%;
-    max-height: 400px;
-    object-fit: contain;
-    display: none;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
-    margin-bottom: 20px;
-}
-
-.dark-theme .image-canvas {
-    border-color: var(--primary-color);
-}
-
-/* 擷取文字區域 */
-.extracted-text {
-    width: 100%;
-    min-height: 100px;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
-    padding: 15px;
-    background-color: var(--card-background);
-    color: var(--text-color);
-    margin-top: 20px;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    display: none;
-}
-
-.dark-theme .extracted-text {
-    background-color: var(--card-background);
-    border-color: var(--primary-color);
-}
-
-/* 頁腳 */
-.footer {
-    margin-top: 40px;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 14px;
-}
-
-/* OCR選項 */
-.ocr-options {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.ocr-help {
-    margin-left: 10px;
-}
-
-.ocr-help button {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    font-weight: bold;
-}
-
-/* OCR進度顯示 */
-.ocr-progress-container {
-    width: 100%;
-    height: 20px;
-    background-color: var(--secondary-light);
-    margin-top: 20px;
-    border-radius: var(--button-radius);
-    overflow: hidden;
-    position: relative;
-}
-
-.ocr-progress-bar {
-    height: 100%;
-    width: 0;
-    background-color: var(--primary-color);
-    transition: width 0.3s;
-}
-
-.ocr-status-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-color);
-    font-size: 12px;
-    font-weight: bold;
-}
-
-/* 檢測到的語言 */
-.detected-language {
-    margin-top: 10px;
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-/* 圖片處理工具 */
-.image-processing-tools {
-    display: flex;
-    flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 15px;
-}
-
-.image-tool-button {
-    font-size: 14px;
-    padding: 8px 12px;
-}
-
-/* 語音功能樣式 */
-.voice-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 10px 0;
-}
-
-.voice-controls {
-    display: flex;
+    margin: 15px 0;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
 }
 
+/* 語音可視化器優化 */
 .voice-visualizer-container {
-    position: relative;
-    width: 100%;
-    height: 150px;
-    background-color: rgba(184, 155, 140, 0.1);
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
-    overflow: hidden;
-    transition: height 0.3s ease;
-}
-
-.dark-theme .voice-visualizer-container {
-    background-color: rgba(108, 108, 108, 0.1);
-    border-color: var(--primary-color);
+    height: 200px;
+    background: var(--card-background);
+    border: 2px solid var(--border-color);
+    border-radius: var(--container-radius);
+    padding: 20px;
+    margin: 15px 0;
 }
 
 .voice-visualizer {
-    width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.voice-size-controls {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    display: flex;
-    gap: 5px;
-}
-
-.small-button {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+    gap: 2px;
 }
 
 .voice-bar {
-    width: 5px;
-    height: 5px;
-    background-color: var(--primary-color);
-    margin: 0 2px;
+    width: 4px;
+    height: 20px;
+    background: var(--primary-color);
     border-radius: 2px;
-    transition: height 0.05s ease;
+    transition: height 0.1s ease;
 }
 
-.dark-theme .voice-bar {
-    background-color: var(--primary-color);
+/* API 設置面板優化 */
+.api-settings-panel {
+    background: var(--card-background);
+    border: 2px solid var(--border-color);
+    border-radius: var(--container-radius);
+    margin: 20px 0;
+    overflow: hidden;
 }
 
-.voice-status {
-    font-size: 14px;
-    color: var(--text-secondary);
-    text-align: center;
-    margin-top: 5px;
-}
-
-.voice-transcript {
-    min-height: 100px;
-    border: 2px solid var(--primary-light);
-    border-radius: var(--button-radius);
+.api-settings-toggle {
     padding: 15px;
-    background-color: var(--card-background);
-    color: var(--text-color);
-    margin-top: 10px;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--primary-light);
+    color: var(--button-text-color);
 }
 
-.dark-theme .voice-transcript {
-    background-color: var(--card-background);
-    border-color: var(--primary-color);
+.api-settings-content {
+    padding: 15px;
+    display: none;
 }
 
-.recording .voice-visualizer-container {
-    border-color: var(--error-color);
-}
-
-.recording .voice-status {
-    color: var(--error-color);
-    font-weight: bold;
+.api-settings-content.show {
+    display: block;
 }
 
 /* 響應式設計優化 */
@@ -666,46 +468,43 @@ textarea:focus {
         padding: 12px;
     }
 
-    .primary-button {
-        padding: 10px 20px;
+    .action-button,
+    .primary-button,
+    .secondary-button,
+    .tool-button {
+        min-width: 100px;
+        height: 36px;
         font-size: 14px;
+        padding: 6px 12px;
     }
 
-    .notification {
-        left: 20px;
-        right: 20px;
-        transform: translateY(-150%);
+    .button-icon {
+        font-size: 18px;
     }
 
-    .notification.show {
-        transform: translateY(0);
-    }
-}
-
-/* 觸控優化 */
-@media (hover: none) {
-    .primary-button:hover {
-        transform: none;
+    .image-tools {
+        justify-content: center;
     }
 
-    .swap-button:hover {
-        transform: none;
-    }
-
-    .tab-button:hover::after {
-        transform: scaleX(0);
+    .result-actions {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 }
 
 /* 深色模式優化 */
-.dark-theme .translation-panel {
+.dark-theme .result-box {
     background: var(--card-background);
-    border: 1px solid var(--border-color);
+    border-color: var(--border-color);
 }
 
-.dark-theme .language-control-panel {
+.dark-theme .voice-visualizer-container {
     background: var(--card-background);
-    border: 1px solid var(--border-color);
+    border-color: var(--border-color);
+}
+
+.dark-theme .api-settings-toggle {
+    background: var(--primary-dark);
 }
 
 /* 無障礙支持 */
@@ -904,4 +703,82 @@ textarea:focus {
 
 .dark-theme .history-target {
     background: rgba(33, 150, 243, 0.1);
+}
+
+/* 模型選擇面板 */
+.model-selection-panel {
+    background: var(--card-background);
+    padding: 15px;
+    border-radius: var(--container-radius);
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.model-select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--button-radius);
+    background: var(--input-background);
+    color: var(--text-color);
+    font-size: 16px;
+    appearance: none;
+    cursor: pointer;
+}
+
+.model-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.model-info {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: var(--button-radius);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.dark-theme .model-info {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* API 狀態指示器 */
+.api-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+}
+
+.api-status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--error-color);
+}
+
+.api-status-indicator.connected {
+    background: var(--success-color);
+}
+
+/* 響應式設計補充 */
+@media (max-width: 768px) {
+    .api-settings-panel,
+    .model-selection-panel {
+        padding: 12px;
+    }
+
+    .api-key-input,
+    .model-select {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .model-info {
+        font-size: 12px;
+    }
 }
