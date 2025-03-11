@@ -609,73 +609,121 @@ document.addEventListener("DOMContentLoaded", () => {
         async translateWithMyMemory(text, sourceLang, targetLang) {
             console.log("使用 MyMemory API 翻譯");
             
-            try {
-                // 構建 API URL
-                const apiUrl = new URL("https://api.mymemory.translated.net/get");
-                apiUrl.searchParams.append("q", text);
-                apiUrl.searchParams.append("langpair", `${sourceLang}|${targetLang}`);
-                apiUrl.searchParams.append("de", "your-email@example.com");
-                
-                // 添加延遲以避免過快請求
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // 發送請求
-                const response = await fetch(apiUrl.toString());
-                
-                // 檢查HTTP錯誤
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                // 解析響應
-                const data = await response.json();
-                
-                // 檢查API響應是否包含翻譯結果
-                if (!data || !data.responseData || !data.responseData.translatedText) {
-                    throw new Error("翻譯API未返回有效結果");
-                }
-                
-                let translatedText = data.responseData.translatedText;
-                
-                // 如果目標語言是中文，確保使用繁體中文
-                if (targetLang === 'zh') {
-                    translatedText = simplifiedToTraditional(translatedText);
-                }
-                
-                return translatedText;
-            } catch (error) {
-                console.error("MyMemory API 翻譯錯誤:", error);
-                // 返回錯誤信息而不是undefined
-                return `翻譯錯誤: ${error.message}`;
+            // 構建API URL
+            const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}&de=your-email@domain.com`;
+            
+            // 添加延遲以避免過快請求
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // 發送請求
+            const response = await fetch(apiUrl);
+            
+            // 檢查HTTP錯誤
+            if (!response.ok) {
+                throw new Error(`MyMemory API 錯誤: ${response.status} ${response.statusText}`);
             }
-        }
-
+            
+            // 解析響應
+            const data = await response.json();
+            
+            // 檢查API響應
+            if (data.responseStatus !== 200) {
+                throw new Error(`MyMemory API 錯誤: ${data.responseStatus} - ${data.responseDetails}`);
+            }
+            
+            // 獲取翻譯結果
+            let result = data.responseData.translatedText;
+            
+            // 如果目標語言為中文，確保使用繁體中文
+            if (targetLang === 'zh') {
+                result = this.convertToTraditionalChinese(result);
+            }
+            
+            return result;
+        },
+        
+        // 使用LibreTranslate進行翻譯
+        async translateWithLibreTranslate(text, sourceLang, targetLang) {
+            console.log("使用 LibreTranslate 翻譯");
+            
+            // 使用免費的LibreTranslate實例
+            const apiUrl = 'https://libretranslate.de/translate';
+            
+            // 添加延遲以避免過快請求
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // 構建請求數據
+            const requestData = {
+                q: text,
+                source: sourceLang,
+                target: targetLang,
+                format: "text"
+            };
+            
+            // 發送POST請求
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                body: JSON.stringify(requestData),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            // 檢查HTTP錯誤
+            if (!response.ok) {
+                throw new Error(`LibreTranslate 錯誤: ${response.status} ${response.statusText}`);
+            }
+            
+            // 解析響應
+            const data = await response.json();
+            
+            // 獲取翻譯結果
+            let result = data.translatedText;
+            
+            // 如果目標語言為中文，確保使用繁體中文
+            if (targetLang === 'zh') {
+                result = this.convertToTraditionalChinese(result);
+            }
+            
+            return result;
+        },
+        
+        // 簡轉繁處理
+        convertToTraditionalChinese(text) {
+            // TODO: 實現更完整的簡轉繁功能
+            // 這裡僅做一些基本替換示例
+            const simplifiedToTraditional = {
+                '简': '簡', '体': '體', '东': '東', '西': '西', '南': '南', '北': '北',
+                '是': '是', '的': '的', '在': '在', '了': '了', '和': '和', '有': '有',
+                '为': '為', '这': '這', '那': '那', '个': '個', '说': '說', '时': '時',
+                '去': '去', '过': '過', '来': '來', '做': '做', '会': '會', '对': '對',
+                '能': '能', '要': '要', '于': '於', '发': '發', '可': '可', '见': '見'
+            };
+            
+            // 替換字符
+            let result = text;
+            for (const [simplified, traditional] of Object.entries(simplifiedToTraditional)) {
+                result = result.replace(new RegExp(simplified, 'g'), traditional);
+            }
+            
+            return result;
+        },
+        
         // 實現備用 API 翻譯方法
         async translateWithBackupAPI(inputText, sourceLang, targetLang) {
             // 直接使用 GPT 作為備用
             return await this.translateWithGPT(inputText, sourceLang, targetLang);
-        }
-
-        // 創建進度條 - 直接從 DOM 創建而不依賴現有元素
+        },
+        
+        // 創建進度條
         createProgressBar() {
-            // 創建進度條容器
             const progressContainer = document.createElement("div");
             progressContainer.className = "progress-container";
-            progressContainer.style.display = "block";
+            progressContainer.style.display = "none"; // 初始隱藏
             
-            // 創建進度條
             const progressBar = document.createElement("div");
             progressBar.className = "progress-bar";
             progressContainer.appendChild(progressBar);
-            
-            // 確定插入位置
-            const container = this.isR18Mode 
-                ? document.querySelector("#r18Tab .action-panel") 
-                : document.querySelector("#textTab .action-panel");
-                
-            if (container) {
-                container.parentNode.insertBefore(progressContainer, container.nextSibling);
-            }
             
             return progressContainer;
         }
@@ -776,6 +824,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 普通翻譯進度條
         const progressContainer = document.createElement("div");
         progressContainer.className = "progress-container";
+        progressContainer.style.display = "none"; // 初始設為隱藏
         const progressBar = document.createElement("div");
         progressBar.className = "progress-bar";
         progressContainer.appendChild(progressBar);
@@ -790,6 +839,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 特殊翻譯進度條
         const specialProgressContainer = document.createElement("div");
         specialProgressContainer.className = "progress-container";
+        specialProgressContainer.style.display = "none"; // 初始設為隱藏
         const specialProgressBar = document.createElement("div");
         specialProgressBar.className = "progress-bar";
         specialProgressContainer.appendChild(specialProgressBar);
@@ -963,22 +1013,33 @@ document.addEventListener("DOMContentLoaded", () => {
         return !isInputEmpty && !isSameLang;
     }
 
+    // 處理翻譯請求
     async function handleTranslation(isR18 = false) {
         try {
-            // 獲取輸入文本和語言設置
-            const inputText = isR18 ? dom.r18InputText.value.trim() : dom.inputText.value.trim();
-            const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
-            const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
+            // 獲取對應的元素
+            const inputElement = isR18 ? dom.r18InputText : dom.inputText;
             const resultElement = isR18 ? dom.r18Result : dom.result;
             const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
             
-            // 驗證輸入
+            // 獲取輸入文本
+            const inputText = inputElement.value.trim();
             if (!inputText) {
-                showNotification("請輸入要翻譯的文本", "warning");
+                showNotification("請輸入要翻譯的文字", "warning");
                 return;
             }
             
-            // 禁用翻譯按鈕，顯示翻譯中狀態
+            // 獲取語言設置
+            const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
+            const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
+            
+            // 驗證翻譯輸入
+            const validationResult = validateTranslationInput(inputText, sourceLang, targetLang);
+            if (!validationResult.valid) {
+                showNotification(validationResult.message, "warning");
+                return;
+            }
+            
+            // 更新按鈕狀態
             translateButton.disabled = true;
             translateButton.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
             
@@ -994,6 +1055,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 progressContainer.style.display = "block";
                 progressBar.style.width = "0%";
                 progressBar.classList.remove("complete");
+                console.log("顯示進度條:", progressContainer);
             }
             
             // 更新進度條
@@ -1003,6 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (progress > 90) progress = 90; // 最多到90%，剩下的10%留給實際完成時
                 if (progressBar) {
                     progressBar.style.width = `${progress}%`;
+                    console.log("更新進度條:", progress + "%");
                 }
             }, 300);
             
@@ -1013,23 +1076,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     const model = dom.r18ModelSelect.value;
                     if (model === "mymemory") {
                         translatedText = await translationManager.translateWithMyMemory(inputText, sourceLang, targetLang);
-                    } else if (model === "libretranslate") {
-                        translatedText = await translateWithLibreTranslate(inputText, sourceLang, targetLang);
+                    } else {
+                        translatedText = await translationManager.translateWithLibreTranslate(inputText, sourceLang, targetLang);
                     }
                 } else {
-                    translatedText = await translationManager.translateWithFallback(inputText, sourceLang, targetLang);
+                    translatedText = await translationManager.translateWithMyMemory(inputText, sourceLang, targetLang);
                 }
                 
-                // 確保翻譯結果不是undefined
-                if (!translatedText) {
-                    throw new Error("翻譯結果為空");
-                }
-                
-                // 完成進度條
+                // 停止進度條更新
                 clearInterval(progressInterval);
+                
+                // 顯示100%完成
                 if (progressBar) {
                     progressBar.style.width = "100%";
                     progressBar.classList.add("complete");
+                    console.log("完成進度條: 100%");
                 }
                 
                 // 顯示翻譯結果
@@ -1045,6 +1106,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearInterval(progressInterval);
                 if (progressContainer) {
                     progressContainer.style.display = "none";
+                    console.log("錯誤時隱藏進度條");
                 }
                 
                 console.error("翻譯過程中發生錯誤:", error);
@@ -1059,6 +1121,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (progressContainer) {
                     setTimeout(() => {
                         progressContainer.style.display = "none";
+                        console.log("最終隱藏進度條");
                     }, 1000);
                 }
             }
@@ -1066,11 +1129,6 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("處理翻譯請求時發生錯誤:", error);
             showNotification("處理翻譯請求時發生錯誤: " + error.message, "error");
         }
-    }
-    
-    // 更新翻譯進度條
-    function updateTranslationProgress(progressIndicator, progress) {
-        progressIndicator.style.width = `${progress}%`;
     }
 
     function initImageTranslation() {
@@ -1838,6 +1896,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 voiceContainer.insertBefore(instructions, voiceContainer.firstChild);
             }
         }
+        
         
         function openVoicePanel() {
             const panel = document.getElementById('voiceFloatingPanel');
