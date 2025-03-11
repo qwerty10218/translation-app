@@ -694,6 +694,7 @@ document.addEventListener("DOMContentLoaded", () => {
         grayscaleButton: document.getElementById("grayscaleButton"),
         resetImageButton: document.getElementById("resetImageButton"),
         clearImageButton: document.getElementById("clearImageButton"),
+        uploadImageButton: document.getElementById("uploadImageButton"),
         extractTextButton: document.getElementById("extractTextButton"),
         extractedText: document.getElementById("extractedText"),
         translateExtractedButton: document.getElementById("translateExtractedButton"),
@@ -731,9 +732,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tabs: document.querySelectorAll(".tab-button"),
         tabContents: document.querySelectorAll(".tab-content"),
         themeToggle: document.querySelector(".theme-toggle"),
-        apiKeyInput: document.querySelector(".api-key-input"),
         modelSelect: document.querySelector(".model-select"),
-        apiSettingsToggle: document.querySelector(".api-settings-toggle"),
         progressBar: null,
         progressContainer: null,
         specialProgressBar: null,
@@ -748,6 +747,7 @@ document.addEventListener("DOMContentLoaded", () => {
         initTabs();
         initTranslation();
         initImageTranslation();
+        initDragAndDrop(); // 確保拖放功能被初始化
         initVoiceRecognition();
         initR18Translation();
         initAPISettings();
@@ -763,10 +763,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const progressBar = document.createElement("div");
         progressBar.className = "progress-bar";
         progressContainer.appendChild(progressBar);
-        dom.textTab.querySelector(".result-container").insertBefore(progressContainer, dom.result);
         
-        dom.progressContainer = progressContainer;
-        dom.progressBar = progressBar;
+        const resultContainer = dom.textTab.querySelector(".result-container");
+        if (resultContainer) {
+            resultContainer.insertBefore(progressContainer, dom.result);
+            dom.progressContainer = progressContainer;
+            dom.progressBar = progressBar;
+        }
         
         // 特殊翻譯進度條
         const specialProgressContainer = document.createElement("div");
@@ -774,29 +777,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const specialProgressBar = document.createElement("div");
         specialProgressBar.className = "progress-bar";
         specialProgressContainer.appendChild(specialProgressBar);
-        dom.r18Tab.querySelector(".result-container").insertBefore(specialProgressContainer, dom.specialResult);
         
-        dom.specialProgressContainer = specialProgressContainer;
-        dom.specialProgressBar = specialProgressBar;
-    }
-
-    // 創建單個進度條
-    function createProgressBar(id, label) {
-        const container = document.createElement("div");
-        container.className = "progress-container";
-        container.id = id + "-container";
-        
-        const labelElem = document.createElement("div");
-        labelElem.className = "progress-label";
-        labelElem.textContent = label;
-        container.appendChild(labelElem);
-        
-        const bar = document.createElement("div");
-        bar.className = "progress-bar";
-        bar.id = id;
-        container.appendChild(bar);
-        
-        return container;
+        const r18ResultContainer = dom.r18Tab.querySelector(".result-container");
+        if (r18ResultContainer) {
+            r18ResultContainer.insertBefore(specialProgressContainer, dom.r18Result);
+            dom.specialProgressContainer = specialProgressContainer;
+            dom.specialProgressBar = specialProgressBar;
+        }
     }
 
     function initButtons() {
@@ -807,9 +794,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         dom.copyResultButton.addEventListener("click", () => {
             if (dom.result.textContent) {
-                navigator.clipboard.writeText(dom.result.textContent)
-                    .then(() => alert("已複製到剪貼簿"))
-                    .catch(err => alert("複製失敗: " + err));
+                copyToClipboard(dom.result.textContent);
             }
         });
         
@@ -817,15 +802,14 @@ document.addEventListener("DOMContentLoaded", () => {
             dom.result.textContent = "";
         });
         
-        dom.clearAllButton.addEventListener("click", () => {
-            dom.inputText.value = "";
-            dom.result.textContent = "";
-            validateTranslationInput();
-        });
-        
-        dom.clearImageButton.addEventListener("click", () => {
-            clearImageData();
-        });
+        // 修正 clearAllButton 引用錯誤
+        if (document.getElementById("clearAllButton")) {
+            document.getElementById("clearAllButton").addEventListener("click", () => {
+                dom.inputText.value = "";
+                dom.result.textContent = "";
+                validateTranslationInput();
+            });
+        }
     }
 
     function initTabs() {
@@ -1027,6 +1011,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 translateExtractedText();
             }
         });
+        
+        // 添加上傳圖片按鈕事件監聽器
+        if (dom.uploadImageButton) {
+            dom.uploadImageButton.addEventListener("click", () => {
+                dom.imageInput.click();
+            });
+        }
+
+        // 添加圖片工具按鈕事件監聽器
+        if (dom.enhanceContrastButton) {
+            dom.enhanceContrastButton.addEventListener("click", enhanceImageContrast);
+        }
+        
+        if (dom.grayscaleButton) {
+            dom.grayscaleButton.addEventListener("click", convertImageToGrayscale);
+        }
+        
+        if (dom.resetImageButton) {
+            dom.resetImageButton.addEventListener("click", resetImage);
+        }
+        
+        if (dom.clearImageButton) {
+            dom.clearImageButton.addEventListener("click", clearImageData);
+        }
     }
 
     function initDragAndDrop() {
@@ -2038,6 +2046,55 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // 檢查 API 狀態
         checkAPIStatus();
+    }
+
+    // 添加圖片處理函數
+    function enhanceImageContrast() {
+        if (!dom.imageCanvas.width) return;
+        
+        const canvas = dom.imageCanvas;
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        // 簡單對比度增強
+        const contrast = 1.5; // 對比度因子
+        
+        for (let i = 0; i < data.length; i += 4) {
+            data[i] = ((data[i] / 255 - 0.5) * contrast + 0.5) * 255;     // 紅
+            data[i+1] = ((data[i+1] / 255 - 0.5) * contrast + 0.5) * 255; // 綠
+            data[i+2] = ((data[i+2] / 255 - 0.5) * contrast + 0.5) * 255; // 藍
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+    }
+    
+    function convertImageToGrayscale() {
+        if (!dom.imageCanvas.width) return;
+        
+        const canvas = dom.imageCanvas;
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        for (let i = 0; i < data.length; i += 4) {
+            const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+            data[i] = avg;     // 紅
+            data[i+1] = avg;   // 綠
+            data[i+2] = avg;   // 藍
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+    }
+    
+    function resetImage() {
+        if (!dom.imageCanvas.width || !dom.imageCanvas.originalImage) return;
+        
+        const canvas = dom.imageCanvas;
+        const ctx = canvas.getContext("2d");
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(canvas.originalImage, 0, 0, canvas.width, canvas.height);
     }
 
     init();
