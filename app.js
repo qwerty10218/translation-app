@@ -3,9 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const API_CONFIG = {
         // GPT API (確認可用)
         gpt: {
-            url: "https://free.v36.cm/v1/chat/completions",
+            url: "https://free.v36.cm",
             key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
-            model: "deepseek-chat",
+            model: "gpt-3.5-turbo-0125",
             timeout: 15000,
             quota: 100000, // 每日字符配額
             delay: 1000 // 請求間隔
@@ -293,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
         async translateWithGPT(text, sourceLang, targetLang) {
             const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}，請使用繁體中文：\n\n${text}`;
             
-            const response = await fetch(API_CONFIG.gpt.url, {
+            const response = await fetch(`${API_CONFIG.gpt.url}/v1/chat/completions`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -317,8 +317,14 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`GPT API 錯誤: ${errorData.error?.message || response.status}`);
+                try {
+                    const errorData = await response.json();
+                    console.error("GPT API 錯誤響應:", errorData);
+                    throw new Error(`GPT API 錯誤: ${errorData.error?.message || response.status}`);
+                } catch (e) {
+                    // 如果無法解析JSON，返回原始錯誤
+                    throw new Error(`GPT API 錯誤: ${response.status} - 請檢查API連接`);
+                }
             }
 
             const data = await response.json();
@@ -1954,48 +1960,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 添加 API 狀態檢查
     async function checkAPIStatus() {
-        const openrouterStatus = document.getElementById("openrouterStatus");
         const gptStatus = document.getElementById("gptStatus");
-        
-        // 檢查 OpenRouter API
-        try {
-            const response = await fetch(API_CONFIG.openrouter.url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${API_CONFIG.openrouter.key}`,
-                    "HTTP-Referer": window.location.href,
-                    "X-Title": "詮語翻譯"
-                },
-                body: JSON.stringify({
-                    model: API_CONFIG.openrouter.model,
-                    messages: [
-                        {role: "user", content: "test"}
-                    ]
-                })
-            });
-            
-            if (response.ok) {
-                if (openrouterStatus) {
-                    openrouterStatus.classList.add("connected");
-                    openrouterStatus.parentElement.querySelector(".api-status-text").textContent = "已連接";
-                }
-            } else {
-                if (openrouterStatus) {
-                    openrouterStatus.classList.remove("connected");
-                    openrouterStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
-                }
-            }
-        } catch (error) {
-            if (openrouterStatus) {
-                openrouterStatus.classList.remove("connected");
-                openrouterStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
-            }
-        }
         
         // 檢查 GPT API
         try {
-            const response = await fetch(API_CONFIG.gpt.url, {
+            const response = await fetch(`${API_CONFIG.gpt.url}/v1/chat/completions`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -2005,7 +1974,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     model: API_CONFIG.gpt.model,
                     messages: [
                         {role: "user", content: "test"}
-                    ]
+                    ],
+                    max_tokens: 5
                 })
             });
             
@@ -2014,13 +1984,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     gptStatus.classList.add("connected");
                     gptStatus.parentElement.querySelector(".api-status-text").textContent = "已連接";
                 }
+                console.log("GPT API 連接成功");
             } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error("GPT API 連接失敗:", response.status, errorData);
                 if (gptStatus) {
                     gptStatus.classList.remove("connected");
                     gptStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
                 }
             }
         } catch (error) {
+            console.error("GPT API 檢查錯誤:", error);
             if (gptStatus) {
                 gptStatus.classList.remove("connected");
                 gptStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
