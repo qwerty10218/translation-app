@@ -746,6 +746,12 @@ document.addEventListener("DOMContentLoaded", () => {
         copyResultButton: document.getElementById("copyResultButton"),
         clearResultButton: document.getElementById("clearResultButton"),
         
+        // 進度條
+        progressContainer: document.getElementById("progressContainer"),
+        progressBar: document.getElementById("progressBar"),
+        specialProgressContainer: document.getElementById("specialProgressContainer"),
+        specialProgressBar: document.getElementById("specialProgressBar"),
+        
         // 暗色模式
         themeToggle: document.getElementById("themeToggle"),
         
@@ -793,16 +799,11 @@ document.addEventListener("DOMContentLoaded", () => {
         r18Tab: document.getElementById("r18Tab"),
         historyTab: document.getElementById("historyTab"),
         settingsTab: document.getElementById("settingsTab"),
-        modelSelect: document.querySelector(".model-select"),
-        progressBar: null,
-        progressContainer: null,
-        specialProgressBar: null,
-        specialProgressContainer: null
+        modelSelect: document.querySelector(".model-select")
     };
 
     function init() {
-        // 創建進度條元素
-        createProgressBars();
+        // 已經在HTML中定義了進度條，不需要動態創建
         
         initTheme();
         initTabs();
@@ -816,39 +817,6 @@ document.addEventListener("DOMContentLoaded", () => {
         initSettings(); // 添加設置初始化
     }
     
-    // 創建進度條元素
-    function createProgressBars() {
-        // 普通翻譯進度條
-        const progressContainer = document.createElement("div");
-        progressContainer.className = "progress-container";
-        progressContainer.style.display = "none"; // 初始設為隱藏
-        const progressBar = document.createElement("div");
-        progressBar.className = "progress-bar";
-        progressContainer.appendChild(progressBar);
-        
-        const resultContainer = dom.textTab.querySelector(".result-container");
-        if (resultContainer) {
-            resultContainer.insertBefore(progressContainer, dom.result);
-            dom.progressContainer = progressContainer;
-            dom.progressBar = progressBar;
-        }
-        
-        // 特殊翻譯進度條
-        const specialProgressContainer = document.createElement("div");
-        specialProgressContainer.className = "progress-container";
-        specialProgressContainer.style.display = "none"; // 初始設為隱藏
-        const specialProgressBar = document.createElement("div");
-        specialProgressBar.className = "progress-bar";
-        specialProgressContainer.appendChild(specialProgressBar);
-        
-        const r18ResultContainer = dom.r18Tab.querySelector(".result-container");
-        if (r18ResultContainer) {
-            r18ResultContainer.insertBefore(specialProgressContainer, dom.r18Result);
-            dom.specialProgressContainer = specialProgressContainer;
-            dom.specialProgressBar = specialProgressBar;
-        }
-    }
-
     function initButtons() {
         dom.clearTextButton.addEventListener("click", () => {
             dom.inputText.value = "";
