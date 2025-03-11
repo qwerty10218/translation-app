@@ -28,12 +28,19 @@
             <button class="tab-button" data-tab="voiceTab">語音翻譯</button>
             <button class="tab-button special" data-tab="r18Tab">R18 翻譯</button>
             <button class="tab-button" data-tab="historyTab">歷史記錄</button>
+            <button class="tab-button" data-tab="settingsTab">設置</button>
         </div>
 
         <!-- 文字翻譯標籤頁 -->
         <div id="textTab" class="tab-content active">
             <div class="translation-panel">
                 <div class="language-control-panel">
+                    <div class="model-selection">
+                        <select id="modelSelect" class="model-select">
+                            <option value="openrouter">DeepSeek R1 (優質翻譯)</option>
+                            <option value="gpt">GPT-3.5 (備用)</option>
+                        </select>
+                    </div>
                     <div class="language-selectors">
                         <select id="sourceLang" class="language-select">
                             <option value="zh">中文</option>
@@ -167,6 +174,12 @@
                 </div>
 
                 <div class="language-control-panel">
+                    <div class="model-selection">
+                        <select id="r18ModelSelect" class="model-select">
+                            <option value="openrouter">DeepSeek R1 (優質翻譯)</option>
+                            <option value="gpt">GPT-3.5 (備用)</option>
+                        </select>
+                    </div>
                     <div class="language-selectors">
                         <select id="r18SourceLang" class="language-select">
                             <option value="zh">中文</option>
@@ -239,24 +252,50 @@
             </div>
         </div>
 
-        <!-- API 設置面板 -->
-        <div class="api-settings-panel">
-            <div class="api-settings-toggle">
-                <span>API 設置</span>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="api-settings-content">
-                <input type="password" class="api-key-input" placeholder="輸入 OpenAI API 金鑰" />
-                <select class="model-select">
-                    <option value="gpt-4">GPT-4</option>
-                    <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo</option>
-                    <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K</option>
-                </select>
-                <div class="model-info"></div>
-                <div class="api-status">
-                    <div class="api-status-indicator"></div>
-                    <span class="api-status-text">未連接</span>
+        <!-- 設置標籤頁 -->
+        <div id="settingsTab" class="tab-content">
+            <div class="settings-panel">
+                <h2>模型設置</h2>
+                <div class="settings-section">
+                    <h3>DeepSeek R1</h3>
+                    <div class="model-info">
+                        <p>DeepSeek R1 是一個高級翻譯模型，提供更高質量的翻譯結果。</p>
+                        <p>API 提供商: OpenRouter</p>
+                        <div class="api-status">
+                            <div class="api-status-indicator" id="openrouterStatus"></div>
+                            <span class="api-status-text">狀態檢查中...</span>
+                        </div>
+                    </div>
+                    
+                    <h3>GPT-3.5</h3>
+                    <div class="model-info">
+                        <p>GPT-3.5 作為備用翻譯模型，當主要模型不可用時自動切換。</p>
+                        <div class="api-status">
+                            <div class="api-status-indicator" id="gptStatus"></div>
+                            <span class="api-status-text">狀態檢查中...</span>
+                        </div>
+                    </div>
                 </div>
+                
+                <h2>應用設置</h2>
+                <div class="settings-section">
+                    <div class="setting-item">
+                        <label for="autoSaveHistory">
+                            <input type="checkbox" id="autoSaveHistory" checked>
+                            自動保存翻譯歷史
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label for="showNotifications">
+                            <input type="checkbox" id="showNotifications" checked>
+                            顯示通知
+                        </label>
+                    </div>
+                </div>
+                
+                <button id="clearLocalStorage" class="secondary-button">
+                    <span class="button-icon">🗑️</span>清除所有本地數據
+                </button>
             </div>
         </div>
     </div>
