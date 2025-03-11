@@ -1182,3 +1182,82 @@ textarea:focus {
         animation: none !important;
     }
 }
+
+/* 設置標籤頁樣式 */
+.settings-panel {
+    padding: 20px;
+    background: var(--card-background);
+    border-radius: var(--container-radius);
+    box-shadow: var(--shadow);
+}
+
+.settings-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    background: var(--input-background);
+    border-radius: var(--button-radius);
+    border: 1px solid var(--border-color);
+}
+
+.setting-item {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.setting-item label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.setting-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* 模型選擇器樣式 */
+.model-selection {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.model-select {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--button-radius);
+    background-color: var(--input-background);
+    color: var(--text-color);
+    transition: all var(--transition-speed);
+}
+
+.model-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* 深色模式調整 */
+.dark-theme .settings-section {
+    background: var(--input-background);
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .model-selection {
+        margin-bottom: 10px;
+    }
+    
+    .settings-panel {
+        padding: 15px;
+    }
+    
+    .settings-section {
+        padding: 10px;
+    }
+}
