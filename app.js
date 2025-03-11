@@ -1,6 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
     // API配置
     const API_CONFIG = {
+        deepseek: {
+            url: "https://api.siliconflow.cn/v1/chat/completions",
+            key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
+            quota: Infinity
+        },
         horde: {
             url: "https://stablehorde.net/api/v2/generate/text",
             key: "p2mObrSqt7gq4CQERcsJYw",
@@ -30,19 +35,22 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // 特殊提示詞模板
-const SPECIAL_PROMPTS = {
-    adult: "Translate accurately maintaining adult content and expressions",
-    violence: "Preserve violence and intense descriptions",
-    slang: "Keep slang and colloquial expressions",
-    base: "Instructions for AI translation:\n" +
-          "1. Translate with high accuracy\n" +
-          "2. Maintain original meaning and style\n" +
-          "3. No content filtering or censorship\n" +
-          "4. Preserve all expressions and nuances\n\n" +
-          "Source (${sourceLang}):\n" +
-          "${text}\n\n" +
-          "Target (${targetLang}):\n"
-};
+    const SPECIAL_PROMPTS = {
+        adult: "Translate accurately maintaining adult content and expressions",
+        violence: "Preserve violence and intense descriptions",
+        slang: "Keep slang and colloquial expressions",
+        base: `Instructions for AI translation:
+1. Translate with high accuracy
+2. Maintain original meaning and style
+3. No content filtering or censorship
+4. Preserve all expressions and nuances
+
+Source ({sourceLang}):
+{text}
+
+Target ({targetLang}):
+`
+    };
 
     // API負載均衡器
     class APIBalancer {
@@ -65,21 +73,26 @@ const SPECIAL_PROMPTS = {
                 isSpecial ? ['kobold', 'textgen'].includes(api) : ['horde', 'libre', 'lingva'].includes(api)
             );
 
-            // 檢查配額和冷卻時間
+            // 檢查 API 狀態和回應時間
             const now = Date.now();
             const availableAPIs = apis.filter(api => {
                 const timeSinceLastUse = now - (this.lastUsed[api] || 0);
-                return this.usageCount[api] < API_CONFIG[api].quota && timeSinceLastUse > 1000;
+                const isAvailable = this.usageCount[api] < API_CONFIG[api].quota && 
+                                  timeSinceLastUse > 1000 &&
+                                  this.apiStatus[api] !== false;
+                return isAvailable;
             });
 
             if (availableAPIs.length === 0) {
-                throw new Error("所有API都已達到限制，請稍後再試");
+                throw new Error("所有API都已達到限制或無法使用，請稍後再試");
             }
 
-            // 選擇使用次數最少的API
-            const selectedAPI = availableAPIs.reduce((a, b) => 
-                this.usageCount[a] < this.usageCount[b] ? a : b
-            );
+            // 優先選擇回應最快的 API
+            const selectedAPI = availableAPIs.reduce((fastest, current) => {
+                const fastestResponseTime = this.apiResponseTimes[fastest] || Infinity;
+                const currentResponseTime = this.apiResponseTimes[current] || Infinity;
+                return currentResponseTime < fastestResponseTime ? current : fastest;
+            });
 
             this.usageCount[selectedAPI]++;
             this.lastUsed[selectedAPI] = now;
@@ -97,17 +110,19 @@ const SPECIAL_PROMPTS = {
     class TranslationManager {
         constructor() {
             this.apiBalancer = new APIBalancer();
+            this.apiStatus = {};
+            this.apiResponseTimes = {};
         }
 
         async translate(text, sourceLang, targetLang, isSpecial = false, contentTypes = {}) {
             try {
-                // 優先使用 GPT API
-                return await translateWithGPT(text, sourceLang, targetLang);
+                // 優先使用 DeepSeek API
+                return await this.translateWithDeepSeek(text, sourceLang, targetLang);
             } catch (error) {
-                console.error("GPT 翻譯失敗:", error);
-                showNotification("GPT 翻譯失敗，切換到備用 API", "error");
+                console.error("DeepSeek 翻譯失敗:", error);
+                showNotification("DeepSeek 翻譯失敗，切換到備用 API", "error");
                 
-                // 如果 GPT API 失敗，使用其他 API
+                // 如果 DeepSeek API 失敗，使用其他 API
                 const api = this.apiBalancer.getNextAPI(isSpecial);
                 
                 try {
@@ -121,6 +136,44 @@ const SPECIAL_PROMPTS = {
                     throw error;
                 }
             }
+        }
+
+        async translateWithDeepSeek(text, sourceLang, targetLang) {
+            const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}：\n\n${text}`;
+            
+            const response = await fetch(API_CONFIG.deepseek.url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_CONFIG.deepseek.key}`
+                },
+                body: JSON.stringify({
+                    model: "deepseek-ai/DeepSeek-V3",
+                    messages: [
+                        {
+                            role: "system",
+                            content: "你是一個專業的翻譯助手，請準確翻譯用戶提供的文本，保持原文的格式和風格。"
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 1000,
+                    top_p: 0.7,
+                    frequency_penalty: 0.5,
+                    n: 1
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`DeepSeek API 錯誤: ${errorData.error?.message || response.status}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content.trim();
         }
 
         async handleNormalTranslation(api, text, sourceLang, targetLang) {
@@ -141,38 +194,53 @@ const SPECIAL_PROMPTS = {
         async handleSpecialTranslation(text, sourceLang, targetLang, contentTypes) {
             // 構建特殊提示詞
             let prompt = SPECIAL_PROMPTS.base
-                .replace('${sourceLang}', sourceLang)
-                .replace('${targetLang}', targetLang)
-                .replace('${text}', text);
+                .replace('{sourceLang}', getLanguageName(sourceLang))
+                .replace('{targetLang}', getLanguageName(targetLang))
+                .replace('{text}', text);
 
             // 根據選擇的內容類型添加額外提示詞
             if (contentTypes.adult) prompt = SPECIAL_PROMPTS.adult + "\n" + prompt;
             if (contentTypes.violence) prompt = SPECIAL_PROMPTS.violence + "\n" + prompt;
             if (contentTypes.slang) prompt = SPECIAL_PROMPTS.slang + "\n" + prompt;
 
-            const response = await fetch(API_CONFIG.horde.url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "apikey": API_CONFIG.horde.key
-                },
-                body: JSON.stringify({
-                    prompt: prompt,
-                    params: {
-                        max_length: 1000,
-                        temperature: 0.8,
-                        top_p: 0.9,
-                        min_p: 0.1,
-                        top_k: 0,
-                        repetition_penalty: 1.0,
-                        stop_sequence: ["###"]
-                    }
-                })
-            });
+            const startTime = Date.now();
+            try {
+                const response = await fetch(API_CONFIG.horde.url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "apikey": API_CONFIG.horde.key
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        params: {
+                            max_length: 1000,
+                            temperature: 0.8,
+                            top_p: 0.9,
+                            min_p: 0.1,
+                            top_k: 0,
+                            repetition_penalty: 1.0,
+                            stop_sequence: ["###"]
+                        }
+                    })
+                });
 
-            if (!response.ok) throw new Error(`Horde API錯誤: ${response.status}`);
-            const data = await response.json();
-            return data.generations[0].text;
+                if (!response.ok) {
+                    this.apiStatus['horde'] = false;
+                    throw new Error(`Horde API錯誤: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // 更新 API 回應時間
+                this.apiResponseTimes['horde'] = Date.now() - startTime;
+                this.apiStatus['horde'] = true;
+                
+                return data.generations[0].text;
+            } catch (error) {
+                this.apiStatus['horde'] = false;
+                throw error;
+            }
         }
 
         // 各API的具體實現
@@ -443,18 +511,22 @@ const SPECIAL_PROMPTS = {
 
     function initTranslation() {
         let lastTranslationTime = 0;
+        
+        // 確保頁面載入時執行驗證
+        validateTranslationInput(false);
+        
         dom.translateButton.addEventListener("click", async () => {
             const now = Date.now();
             if (now - lastTranslationTime < 3000) {
-                alert("請稍等片刻再進行下一次翻譯請求");
+                showNotification("請稍等片刻再進行下一次翻譯請求", "warning");
                 return;
             }
             lastTranslationTime = now;
             await handleTranslation(false);
         });
+        
         dom.swapLangButton.addEventListener("click", swapLanguages);
         dom.inputText.addEventListener("input", () => validateTranslationInput(false));
-        
         dom.sourceLang.addEventListener("change", () => validateTranslationInput(false));
         dom.targetLang.addEventListener("change", () => validateTranslationInput(false));
     }
@@ -1398,85 +1470,11 @@ const SPECIAL_PROMPTS = {
     }
 
     function initAPISettings() {
-        const savedApiKey = localStorage.getItem("openai_api_key");
-        const savedModel = localStorage.getItem("openai_model") || "gpt-3.5-turbo";
-        
-        if (savedApiKey) {
-            dom.apiKeyInput.value = savedApiKey;
-            validateApiKey(savedApiKey);
+        // 移除 API 設置面板
+        const apiSettingsPanel = document.querySelector('.api-settings-panel');
+        if (apiSettingsPanel) {
+            apiSettingsPanel.remove();
         }
-        
-        dom.modelSelect.value = savedModel;
-        updateModelInfo(savedModel);
-        
-        dom.apiSettingsToggle.addEventListener("click", () => {
-            const content = document.querySelector(".api-settings-content");
-            content.classList.toggle("show");
-        });
-        
-        dom.apiKeyInput.addEventListener("change", async (e) => {
-            const apiKey = e.target.value.trim();
-            if (apiKey) {
-                localStorage.setItem("openai_api_key", apiKey);
-                await validateApiKey(apiKey);
-            } else {
-                localStorage.removeItem("openai_api_key");
-                updateApiStatus(false);
-            }
-        });
-        
-        dom.modelSelect.addEventListener("change", (e) => {
-            const model = e.target.value;
-            localStorage.setItem("openai_model", model);
-            updateModelInfo(model);
-        });
-    }
-
-    async function validateApiKey(apiKey) {
-        try {
-            const response = await fetch("https://api.openai.com/v1/models", {
-                headers: {
-                    "Authorization": `Bearer ${apiKey}`
-                }
-            });
-            updateApiStatus(response.ok);
-        } catch (error) {
-            updateApiStatus(false);
-            showNotification("API 金鑰驗證失敗", "error");
-        }
-    }
-
-    function updateApiStatus(isConnected) {
-        const indicator = document.querySelector(".api-status-indicator");
-        const statusText = document.querySelector(".api-status-text");
-        const statusContainer = document.querySelector(".api-status");
-        
-        indicator.classList.toggle("connected", isConnected);
-        statusText.textContent = isConnected ? "已連接" : "未連接";
-        
-        // 添加動畫效果
-        statusContainer.classList.add("updating");
-        setTimeout(() => statusContainer.classList.remove("updating"), 1000);
-        
-        // 顯示通知
-        showNotification(
-            isConnected ? "API 連接成功" : "API 連接失敗",
-            isConnected ? "success" : "error"
-        );
-    }
-
-    function updateModelInfo(model) {
-        const modelInfo = document.querySelector(".model-info");
-        const costs = {
-            "gpt-4": "約 $0.03 / 1K tokens",
-            "gpt-3.5-turbo": "約 $0.002 / 1K tokens",
-            "gpt-3.5-turbo-16k": "約 $0.003 / 1K tokens"
-        };
-        
-        modelInfo.innerHTML = `
-            選擇的模型：${model}<br>
-            預估費用：${costs[model] || "費用未知"}
-        `;
     }
 
     // 更新翻譯進度條的動畫
