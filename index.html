@@ -6,9 +6,13 @@
     <meta name="robots" content="noindex, nofollow">
     <title>詮語翻譯</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="https://img.icons8.com/?size=100&id=PyrI7GCv8LCv&format=png&color=000000" type="image/png">
+    <link rel="icon" href="https://img.icons8.com/fluency/48/translate-app.png" type="image/png">
+    <!-- Tesseract.js for OCR -->
+    <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
 </head>
 <body>
+    <button class="theme-toggle" aria-label="切換主題">🌙</button>
+    
     <div class="container">
         <header class="main-header">
             <h1>詮語翻譯</h1>
@@ -17,171 +21,227 @@
             </div>
         </header>
 
-        <!-- 主要功能標籤頁 -->
+        <!-- 標籤頁 -->
         <div class="tabs">
-            <button class="tab-button active" data-tab="normalTab">一般翻譯</button>
-            <button class="tab-button" data-tab="specialTab">特殊翻譯</button>
-            <button class="tab-button" data-tab="historyTab">翻譯歷史</button>
+            <button class="tab-button active" data-tab="textTab">文字翻譯</button>
+            <button class="tab-button" data-tab="imageTab">圖片翻譯</button>
+            <button class="tab-button" data-tab="voiceTab">語音翻譯</button>
+            <button class="tab-button special" data-tab="r18Tab">R18 翻譯</button>
+            <button class="tab-button" data-tab="historyTab">歷史記錄</button>
         </div>
 
-        <!-- 一般翻譯區 -->
-        <div id="normalTab" class="tab-content active">
+        <!-- 文字翻譯標籤頁 -->
+        <div id="textTab" class="tab-content active">
             <div class="translation-panel">
-                <!-- 語言選擇區 -->
                 <div class="language-control-panel">
                     <div class="language-selectors">
-                        <div class="select-wrapper">
-                            <label for="sourceLang">從：</label>
-                            <select id="sourceLang" class="language-select">
-                                <option value="zh">中文</option>
-                                <option value="en">英文</option>
-                                <option value="ja">日文</option>
-                                <option value="ko">韓文</option>
-                            </select>
-                        </div>
-                        <button id="swapLang" class="icon-button swap-button" title="交換語言">⇄</button>
-                        <div class="select-wrapper">
-                            <label for="targetLang">到：</label>
-                            <select id="targetLang" class="language-select">
-                                <option value="en">英文</option>
-                                <option value="zh">中文</option>
-                                <option value="ja">日文</option>
-                                <option value="ko">韓文</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="model-selection">
-                        <label for="modelSelect">翻譯模型：</label>
-                        <select id="modelSelect">
-                            <option value="horde">AI Horde (免費)</option>
-                            <option value="libre">LibreTranslate (免費)</option>
-                            <option value="lingva">Lingva (免費)</option>
+                        <select id="sourceLang" class="language-select">
+                            <option value="zh">中文</option>
+                            <option value="en">英文</option>
+                            <option value="ja">日文</option>
+                            <option value="ko">韓文</option>
+                        </select>
+                        <button id="swapLang" class="swap-button" title="交換語言">
+                            <span class="material-icons">🔄</span>
+                        </button>
+                        <select id="targetLang" class="language-select">
+                            <option value="en">英文</option>
+                            <option value="zh">中文</option>
+                            <option value="ja">日文</option>
+                            <option value="ko">韓文</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- 輸入區域 -->
-                <div class="input-panel">
-                    <textarea id="inputText" placeholder="輸入要翻譯的文字..." class="translation-textarea"></textarea>
-                    <div class="character-count">0/5000</div>
-                </div>
-
-                <!-- 翻譯按鈕區 -->
+                <textarea id="inputText" placeholder="輸入要翻譯的文字..." class="translation-textarea"></textarea>
+                
                 <div class="action-panel">
-                    <button id="translateButton" class="primary-button" disabled>
-                        <span class="button-icon">🔄</span>
-                        <span class="button-text">翻譯</span>
+                    <button id="translateButton" class="primary-button">
+                        <span class="button-icon">🔄</span>翻譯
+                    </button>
+                    <button id="clearTextButton" class="secondary-button">
+                        <span class="button-icon">🗑️</span>清除
                     </button>
                 </div>
 
-                <!-- 結果區域 -->
-                <div class="output-panel">
-                    <div id="result" class="translation-result"></div>
-                    <div class="output-controls">
-                        <button id="copyBtn" class="icon-button" title="複製">📄</button>
-                        <button id="clearOutputBtn" class="icon-button" title="清除">🗑️</button>
+                <div class="result-container">
+                    <div id="result" class="result-box"></div>
+                    <div class="result-actions">
+                        <button id="copyResultButton" class="action-button">
+                            <span class="button-icon">📋</span>複製
+                        </button>
+                        <button id="clearResultButton" class="action-button">
+                            <span class="button-icon">🗑️</span>清除
+                        </button>
                     </div>
-                </div>
-
-                <!-- 進度提示 -->
-                <div class="progress-container">
-                    <div id="progressBar" class="progress-bar"></div>
-                    <div class="progress-text">翻譯中...</div>
                 </div>
             </div>
         </div>
 
-        <!-- 特殊翻譯區 -->
-        <div id="specialTab" class="tab-content">
+        <!-- 圖片翻譯標籤頁 -->
+        <div id="imageTab" class="tab-content">
+            <div class="translation-panel">
+                <div class="image-drop-area" id="imageDropArea">
+                    <span class="drop-icon">📷</span>
+                    <span class="drop-text">點擊或拖放圖片至此</span>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                </div>
+
+                <canvas id="imageCanvas" class="image-canvas"></canvas>
+
+                <div class="image-tools">
+                    <button id="enhanceContrastButton" class="tool-button">
+                        <span class="button-icon">🎨</span>增強對比
+                    </button>
+                    <button id="grayscaleButton" class="tool-button">
+                        <span class="button-icon">⚫</span>灰階
+                    </button>
+                    <button id="resetImageButton" class="tool-button">
+                        <span class="button-icon">↺</span>重置
+                    </button>
+                    <button id="clearImageButton" class="tool-button">
+                        <span class="button-icon">🗑️</span>清除
+                    </button>
+                </div>
+
+                <div class="ocr-controls">
+                    <select id="ocrLanguageSelect">
+                        <option value="chi_tra+eng">繁體中文+英文</option>
+                        <option value="jpn">日文</option>
+                        <option value="kor">韓文</option>
+                    </select>
+                    <button id="extractTextButton" class="primary-button" disabled>
+                        <span class="button-icon">📝</span>擷取文字
+                    </button>
+                </div>
+
+                <div id="extractedText" class="extracted-text"></div>
+
+                <button id="translateExtractedButton" class="primary-button" disabled>
+                    <span class="button-icon">🔄</span>翻譯擷取文字
+                </button>
+            </div>
+        </div>
+
+        <!-- 語音翻譯標籤頁 -->
+        <div id="voiceTab" class="tab-content">
+            <div class="translation-panel">
+                <div class="voice-container">
+                    <div class="voice-controls">
+                        <button id="startVoiceBtn" class="primary-button">
+                            <span class="button-icon">🎤</span>開始錄音
+                        </button>
+                        <button id="stopVoiceBtn" class="primary-button" disabled>
+                            <span class="button-icon">⏹️</span>停止錄音
+                        </button>
+                    </div>
+
+                    <div class="voice-visualizer-container">
+                        <div id="voiceVisualizer" class="voice-visualizer"></div>
+                        <div class="voice-size-controls">
+                            <button id="expandVoiceBtn" class="small-button">+</button>
+                            <button id="shrinkVoiceBtn" class="small-button">-</button>
+                        </div>
+                    </div>
+
+                    <div id="voiceRecordingStatus" class="voice-status">準備就緒</div>
+                    <div id="voiceTranscript" class="voice-transcript"></div>
+
+                    <div class="voice-actions">
+                        <button id="useVoiceTextBtn" class="primary-button" disabled>
+                            <span class="button-icon">📝</span>使用文字
+                        </button>
+                        <button id="clearVoiceBtn" class="secondary-button">
+                            <span class="button-icon">🗑️</span>清除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- R18 翻譯標籤頁 -->
+        <div id="r18Tab" class="tab-content">
             <div class="translation-panel">
                 <div class="warning-banner">
-                    ⚠️ 特殊內容翻譯區 - 無內容限制
+                    ⚠️ R18 內容翻譯區 - 無內容限制
                 </div>
-                
+
                 <div class="language-control-panel">
                     <div class="language-selectors">
-                        <div class="select-wrapper">
-                            <label for="specialSourceLang">從：</label>
-                            <select id="specialSourceLang" class="language-select">
-                                <option value="zh">中文</option>
-                                <option value="en">英文</option>
-                                <option value="ja">日文</option>
-                            </select>
-                        </div>
-                        <button id="specialSwapLang" class="icon-button swap-button" title="交換語言">⇄</button>
-                        <div class="select-wrapper">
-                            <label for="specialTargetLang">到：</label>
-                            <select id="specialTargetLang" class="language-select">
-                                <option value="en">英文</option>
-                                <option value="zh">中文</option>
-                                <option value="ja">日文</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="model-selection">
-                        <label for="specialModelSelect">翻譯模型：</label>
-                        <select id="specialModelSelect">
-                            <option value="horde">Stable Horde (無限制)</option>
-                            <option value="kobold">KoboldAI (本地)</option>
+                        <select id="r18SourceLang" class="language-select">
+                            <option value="zh">中文</option>
+                            <option value="en">英文</option>
+                            <option value="ja">日文</option>
+                        </select>
+                        <button id="r18SwapLang" class="swap-button" title="交換語言">
+                            <span class="material-icons">🔄</span>
+                        </button>
+                        <select id="r18TargetLang" class="language-select">
+                            <option value="en">英文</option>
+                            <option value="zh">中文</option>
+                            <option value="ja">日文</option>
                         </select>
                     </div>
-
-                    <div class="content-type-selection">
-                        <label>內容類型：</label>
-                        <div class="checkbox-group">
-                            <label>
-                                <input type="checkbox" id="adultContent" checked>
-                                成人內容
-                            </label>
-                            <label>
-                                <input type="checkbox" id="violenceContent" checked>
-                                暴力內容
-                            </label>
-                            <label>
-                                <input type="checkbox" id="slangContent" checked>
-                                俚語/粗話
-                            </label>
-                        </div>
-                    </div>
                 </div>
 
-                <div class="input-panel">
-                    <textarea id="specialInputText" placeholder="輸入要翻譯的特殊文字..." class="translation-textarea"></textarea>
-                    <div class="character-count">0/5000</div>
-                </div>
+                <textarea id="r18InputText" placeholder="輸入要翻譯的 R18 文字..." class="translation-textarea"></textarea>
 
                 <div class="action-panel">
-                    <button id="specialTranslateButton" class="primary-button" disabled>
-                        <span class="button-icon">🔄</span>
-                        <span class="button-text">翻譯</span>
+                    <button id="r18TranslateButton" class="primary-button">
+                        <span class="button-icon">🔄</span>翻譯
+                    </button>
+                    <button id="r18ClearButton" class="secondary-button">
+                        <span class="button-icon">🗑️</span>清除
                     </button>
                 </div>
 
-                <div class="output-panel">
-                    <div id="specialResult" class="translation-result"></div>
-                    <div class="output-controls">
-                        <button id="specialCopyBtn" class="icon-button" title="複製">📄</button>
-                        <button id="specialClearOutputBtn" class="icon-button" title="清除">🗑️</button>
+                <div class="result-container">
+                    <div id="r18Result" class="result-box"></div>
+                    <div class="result-actions">
+                        <button id="r18CopyButton" class="action-button">
+                            <span class="button-icon">📋</span>複製
+                        </button>
+                        <button id="r18ClearResultButton" class="action-button">
+                            <span class="button-icon">🗑️</span>清除
+                        </button>
                     </div>
-                </div>
-
-                <div class="progress-container">
-                    <div id="specialProgressBar" class="progress-bar"></div>
-                    <div class="progress-text">翻譯中...</div>
                 </div>
             </div>
         </div>
 
-        <!-- 翻譯歷史區 -->
+        <!-- 歷史記錄標籤頁 -->
         <div id="historyTab" class="tab-content">
             <div class="history-container">
                 <div class="history-controls">
-                    <button id="clearHistoryBtn" class="control-button">清除歷史</button>
-                    <button id="exportHistoryBtn" class="control-button">匯出歷史</button>
+                    <button id="clearHistoryBtn" class="primary-button">
+                        <span class="button-icon">🗑️</span>清除歷史
+                    </button>
+                    <button id="exportHistoryBtn" class="primary-button">
+                        <span class="button-icon">📥</span>匯出歷史
+                    </button>
                 </div>
                 <div id="historyList" class="history-list"></div>
+            </div>
+        </div>
+
+        <!-- API 設置面板 -->
+        <div class="api-settings-panel">
+            <div class="api-settings-toggle">
+                <span>API 設置</span>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="api-settings-content">
+                <input type="password" class="api-key-input" placeholder="輸入 OpenAI API 金鑰" />
+                <select class="model-select">
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo</option>
+                    <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16K</option>
+                </select>
+                <div class="model-info"></div>
+                <div class="api-status">
+                    <div class="api-status-indicator"></div>
+                    <span class="api-status-text">未連接</span>
+                </div>
             </div>
         </div>
     </div>
