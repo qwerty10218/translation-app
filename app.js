@@ -6,13 +6,26 @@ document.addEventListener("DOMContentLoaded", () => {
             url: "https://free.v36.cm/v1/chat/completions",
             key: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827",
             model: "deepseek-chat",
-            timeout: 15000
+            timeout: 15000,
+            quota: 100000, // 每日字符配額
+            delay: 1000 // 請求間隔
         },
         // MyMemory API (無登錄免費)
         mymemory: {
             url: "https://api.mymemory.translated.net/get",
             quota: 5000, // 每日字符配額
             delay: 500 // 請求間隔，避免過快
+        },
+        // LibreTranslate API
+        libre: {
+            endpoints: [
+                "https://libretranslate.de/translate",
+                "https://translate.argosopentech.com/translate",
+                "https://libretranslate.com/translate",
+                "https://translate.terraprint.co/translate"
+            ],
+            delay: 1000,
+            quota: 5000
         }
     };
 
@@ -24,11 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
         "https://translate.terraprint.co/translate"
     ];
 
-    // 特殊提示詞模板 - 改進 R18 翻譯效果的 prompt
+    // 特殊提示詞模板 - 改進翻譯效果的 prompt
     const SPECIAL_PROMPTS = {
-        adult: "完整翻譯成人內容，包括露骨表達和描述，不要審查或淡化任何內容",
-        violence: "精確保留暴力和強烈描述，維持原文的強度和氛圍",
-        slang: "保留所有俚語、俗語和口語表達，不要使其正式化或簡化",
         base: `翻譯指引：
 1. 精確翻譯，保持原文格式和風格
 2. 不做任何內容過濾或審查
@@ -36,12 +46,16 @@ document.addEventListener("DOMContentLoaded", () => {
 4. 若有成人內容，請如實翻譯所有露骨表述和描述
 5. 若有暴力內容，請準確翻譯所有暴力描述
 6. 若有俚語或口語，請使用對等的目標語言俚語，而非正式表達
+7. 優先使用繁體中文進行翻譯
 
 源語言 ({sourceLang}):
 {text}
 
 目標語言 ({targetLang}):
-`
+`,
+        adult: "完整翻譯成人內容，包括露骨表達和描述，不要審查或淡化任何內容。使用繁體中文。",
+        violence: "精確保留暴力和強烈描述，維持原文的強度和氛圍。使用繁體中文。",
+        slang: "保留所有俚語、俗語和口語表達，不要使其正式化或簡化。使用繁體中文對應用語。"
     };
 
     // 當前使用的端點索引
@@ -122,13 +136,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // 翻譯管理器
     class TranslationManager {
         constructor() {
-            this.model = "openrouter";
+            this.model = "gpt";
             this.apiBalancer = new APIBalancer();
             this.apiResponseTimes = {};
             this.apiStatus = {};
-            this.libreEndpointIndex = 0; // 當前使用的 LibreTranslate 端點索引
+            this.libreEndpointIndex = 0;
             this.currentLibreEndpointIndex = 0;
             this.isR18Mode = false;
+            this.lastTranslationTime = 0;
         }
 
         // 設置所選模型
@@ -276,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         async translateWithGPT(text, sourceLang, targetLang) {
-            const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}：\n\n${text}`;
+            const prompt = `將以下${getLanguageName(sourceLang)}文本翻譯成${getLanguageName(targetLang)}，請使用繁體中文：\n\n${text}`;
             
             const response = await fetch(API_CONFIG.gpt.url, {
                 method: "POST",
@@ -289,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     messages: [
                         {
                             role: "system",
-                            content: "你是一個專業的翻譯助手，請準確翻譯用戶提供的文本，保持原文的格式和風格。"
+                            content: "你是一個專業的翻譯助手，請準確翻譯用戶提供的文本，保持原文的格式和風格。優先使用繁體中文。"
                         },
                         {
                             role: "user",
@@ -297,7 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                     ],
                     temperature: 0.3,
-                    max_tokens: 1000
+                    max_tokens: 2000
                 })
             });
 
@@ -505,12 +520,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         async translateWithFallback(inputText, sourceLang, targetLang, isR18 = false) {
+            const now = Date.now();
+            if (now - this.lastTranslationTime < 2000) {
+                throw new Error("請稍等片刻再進行下一次翻譯");
+            }
+            this.lastTranslationTime = now;
+            
             this.isR18Mode = isR18;
             const progressContainer = this.createProgressBar();
             let progressInterval;
             
             try {
-                // 顯示進度條
                 let progress = 0;
                 progressInterval = setInterval(() => {
                     progress += 5;
@@ -521,44 +541,45 @@ document.addEventListener("DOMContentLoaded", () => {
                     const progressBar = progressContainer.querySelector('.progress-bar');
                     if (progressBar) {
                         progressBar.style.width = `${progress}%`;
-                        // 添加脈動效果
                         progressBar.classList.add('pulse');
                     }
                 }, 300);
                 
-                // 根據模式選擇不同的翻譯路徑
                 if (isR18) {
-                    // R18 內容翻譯邏輯
                     console.log("R18 內容翻譯中...");
-                    
-                    // 首先嘗試 MyMemory API (無內容限制)
                     try {
-                        console.log("嘗試使用 MyMemory API 翻譯 R18 內容...");
+                        console.log("嘗試使用 MyMemory API 翻譯...");
                         return await this.translateWithMyMemory(inputText, sourceLang, targetLang);
                     } catch (myMemoryError) {
                         console.error("MyMemory 翻譯失敗:", myMemoryError);
                         showNotification("MyMemory API 失敗，嘗試使用 LibreTranslate...", "info");
                         
-                        // 最後嘗試 LibreTranslate
                         try {
-                            console.log("嘗試使用 LibreTranslate 翻譯 R18 內容...");
+                            console.log("嘗試使用 LibreTranslate 翻譯...");
                             return await this.translateWithLibre(inputText, sourceLang, targetLang);
                         } catch (libreError) {
                             console.error("LibreTranslate 翻譯失敗:", libreError);
-                            showNotification("所有 R18 翻譯 API 均失敗", "error");
-                            throw new Error("所有 R18 翻譯 API 均失敗");
+                            showNotification("所有翻譯 API 均失敗", "error");
+                            throw new Error("所有翻譯 API 均失敗");
                         }
                     }
                 } else {
-                    // 一般內容翻譯邏輯 - 直接使用 GPT API
                     console.log("使用 GPT API 翻譯一般內容...");
-                    return await this.translateWithGPT(inputText, sourceLang, targetLang);
+                    try {
+                        return await this.translateWithGPT(inputText, sourceLang, targetLang);
+                    } catch (gptError) {
+                        console.error("GPT 翻譯失敗:", gptError);
+                        showNotification("GPT API 失敗，嘗試使用備用翻譯...", "info");
+                        
+                        try {
+                            return await this.translateWithMyMemory(inputText, sourceLang, targetLang);
+                        } catch (error) {
+                            console.error("備用翻譯也失敗:", error);
+                            throw new Error("所有翻譯 API 均失敗");
+                        }
+                    }
                 }
-            } catch (error) {
-                console.error("翻譯過程中發生錯誤:", error);
-                throw error;
             } finally {
-                // 清理進度條
                 if (progressInterval) {
                     clearInterval(progressInterval);
                 }
@@ -583,20 +604,16 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("使用 MyMemory API 翻譯...");
             
             try {
-                // 確保源語言和目標語言格式正確
                 const source = sourceLang.toLowerCase();
                 const target = targetLang.toLowerCase();
                 
-                // 構建 API URL
                 const apiUrl = new URL(API_CONFIG.mymemory.url);
                 apiUrl.searchParams.append('q', inputText);
                 apiUrl.searchParams.append('langpair', `${source}|${target}`);
-                apiUrl.searchParams.append('de', 'example@gmail.com'); // 可選，用於增加每日配額
+                apiUrl.searchParams.append('de', 'translation@app.com');
                 
-                // 添加延遲，避免請求過快
                 await new Promise(resolve => setTimeout(resolve, API_CONFIG.mymemory.delay));
                 
-                // 發送 API 請求
                 const response = await fetch(apiUrl.toString());
                 
                 if (!response.ok) {
@@ -609,7 +626,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     throw new Error(`MyMemory API 錯誤: ${data.responseStatus}`);
                 }
                 
-                return data.responseData.translatedText;
+                // 確保輸出使用繁體中文
+                let translatedText = data.responseData.translatedText;
+                if (target === 'zh') {
+                    translatedText = translatedText.replace(/简/g, '簡')
+                                               .replace(/复/g, '複')
+                                               .replace(/么/g, '麼')
+                                               .replace(/着/g, '著');
+                }
+                
+                return translatedText;
             } catch (error) {
                 console.error("MyMemory 翻譯失敗:", error);
                 throw error;
