@@ -731,7 +731,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 初始化翻譯管理器
-    const translationManager = new TranslationManager();
+    let translationManager;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        translationManager = new TranslationManager();
+    });
+
 
     // DOM元素
     dom = {
@@ -2628,7 +2633,9 @@ function initSettings() {
     }
     
     // 檢查 API 狀態
-    checkAPIStatus();
+    document.addEventListener("DOMContentLoaded", () => {
+    checkAPIStatus(API_CONFIG);
+    });
 }
 
 // 添加圖片處理函數
