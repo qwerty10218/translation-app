@@ -3,7 +3,6 @@ let dom = {};
 
 // 等待 DOM 加載完成後初始化應用
 document.addEventListener("DOMContentLoaded", () => {
-    window.translationManager = new TranslationManager();
 
     // API配置
     const API_CONFIG = {
@@ -148,6 +147,8 @@ document.addEventListener("DOMContentLoaded", () => {
             this.isR18Mode = false;
             this.lastTranslationTime = 0;
         }
+    const translationManager = new TranslationManager();
+
 
         // 設置所選模型
         setModel(model) {
@@ -2768,3 +2769,5 @@ async function translateWithLibreTranslate(text, sourceLang, targetLang) {
         return `翻譯錯誤: ${error.message}`;
     }
 } // **這裡函式應該結束，不要加 `});`**
+window.translationManager = new TranslationManager();
+
