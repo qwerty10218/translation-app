@@ -2759,7 +2759,6 @@ async function translateWithLibreTranslate(text, sourceLang, targetLang) {
         return `翻譯錯誤: ${error.message}`;
     }
 }
-}
 
 // 關閉 DOMContentLoaded 事件處理函數
 });
