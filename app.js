@@ -1564,7 +1564,8 @@ async function translateExtractedText() {
         if (!result || result.trim() === '') {
             throw new Error("翻譯結果為空");
         }
-        
+        window.translationManager = new TranslationManager();
+
         // 顯示結果
         dom.result.innerHTML = result;
         // 定位到主文字翻譯標籤頁
@@ -2768,5 +2769,4 @@ async function translateWithLibreTranslate(text, sourceLang, targetLang) {
         return `翻譯錯誤: ${error.message}`;
     }
 } // **這裡函式應該結束，不要加 `});`**
-window.translationManager = new TranslationManager();
 
