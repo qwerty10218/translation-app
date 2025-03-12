@@ -1039,111 +1039,56 @@ async function handleTranslation(isR18 = false) {
         // 顯示加載狀態
         resultElement.textContent = "翻譯中...";
         
-        // 獲取進度條元素
-        let progressContainer, progressBar;
-        
-        try {
-            progressContainer = isR18 ? dom.specialProgressContainer : dom.progressContainer;
-            progressBar = isR18 ? dom.specialProgressBar : dom.progressBar;
-            
-            // 如果 dom 引用不存在，嘗試直接獲取元素
-            if (!progressContainer || !progressBar) {
-                console.warn("進度條 DOM 引用不存在，嘗試直接獲取元素");
-                progressContainer = isR18 ? 
-                    document.getElementById("specialProgressContainer") : 
-                    document.getElementById("progressContainer");
-                progressBar = isR18 ? 
-                    document.getElementById("specialProgressBar") : 
-                    document.getElementById("progressBar");
-            }
-            
-            // 確保進度條可見並初始化
-            if (progressContainer && progressBar) {
-                progressContainer.style.display = "block";
-                progressBar.style.width = "0%";
-                progressBar.classList.remove("complete");
-                console.log("顯示進度條:", progressContainer);
-            } else {
-                console.warn("進度條元素未找到:", {progressContainer, progressBar});
-            }
-        } catch (error) {
-            console.error("處理進度條時發生錯誤:", error);
+        // 顯示進度條
+        const progressBar = dom.progressBar;
+        const progressContainer = progressBar.parentElement;
+        if (progressBar && progressContainer) {
+            progressBar.style.width = "0%";
+            progressContainer.style.display = "block";
         }
+        
+        // 開始翻譯
+        const translatedText = await window.translationManager.translate(
+            inputText,
+            sourceLang,
+            targetLang,
+            isR18
+        );
+        
+        // 更新結果
+        resultElement.textContent = translatedText;
+        
+        // 更新按鈕狀態
+        translateButton.disabled = false;
+        translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
         
         // 更新進度條
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += 5;
-            if (progress > 90) progress = 90; // 最多到90%，剩下的10%留給實際完成時
-            try {
-                if (progressBar) {
-                    progressBar.style.width = `${progress}%`;
-                    console.log("更新進度條:", progress + "%");
-                }
-            } catch (error) {
-                console.error("更新進度條時發生錯誤:", error);
-            }
-        }, 300);
-        
-        // 根據是否為R18內容選擇不同的翻譯方法
-        let translatedText;
-        try {
-            if (isR18) {
-                const model = dom.r18ModelSelect.value;
-                if (model === "mymemory") {
-                    translatedText = await translationManager.translateWithMyMemory(inputText, sourceLang, targetLang);
-                } else {
-                    translatedText = await translationManager.translateWithLibreTranslate(inputText, sourceLang, targetLang);
-                }
-            } else {
-                translatedText = await translationManager.translateWithMyMemory(inputText, sourceLang, targetLang);
-            }
-            
-            // 停止進度條更新
-            clearInterval(progressInterval);
-            
-            // 顯示100%完成
-            if (progressBar) {
-                progressBar.style.width = "100%";
-                progressBar.classList.add("complete");
-                console.log("完成進度條: 100%");
-            }
-            
-            // 顯示翻譯結果
-            resultElement.textContent = translatedText;
-            
-            // 添加到歷史記錄
-            addToHistory(inputText, translatedText, sourceLang, targetLang, isR18);
-            
-            // 顯示成功通知
-            showNotification("翻譯完成", "success");
-        } catch (error) {
-            // 出錯時停止進度條
-            clearInterval(progressInterval);
-            if (progressContainer) {
+        if (progressBar && progressContainer) {
+            progressBar.style.width = "100%";
+            setTimeout(() => {
                 progressContainer.style.display = "none";
-                console.log("錯誤時隱藏進度條");
-            }
-            
-            console.error("翻譯過程中發生錯誤:", error);
-            resultElement.textContent = `翻譯錯誤: ${error.message}`;
-            showNotification("翻譯失敗: " + error.message, "error");
-        } finally {
-            // 恢復按鈕狀態
+                progressBar.style.width = "0%";
+            }, 500);
+        }
+        
+    } catch (error) {
+        console.error("翻譯失敗:", error);
+        showNotification(`翻譯失敗: ${error.message}`, "error");
+        
+        // 重置按鈕狀態
+        const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
+        if (translateButton) {
             translateButton.disabled = false;
             translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
-            
-            // 延遲隱藏進度條
-            if (progressContainer) {
-                setTimeout(() => {
-                    progressContainer.style.display = "none";
-                    console.log("最終隱藏進度條");
-                }, 1000);
-            }
         }
-    } catch (error) {
-        console.error("處理翻譯請求時發生錯誤:", error);
-        showNotification("處理翻譯請求時發生錯誤: " + error.message, "error");
+        
+        // 重置進度條
+        const progressBar = dom.progressBar;
+        const progressContainer = progressBar?.parentElement;
+        if (progressBar && progressContainer) {
+            progressContainer.style.display = "none";
+            progressBar.style.width = "0%";
+        }
     }
 }
 
