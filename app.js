@@ -2769,4 +2769,3 @@ async function translateWithLibreTranslate(text, sourceLang, targetLang) {
         return `翻譯錯誤: ${error.message}`;
     }
 } // **這裡函式應該結束，不要加 `});`**
-
