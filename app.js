@@ -2703,21 +2703,21 @@ function simplifiedToTraditional(text) {
 
 async function translateWithLibreTranslate(text, sourceLang, targetLang) {
     console.log("使用 LibreTranslate API 翻譯");
-    
+
     try {
         // 轉換語言代碼為LibreTranslate格式
         sourceLang = convertToLibreFormat(sourceLang);
         targetLang = convertToLibreFormat(targetLang);
-        
+
         // 輪流使用不同的LibreTranslate端點
         const endpoints = [
             "https://libretranslate.com/translate",
             "https://translate.argosopentech.com/translate"
         ];
-        
+
         const endpoint = endpoints[libreEndpointIndex];
         libreEndpointIndex = (libreEndpointIndex + 1) % endpoints.length;
-        
+
         // 構建請求
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -2731,34 +2731,31 @@ async function translateWithLibreTranslate(text, sourceLang, targetLang) {
                 format: "text"
             })
         });
-        
+
         // 檢查HTTP錯誤
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         // 解析響應
         const data = await response.json();
-        
+
         // 檢查API響應是否包含翻譯結果
         if (!data || !data.translatedText) {
             throw new Error("LibreTranslate API未返回有效結果");
         }
-        
+
         let translatedText = data.translatedText;
-        
+
         // 如果目標語言是中文，確保使用繁體中文
         if (targetLang === 'zh') {
             translatedText = simplifiedToTraditional(translatedText);
         }
-        
+
         return translatedText;
+
     } catch (error) {
         console.error("LibreTranslate API 翻譯錯誤:", error);
-        // 返回錯誤信息而不是undefined
         return `翻譯錯誤: ${error.message}`;
     }
-}
-
-// 關閉 DOMContentLoaded 事件處理函數
-});
+} // **這裡函式應該結束，不要加 `});`**
