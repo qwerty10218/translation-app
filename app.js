@@ -733,10 +733,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 初始化翻譯管理器
-    let translationManager;
+    window.translationManager = new TranslationManager();
 
     document.addEventListener("DOMContentLoaded", () => {
-        translationManager = new TranslationManager();
     });
 
 
@@ -1564,7 +1563,6 @@ async function translateExtractedText() {
         if (!result || result.trim() === '') {
             throw new Error("翻譯結果為空");
         }
-        window.translationManager = new TranslationManager();
 
         // 顯示結果
         dom.result.innerHTML = result;
