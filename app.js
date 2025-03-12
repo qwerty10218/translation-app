@@ -3,6 +3,8 @@ let dom = {};
 
 // 等待 DOM 加載完成後初始化應用
 document.addEventListener("DOMContentLoaded", () => {
+    window.translationManager = new TranslationManager();
+
     // API配置
     const API_CONFIG = {
         // GPT API (確認可用)
