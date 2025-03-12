@@ -2520,49 +2520,94 @@ function initAPISettings() {
 
 // 添加 API 狀態檢查
 async function checkAPIStatus() {
-    const gptStatus = document.getElementById("gptStatus");
-    
+    // 檢查所有 API 狀態元素
+    const statusElements = {
+        gpt: document.getElementById("gptStatus"),
+        mymemory: document.getElementById("mymemoryStatus"),
+        libre: document.getElementById("libreStatus")
+    };
+
     // 檢查 GPT API
-    try {
-        const response = await fetch(`${API_CONFIG.gpt.url}/v1/chat/completions`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${API_CONFIG.gpt.key}`
-            },
-            body: JSON.stringify({
-                model: API_CONFIG.gpt.model,
-                messages: [
-                    {role: "user", content: "test"}
-                ],
-                max_tokens: 5
-            })
-        });
-        
-        if (response.ok) {
-            if (gptStatus) {
-                gptStatus.classList.add("connected");
-                gptStatus.parentElement.querySelector(".api-status-text").textContent = "已連接";
-            }
-            console.log("GPT API 連接成功");
-        } else {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("GPT API 連接失敗:", response.status, errorData);
-            if (gptStatus) {
-                gptStatus.classList.remove("connected");
-                gptStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
-            }
+    if (statusElements.gpt) {
+        try {
+            const response = await fetch(`${API_CONFIG.gpt.url}/v1/chat/completions`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_CONFIG.gpt.key}`
+                },
+                body: JSON.stringify({
+                    model: API_CONFIG.gpt.model,
+                    messages: [{role: "user", content: "test"}],
+                    max_tokens: 5
+                })
+            });
+            
+            updateStatusElement(statusElements.gpt, response.ok);
+        } catch (error) {
+            console.error("GPT API 檢查錯誤:", error);
+            updateStatusElement(statusElements.gpt, false);
         }
-    } catch (error) {
-        console.error("GPT API 檢查錯誤:", error);
-        if (gptStatus) {
-            gptStatus.classList.remove("connected");
-            gptStatus.parentElement.querySelector(".api-status-text").textContent = "未連接";
+    }
+
+    // 檢查 MyMemory API
+    if (statusElements.mymemory) {
+        try {
+            const response = await fetch(`${API_CONFIG.mymemory.url}/translate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    q: "test",
+                    langpair: "en|zh"
+                })
+            });
+            
+            updateStatusElement(statusElements.mymemory, response.ok);
+        } catch (error) {
+            console.error("MyMemory API 檢查錯誤:", error);
+            updateStatusElement(statusElements.mymemory, false);
+        }
+    }
+
+    // 檢查 LibreTranslate API
+    if (statusElements.libre) {
+        try {
+            const response = await fetch(`${API_CONFIG.libre.url}/translate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    q: "test",
+                    source: "en",
+                    target: "zh"
+                })
+            });
+            
+            updateStatusElement(statusElements.libre, response.ok);
+        } catch (error) {
+            console.error("LibreTranslate API 檢查錯誤:", error);
+            updateStatusElement(statusElements.libre, false);
         }
     }
 }
 
-// 添加設置標籤頁初始化
+function updateStatusElement(element, isConnected) {
+    if (!element) return;
+    
+    const statusText = element.parentElement.querySelector(".api-status-text");
+    if (isConnected) {
+        element.classList.add("connected");
+        if (statusText) statusText.textContent = "已連接";
+    } else {
+        element.classList.remove("connected");
+        if (statusText) statusText.textContent = "未連接";
+    }
+}
+
+// 修改設置初始化函數
 function initSettings() {
     const clearLocalStorageBtn = document.getElementById("clearLocalStorage");
     
@@ -2578,10 +2623,14 @@ function initSettings() {
         });
     }
     
+    // 確保 API_CONFIG 已定義
+    if (typeof API_CONFIG === 'undefined') {
+        console.error("API_CONFIG 未定義");
+        return;
+    }
+    
     // 檢查 API 狀態
-    document.addEventListener("DOMContentLoaded", () => {
-    checkAPIStatus(API_CONFIG);
-    });
+    checkAPIStatus();
 }
 
 // 添加圖片處理函數
