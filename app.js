@@ -147,7 +147,6 @@ document.addEventListener("DOMContentLoaded", () => {
             this.isR18Mode = false;
             this.lastTranslationTime = 0;
         }
-    const translationManager = new TranslationManager();
 
 
         // 設置所選模型
