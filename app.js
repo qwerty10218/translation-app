@@ -759,79 +759,128 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // DOM元素
-dom = {
+const domElements = {
     // 標籤頁
     tabs: document.querySelectorAll(".tab-button"),
     tabContents: document.querySelectorAll(".tab-content"),
     
-    // 文字翻譯
-    inputText: document.getElementById("inputText"),
-    result: document.getElementById("result"),
-    sourceLang: document.getElementById("sourceLang"),
-    targetLang: document.getElementById("targetLang"),
-    translateButton: document.getElementById("translateButton"),
-    clearTextButton: document.getElementById("clearTextButton"),
-    swapLangButton: document.getElementById("swapLang"),
-    copyResultButton: document.getElementById("copyResultButton"),
-    clearResultButton: document.getElementById("clearResultButton"),
+     // 文字翻译模块
+    translation: {
+        inputText: document.getElementById("inputText"),
+        result: document.getElementById("result"),
+        sourceLang: document.getElementById("sourceLang"),
+        targetLang: document.getElementById("targetLang"),
+        translateButton: document.getElementById("translateButton"),
+        clearTextButton: document.getElementById("clearTextButton"),
+        swapLangButton: document.getElementById("swapLang"),
+        copyResultButton: document.getElementById("copyResultButton"),
+        clearResultButton: document.getElementById("clearResultButton")
+    },
     
-    // 進度條
-    progressContainer: document.getElementById("progressContainer"),
-    progressBar: document.getElementById("progressBar"),
-    specialProgressContainer: document.getElementById("specialProgressContainer"),
-    specialProgressBar: document.getElementById("specialProgressBar"),
+    // 进度条模块
+    progress: {
+        container: document.getElementById("progressContainer"),
+        bar: document.getElementById("progressBar"),
+        specialContainer: document.getElementById("specialProgressContainer"),
+        specialBar: document.getElementById("specialProgressBar")
+    },
     
-    // 暗色模式
-    themeToggle: document.getElementById("themeToggle"),
+    // 主题切换
+    theme: {
+        toggle: document.getElementById("themeToggle")
+    },
     
-    // ...existing DOM references...
-    imageDropArea: document.getElementById("imageDropArea"),
-    imageInput: document.getElementById("imageInput"),
-    imageCanvas: document.getElementById("imageCanvas"),
-    enhanceContrastButton: document.getElementById("enhanceContrastButton"),
-    grayscaleButton: document.getElementById("grayscaleButton"),
-    resetImageButton: document.getElementById("resetImageButton"),
-    clearImageButton: document.getElementById("clearImageButton"),
-    uploadImageButton: document.getElementById("uploadImageButton"),
-    extractTextButton: document.getElementById("extractTextButton"),
-    extractedText: document.getElementById("extractedText"),
-    translateExtractedButton: document.getElementById("translateExtractedButton"),
-    ocrLanguageSelect: document.getElementById("ocrLanguageSelect"),
-    startVoiceBtn: document.getElementById("startVoiceBtn"),
-    stopVoiceBtn: document.getElementById("stopVoiceBtn"),
-    voiceVisualizer: document.getElementById("voiceVisualizer"),
-    voiceRecordingStatus: document.getElementById("voiceRecordingStatus"),
-    voiceTranscript: document.getElementById("voiceTranscript"),
-    useVoiceTextBtn: document.getElementById("useVoiceTextBtn"),
-    clearVoiceBtn: document.getElementById("clearVoiceBtn"),
-    expandVoiceBtn: document.getElementById("expandVoiceBtn"),
-    shrinkVoiceBtn: document.getElementById("shrinkVoiceBtn"),
-    r18InputText: document.getElementById("r18InputText"),
-    r18Result: document.getElementById("r18Result"),
-    r18TranslateButton: document.getElementById("r18TranslateButton"),
-    r18ClearButton: document.getElementById("r18ClearButton"),
-    r18CopyButton: document.getElementById("r18CopyButton"),
-    r18ClearResultButton: document.getElementById("r18ClearResultButton"),
-    r18SourceLang: document.getElementById("r18SourceLang"),
-    r18TargetLang: document.getElementById("r18TargetLang"),
-    r18SwapLangButton: document.getElementById("r18SwapLang"),
-    r18ModelSelect: document.getElementById("r18ModelSelect"),
-    adultContent: document.getElementById("adultContent"),
-    violenceContent: document.getElementById("violenceContent"),
-    slangContent: document.getElementById("slangContent"),
-    historyList: document.getElementById("historyList"),
-    clearHistoryBtn: document.getElementById("clearHistoryBtn"),
-    exportHistoryBtn: document.getElementById("exportHistoryBtn"),
-    textTab: document.getElementById("textTab"),
-    imageTab: document.getElementById("imageTab"),
-    voiceTab: document.getElementById("voiceTab"),
-    r18Tab: document.getElementById("r18Tab"),
-    historyTab: document.getElementById("historyTab"),
-    settingsTab: document.getElementById("settingsTab"),
+    // 图像处理模块
+    image: {
+        dropArea: document.getElementById("imageDropArea"),
+        input: document.getElementById("imageInput"),
+        canvas: document.getElementById("imageCanvas"),
+        enhanceContrastButton: document.getElementById("enhanceContrastButton"),
+        grayscaleButton: document.getElementById("grayscaleButton"),
+        resetButton: document.getElementById("resetImageButton"),
+        clearButton: document.getElementById("clearImageButton"),
+        uploadButton: document.getElementById("uploadImageButton"),
+        extractTextButton: document.getElementById("extractTextButton"),
+        extractedText: document.getElementById("extractedText"),
+        translateExtractedButton: document.getElementById("translateExtractedButton"),
+        ocrLanguageSelect: document.getElementById("ocrLanguageSelect")
+    },
+    
+    // 语音模块
+    voice: {
+        startButton: document.getElementById("startVoiceBtn"),
+        stopButton: document.getElementById("stopVoiceBtn"),
+        visualizer: document.getElementById("voiceVisualizer"),
+        recordingStatus: document.getElementById("voiceRecordingStatus"),
+        transcript: document.getElementById("voiceTranscript"),
+        useTextButton: document.getElementById("useVoiceTextBtn"),
+        clearButton: document.getElementById("clearVoiceBtn"),
+        expandButton: document.getElementById("expandVoiceBtn"),
+        shrinkButton: document.getElementById("shrinkVoiceBtn")
+    },
+    
+    // R18 翻译模块
+    r18Translation: {
+        inputText: document.getElementById("r18InputText"),
+        result: document.getElementById("r18Result"),
+        translateButton: document.getElementById("r18TranslateButton"),
+        clearButton: document.getElementById("r18ClearButton"),
+        copyButton: document.getElementById("r18CopyButton"),
+        clearResultButton: document.getElementById("r18ClearResultButton"),
+        sourceLang: document.getElementById("r18SourceLang"),
+        targetLang: document.getElementById("r18TargetLang"),
+        swapLangButton: document.getElementById("r18SwapLang"),
+        modelSelect: document.getElementById("r18ModelSelect")
+    },
+    
+    // 内容过滤
+    contentFilter: {
+        adultContent: document.getElementById("adultContent"),
+        violenceContent: document.getElementById("violenceContent"),
+        slangContent: document.getElementById("slangContent")
+    },
+    
+    // 历史记录
+    history: {
+        list: document.getElementById("historyList"),
+        clearButton: document.getElementById("clearHistoryBtn"),
+        exportButton: document.getElementById("exportHistoryBtn")
+    },
+    
+    // 标签页
+    tabs: {
+        text: document.getElementById("textTab"),
+        image: document.getElementById("imageTab"),
+        voice: document.getElementById("voiceTab"),
+        r18: document.getElementById("r18Tab"),
+        history: document.getElementById("historyTab"),
+        settings: document.getElementById("settingsTab")
+    },
+    
+    // 模型选择
     modelSelect: document.querySelector(".model-select")
 };
 
-// 初始化應用
+// 使用示例
+function initTranslation() {
+    const { 
+        inputText, 
+        translateButton, 
+        clearTextButton 
+    } = domElements.translation;
+    
+    // 添加事件监听器的示例
+    translateButton.addEventListener('click', translateText);
+    clearTextButton.addEventListener('click', clearInput);
+}
+
+// 初始化应用
+function init() {
+    initTranslation();
+    // 其他模块初始化...
+}
+
+// 调用初始化
 init();
 
 function init() {
