@@ -2793,11 +2793,7 @@ function simplifiedToTraditional(text) {
 async function translateWithLibreTranslate(text, sourceLang, targetLang) {
     console.log("使用 LibreTranslate API 翻譯");
 
-    try {
-        // 轉換語言代碼為LibreTranslate格式
-        sourceLang = convertToLibreFormat(sourceLang);
-        targetLang = convertToLibreFormat(targetLang);
-
+    try {       
         // 輪流使用不同的LibreTranslate端點
         const endpoints = [
             "https://libretranslate.com/translate",
