@@ -3260,25 +3260,43 @@ function swapLanguages() {
 }
 
 function validateTranslationInput(isR18 = false) {
-    // 獲取相應的DOM元素
-    const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
-    const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
-    const inputText = isR18 ? dom.r18InputText.value.trim() : dom.inputText.value.trim();
-    const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
-    
+    // 確保 DOM 物件已定義
+    if (!dom) {
+        console.error("DOM 物件未初始化！");
+        return;
+    }
+
+    // 確保對應的 DOM 元素存在
+    const sourceLangElem = isR18 ? dom?.r18SourceLang : dom?.sourceLang;
+    const targetLangElem = isR18 ? dom?.r18TargetLang : dom?.targetLang;
+    const inputTextElem = isR18 ? dom?.r18InputText : dom?.inputText;
+    const translateButton = isR18 ? dom?.r18TranslateButton : dom?.translateButton;
+
+    if (!sourceLangElem || !targetLangElem || !inputTextElem || !translateButton) {
+        console.warn("部分 DOM 元素缺失，請檢查 HTML 結構");
+        return;
+    }
+
+    // 取得值
+    const sourceLang = sourceLangElem.value;
+    const targetLang = targetLangElem.value;
+    const inputText = inputTextElem.value.trim();
+
     // 檢查輸入是否為空
     const isInputEmpty = inputText.length === 0;
-    
+
     // 檢查源語言和目標語言是否相同
     const isSameLang = sourceLang === targetLang;
-    
+
     // 禁用或啟用翻譯按鈕
     translateButton.disabled = isInputEmpty || isSameLang;
-    
-    // 如果語言相同，顯示警告
-    if (isSameLang && !isInputEmpty) {
+
+    // 如果語言相同且輸入不為空，顯示警告（確保 `showNotification` 存在）
+    if (isSameLang && !isInputEmpty && typeof showNotification === "function") {
         showNotification("源語言和目標語言不能相同", "warning");
     }
+}
+
     
     // 返回驗證結果
     return !isInputEmpty && !isSameLang;
