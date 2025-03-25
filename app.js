@@ -3123,15 +3123,15 @@ function initButtons() {
 }
 
 function initTabs() {
-    dom.tabs.forEach(tab => {
+    dom.tabs.allTabs.forEach(tab => {
         tab.addEventListener("click", () => {
-            dom.tabs.forEach(t => t.classList.remove("active"));
-            dom.tabContents.forEach(c => c.classList.remove("active"));
+            dom.tabs.allTabs.forEach(t => t.classList.remove("active"));
+            dom.tabs.allTabContents.forEach(c => c.classList.remove("active"));
             tab.classList.add("active");
             document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
-            dom.result.textContent = "";
-            if (dom.extractedText) {
-                dom.extractedText.textContent = "";
+            dom.translation.result.textContent = "";
+            if (dom.image.extractedText) {
+                dom.image.extractedText.textContent = "";
             }
         });
     });
