@@ -958,18 +958,61 @@ function initButtons() {
 }
 
 function initTabs() {
-    dom.tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-            dom.tabs.forEach(t => t.classList.remove("active"));
-            dom.tabContents.forEach(c => c.classList.remove("active"));
-            tab.classList.add("active");
-            document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
-            dom.result.textContent = "";
-            if (dom.extractedText) {
-                dom.extractedText.textContent = "";
-            }
-        });
+    const { tabs, tabContents, translation, image } = dom;
+
+    // 使用事件委托减少事件监听器数量
+    const tabContainer = document.querySelector('.tab-container');
+    
+    tabContainer.addEventListener('click', (event) => {
+        const tab = event.target.closest('.tab');
+        
+        // 确保点击的是tab元素
+        if (!tab) return;
+
+        // 移除所有tab和内容的激活状态
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        // 激活点击的tab和对应内容
+        tab.classList.add('active');
+        const targetTabId = tab.getAttribute('data-tab');
+        const targetTab = document.getElementById(targetTabId);
+        
+        if (targetTab) {
+            targetTab.classList.add('active');
+        }
+
+        // 清空result和extractedText
+        clearTabRelatedContent();
     });
+
+    // 封装清空内容的逻辑
+    function clearTabRelatedContent() {
+        // 清空翻译结果
+        if (translation.result) {
+            translation.result.textContent = '';
+        }
+
+        // 清空提取的文本
+        if (image.extractedText) {
+            image.extractedText.textContent = '';
+        }
+
+        // 可以根据需要添加更多清空逻辑
+        // 例如：清空语音、R18翻译等相关内容
+    }
+
+    // 可选：默认选中第一个标签
+    const firstTab = tabs[0];
+    if (firstTab) {
+        firstTab.classList.add('active');
+        const firstTabId = firstTab.getAttribute('data-tab');
+        const firstTabContent = document.getElementById(firstTabId);
+        
+        if (firstTabContent) {
+            firstTabContent.classList.add('active');
+        }
+    }
 }
 
 function initTranslation() {
