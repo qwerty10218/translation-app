@@ -2901,7 +2901,7 @@ function initDOM() {
         // 標籤頁
         tabs: document.querySelectorAll('.tab'),
         tabContents: document.querySelectorAll('.tab-content')
-    };
+    }
     
     // 初始化進度條
     createProgressBar();
