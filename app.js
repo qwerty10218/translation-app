@@ -3123,19 +3123,46 @@ function initButtons() {
 }
 
 function initTabs() {
-    dom.tabs.allTabs.forEach(tab => {
+    // 確保 tabs 和對應的內容區域存在
+    const allTabs = document.querySelectorAll(".tab-button");
+    const allTabContents = document.querySelectorAll(".tab-content");
+
+    if (!allTabs.length || !allTabContents.length) {
+        console.warn("未找到標籤頁按鈕或內容區塊，請檢查 HTML 結構。");
+        return;
+    }
+
+    allTabs.forEach(tab => {
         tab.addEventListener("click", () => {
-            dom.tabs.allTabs.forEach(t => t.classList.remove("active"));
-            dom.tabs.allTabContents.forEach(c => c.classList.remove("active"));
+            // 取消所有 tab 的 active 狀態
+            allTabs.forEach(t => t.classList.remove("active"));
+            allTabContents.forEach(c => c.classList.remove("active"));
+
+            // 設定當前 tab 為 active
             tab.classList.add("active");
-            document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
-            dom.translation.result.textContent = "";
-            if (dom.image.extractedText) {
+
+            // 取得 data-tab，確保它存在
+            const targetTabId = tab.getAttribute("data-tab");
+            if (targetTabId) {
+                const targetTabContent = document.getElementById(targetTabId);
+                if (targetTabContent) {
+                    targetTabContent.classList.add("active");
+                }
+            }
+
+            // 清空翻譯結果
+            if (dom?.translation?.result) {
+                dom.translation.result.textContent = "";
+            }
+
+            // 清空圖片擷取的文字
+            if (dom?.image?.extractedText) {
                 dom.image.extractedText.textContent = "";
             }
         });
     });
 }
+
 
 function initTranslation() {
     let lastTranslationTime = 0;
