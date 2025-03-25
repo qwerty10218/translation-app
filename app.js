@@ -2924,15 +2924,13 @@ function createProgressBar() {
 
 // 更新進度條
 function updateProgressBar(progress) {
-    const progressBar = document.getElementById("progressBar");
-    const progressContainer = document.getElementById("progressContainer");
-    
+    const progressBar = dom.progress?.bar || document.getElementById("progressBar");
+    const progressContainer = dom.progress?.container || document.getElementById("progressContainer");
+
     if (progressBar && progressContainer) {
-        // 確保進度條可見
-        progressContainer.style.display = "block";
         progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+        progressContainer.style.display = "block";
         
-        // 如果進度達到 100%，延遲隱藏進度條
         if (progress >= 100) {
             setTimeout(() => {
                 progressContainer.style.display = "none";
@@ -3053,8 +3051,8 @@ function validateTranslationInput(isR18 = false) {
 
 // 修正進度條更新邏輯
 function updateProgressBar(progress) {
-    const progressBar = dom.progress?.bar;
-    const progressContainer = dom.progress?.container;
+    const progressBar = dom.progress?.bar || document.getElementById("progressBar");
+    const progressContainer = dom.progress?.container || document.getElementById("progressContainer");
 
     if (progressBar && progressContainer) {
         progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
@@ -3065,25 +3063,6 @@ function updateProgressBar(progress) {
                 progressContainer.style.display = "none";
                 progressBar.style.width = "0%";
             }, 500);
-        }
-        
-    } catch (error) {
-        console.error("翻譯失敗:", error);
-        showNotification(`翻譯失敗: ${error.message}`, "error");
-        
-        // 重置按鈕狀態
-        const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
-        if (translateButton) {
-            translateButton.disabled = false;
-            translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
-        }
-        
-        // 重置進度條
-        const progressBar = dom.progressBar;
-        const progressContainer = progressBar?.parentElement;
-        if (progressBar && progressContainer) {
-            progressContainer.style.display = "none";
-            progressBar.style.width = "0%";
         }
     }
 }
