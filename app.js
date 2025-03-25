@@ -2818,7 +2818,7 @@ function simplifiedToTraditional(text) {
     
     // 常見簡繁對照
     const simplifiedChars = '习乐宁东买卖产业丑严与丢两严丧个临为举么义乐习乡书买乱争于亏云亚产亲亿仅从仑仓仪们价众优伙会伟传伤伦休伟体余处备党务传位低住佛作体余佣佥侠侣侥侦侧侨侩佣侵促俭修信保俦侥俩俭债俪值側偿优偓傥傧储傤僭儿儿党兰关兴兹养兽冢决况冷冻凄凉处净凑减凤凫凭凯击凿则准刘刚创删别刹刽刿剀剂剐剑剧劝办务动励劲劳势勋勐勚匀匦却厅厉厍厘厦厨厩參发参侧叁团园困囱围国图团圆國圣圾坏块坚坛坜址坝坞坟坠垄垅坛垦垧垩垴垵垒垆垄埘埙埚实埯塆墙壤壮声壤壳壶处备复够妆姗姹娄娅娆娇娈娱娲娴婳婴婶媪嫒媪嫔嬷嬿孙学孪孙宁宝实宠审宪宫宽宾寝对寻导寿将尔尘尝尧尽层居屆屉届屋屏屡孱岁岂峄峡峣困巨巢巽帅师帐帜带帧席帮常长帻仓厍广庄庆库应庙庞废庼廪开异弃强归归录彦彻员丽彻征径径织绕绘絷经战荡结给络继绥绿网彘徵德徽齿恒恶悦悬参悭惊恶惩惫惬惭涌淀凄愤愦慑慓栅栆校样哓核根栖栋栏树栅栈栖标栈桡桢业桥桦桧档桩梦梼梾梿检棁栋棱栾棵椁椭楼榄榇榈榉楼荣槚槛槟槠横樯柽欧欤欢欣欸欻款歼歿殇残杀殒殓殚殡殴毁毂毕毙毡气气氢汉汤汹沟没泞泪泪泼泽泾洁洒洼浃浅浆浇浈浊测浍济浏浐浑浒浓浔浕涂涛涝涞涟涠渎渐渑渔渝渐温湿湼渍渖渗沟温溆滞满滚漕沪漤汤潆潇潍沥潜澜澧澹澳激沟火灭灯灾灿炀炉炖炜炝点炼炀烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
-    const traditionalChars = '習樂寧東買賣產業醜嚴與丟兩嚴喪個臨為舉麼義樂習鄉書買亂爭於虧雲亞產親億僅從崙倉儀們價眾優夥會偉傳傷倫休偉體餘處備黨務傳位低住佛作體餘傭僉俠侶僥偵側僑儈傭侵促儉修信保儔僥倆儉債儷值側償優嫿儻儐儲儓僭兒兒黨蘭關興茲養獸塚決況冷凍淒涼處淨湊減鳳鳧憑凱擊鑿則準劉剛創刪別剎劊劌剴劑剮劍劇勸辦務動勵勁勞勢勛猛勩勻匭卻廳厲厙釐廈廚廄參發參側叄團園困囪圍國圖團圓國聖圾壞塊堅壇壢址壩塢墳墜壟壠壇墾壧礡塏壪壘壙壟塒塤堝實塱壆牆壤壯聲壤殼壺處備複夠妝姍媯婁婭嬈嬌孌娛媧嫺嫿嬰嬸媼嬡媼嬪嬤孌孫學孿孫寧寶實寵審憲宮寬賓寢對尋導壽將爾塵嚐堯盡層居屆屜屆屋屏屢孱歲豈嶧峽嶢困鉅巢巽帥師帳幟帶幀席幫常長幬倉厙廣莊慶庫應廟龐廢廎廩開異棄強歸歸錄彥徹員麗徹征徑徑織紆繪縶經戰蕩結給絡繼綏綠網彘徵德徽齒恆惡悅懸參慳驚惡懲憊惬慚湧淀淒憤僨懾慄柵棓校樣嘵核根棲棟欄樹柵棧棲標棧橈楨業橋樺檜檔樁夢檉檢樅檁棟稜欒棵槨橢樓欖櫬櫚櫪樓榮檣檉歐漚懽欣啊咦款殲歿殤殘殺殞殮殫殯毆毀轂畢斃氈氣氣氫漢湯洶溝沒濘淚淚潑澤涇潔灑窪浹淺漿澆湞濁測滸濟瀏滻渾滸濃潯濜塗濤澇淶漣潎瀆漸澮漁渝漸溫溼瀎涅滙滬瀋湯漭瀟濰瀝潛瀾灄躁滿滾漕滬灢湯瀠灩濰溝溫漊滯滿滾漕滬灤湯潆潇潍泄潜澜潾澹澳激沟火灭灯灾灿炀炉炖炜炝点炼烊烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
+    const traditionalChars = '習樂寧東買賣產業醜嚴與丟兩嚴喪個臨為舉麼義樂習鄉書買亂爭於虧雲亞產親億僅從崙倉儀們價眾優夥會偉傳傷倫休偉體餘處備黨務傳位低住佛作體餘傭僉俠侶僥偵側僑儈傭侵促儉修信保儔僥倆儉債儷值側償優嫿儻儐儲儓僭兒兒黨蘭關興茲養獸塚決況冷凍淒涼處淨湊減鳳鳧憑凱擊鑿則準劉剛創刪別剎劊劌剴劑剮劍劇勸辦務動勵勁勞勣勛勩勻匭卻廳厲厙釐廈廚廄參發參側叄團園困囪圍國圖團圓國聖圾壞塊堅壇壢址壩塢墳墜壟壠壇墾壧礡塏壪壘壙壟塒塤堝實塱壆牆壤壯聲壤殼壺處備複夠妝姍媯婁婭嬈嬌孌娛媧嫺嫿嬰嬸媼嬡媼嬪嬤孌孫學孿孫寧寶實寵審憲宮寬賓寢對尋導壽將爾塵嚐堯盡層居屆屜屆屋屏屢孱歲豈嶧峽嶢困鉅巢巽帥師帳幟帶幀席幫常長幬倉厙廣莊慶庫應廟龐廢廎廩開異棄強歸歸錄彥徹員麗徹征徑徑織紆繪縶經戰蕩結給絡繼綏綠網彘徵德徽齒恆惡悅懸參慳驚惡懲憊惬慚湧淀淒憤僨懾慄柵棓校樣嘵核根棲棟欄樹柵棧棲標棧橈楨業橋樺檜檔樁夢檉檢樅檁棟稜欒棵槨橢樓欖櫬櫚櫪樓榮檣檉歐漚懽欣啊咦款殲歿殤殘殺殞殮殫殯毆毀轂畢斃氈氣氣氫漢湯洶溝沒濘淚淚潑澤涇潔灑窪浹淺漿澆湞濁測滸濟瀏滻渾滸濃潯濜塗濤澇淶漣潎瀆漸澮漁渝漸溫溼瀎涅滙滬瀋湯漭瀟濰瀝潛瀾灄躁滿滾漕滬灢湯瀠灩濰溝溫漊滯滿滾漕滬灤湯潆潇潍泄潜澜潾澹澳激沟火灭灯灾灿炀炉炖炜炝点炼烊烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
     
     let result = '';
     for (let i = 0; i < text.length; i++) {
@@ -2930,7 +2930,7 @@ function updateProgressBar(progress) {
     if (progressBar && progressContainer) {
         // 確保進度條可見
         progressContainer.style.display = "block";
-        progressBar.style.width = `${progress}%`;
+        progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
         
         // 如果進度達到 100%，延遲隱藏進度條
         if (progress >= 100) {
@@ -2942,437 +2942,125 @@ function updateProgressBar(progress) {
     }
 }
 
+// 修正重複的 initDOM 定義並增強安全性
 function initDOM() {
-    // 使用解构赋值简化 getElementById
-    const getById = document.getElementById.bind(document);
-    const getBySelector = document.querySelector.bind(document);
-    const getAllBySelector = document.querySelectorAll.bind(document);
+    const getSafeElement = (id) => {
+        const el = document.getElementById(id);
+        if (!el) console.warn(`Element #${id} not found`);
+        return el;
+    };
 
-    // 统一管理所有 DOM 元素
-    const dom = {
-        // 文本翻译区域
+    // 統一管理所有 DOM 元素
+    dom = {
         translation: {
-            inputText: getById("inputText"),
-            result: getById("result"),
-            sourceLang: getById("sourceLang"),
-            targetLang: getById("targetLang"),
-            translateButton: getById("translateBtn"),
-            clearButton: getById("clearBtn"),
-            swapLangButton: getById("swapLang"),
-            copyResultButton: getById("copyResultButton")
+            inputText: getSafeElement("inputText"),
+            result: getSafeElement("result"),
+            sourceLang: getSafeElement("sourceLang"),
+            targetLang: getSafeElement("targetLang"),
+            translateButton: getSafeElement("translateButton"),
+            clearTextButton: getSafeElement("clearTextButton"),
+            swapLangButton: getSafeElement("swapLang"),
+            copyResultButton: getSafeElement("copyResultButton"),
+            clearResultButton: getSafeElement("clearResultButton")
         },
-
-        // 图像翻译区域
-        image: {
-            input: getById("imageInput"),
-            preview: getById("imagePreview"),
-            canvas: getById("imageCanvas"),
-            extractedText: getById("extractedText"),
-            enhanceContrastButton: getById("enhanceContrastButton"),
-            grayscaleButton: getById("grayscaleButton"),
-            resetButton: getById("resetImageButton"),
-            clearButton: getById("clearImageButton"),
-            uploadButton: getById("uploadImageButton"),
-            extractTextButton: getById("extractTextButton"),
-            translateExtractedButton: getById("translateExtractedButton"),
-            ocrLanguageSelect: getById("ocrLanguageSelect")
-        },
-
-        // R18 翻译区域
-        r18Translation: {
-            inputText: getById("r18InputText"),
-            result: getById("r18Result"),
-            sourceLang: getById("r18SourceLang"),
-            targetLang: getById("r18TargetLang"),
-            translateButton: getById("r18TranslateBtn"),
-            clearButton: getById("r18ClearButton"),
-            copyButton: getById("r18CopyButton"),
-            modelSelect: getById("r18ModelSelect")
-        },
-
-        // 语音识别区域
-        voice: {
-            startButton: getById("startVoiceBtn"),
-            stopButton: getById("stopVoiceBtn"),
-            visualizer: getById("voiceVisualizer"),
-            recordingStatus: getById("voiceRecordingStatus"),
-            transcript: getById("voiceTranscript"),
-            useTextButton: getById("useVoiceTextBtn"),
-            clearButton: getById("clearVoiceBtn"),
-            expandButton: getById("expandVoiceBtn"),
-            shrinkButton: getById("shrinkVoiceBtn")
-        },
-
-        // 内容过滤
-        contentFilter: {
-            adultContent: getById("adultContent"),
-            violenceContent: getById("violenceContent"),
-            slangContent: getById("slangContent")
-        },
-
-        // 历史记录
-        history: {
-            list: getById("historyList"),
-            clearButton: getById("clearHistoryBtn"),
-            exportButton: getById("exportHistoryBtn")
-        },
-
-        // 标签页
-        tabs: {
-            textTab: getById("textTab"),
-            imageTab: getById("imageTab"),
-            voiceTab: getById("voiceTab"),
-            r18Tab: getById("r18Tab"),
-            historyTab: getById("historyTab"),
-            settingsTab: getById("settingsTab"),
-            allTabs: getAllBySelector('.tab'),
-            allTabContents: getAllBySelector('.tab-content')
-        },
-
-        // 其他通用元素
-        common: {
-            themeToggle: getById("themeToggle"),
-            modelSelect: getBySelector(".model-select"),
-            progressContainer: getById("progressContainer"),
-            progressBar: getById("progressBar"),
-            specialProgressContainer: getById("specialProgressContainer"),
-            specialProgressBar: getById("specialProgressBar"),
-            
-            // API 状态显示
-            apiStatus: {
-                gpt: getById("gptStatus"),
-                myMemory: getById("mymemoryStatus"),
-                libre: getById("libreStatus")
-            }
-        }
+        // 其他元素初始化...
     };
 
-    // 安全检查：确保所有关键元素都已正确加载
-    const checkDOMElements = (elements) => {
-        const missingElements = [];
+    // 新增元素存在性檢查
+    this.validateDOMElements = () => {
+        const elementsToCheck = [
+            dom.translation.inputText,
+            dom.translation.result,
+            dom.translation.translateButton
+        ];
         
-        Object.keys(elements).forEach(category => {
-            Object.entries(elements[category]).forEach(([key, element]) => {
-                if (!element) {
-                    missingElements.push(`${category}.${key}`);
-                }
-            });
+        elementsToCheck.forEach(element => {
+            if (!element) {
+                throw new Error("關鍵DOM元素缺失，請檢查HTML結構");
+            }
         });
-
-        if (missingElements.length > 0) {
-            console.warn('以下 DOM 元素未找到:', missingElements);
-        }
     };
-
-    // 初始化进度条（假设存在此函数）
-    try {
-        checkDOMElements(dom);
-        createProgressBar();
-    } catch (error) {
-        console.error('DOM 初始化出错:', error);
-    }
-
-    return dom;
 }
 
-// 在 DOMContentLoaded 事件中调用
-document.addEventListener('DOMContentLoaded', () => {
-    const dom = initDOM();
-    init(dom);  // 传入 dom 对象给初始化函数
-});
-
+// 修正重複的 init 函數並優化初始化流程
 function init() {
-    // 已經在HTML中定義了進度條，不需要動態創建
-    
-    initTheme();
-    initTabs();
-    initTranslation();
-    initImageTranslation();
-    initDragAndDrop(); // 確保拖放功能被初始化
-    initVoiceRecognition();
-    initR18Translation();
-    initAPISettings();
-    initHistory();
-    initSettings(); // 添加設置初始化
-}
-
-function initButtons() {
-    dom.clearTextButton.addEventListener("click", () => {
-        dom.inputText.value = "";
-        validateTranslationInput();
-    });
-    
-    dom.copyResultButton.addEventListener("click", () => {
-        if (dom.result.textContent) {
-            copyToClipboard(dom.result.textContent);
-        }
-    });
-    
-    dom.clearResultButton.addEventListener("click", () => {
-        dom.result.textContent = "";
-    });
-    
-    // 修正 clearAllButton 引用錯誤
-    if (document.getElementById("clearAllButton")) {
-        document.getElementById("clearAllButton").addEventListener("click", () => {
-            dom.inputText.value = "";
-            dom.result.textContent = "";
-            validateTranslationInput();
-        });
-    }
-}
-
-function initTabs() {
-    // 確保 tabs 和對應的內容區域存在
-    const allTabs = document.querySelectorAll(".tab-button");
-    const allTabContents = document.querySelectorAll(".tab-content");
-
-    if (!allTabs.length || !allTabContents.length) {
-        console.warn("未找到標籤頁按鈕或內容區塊，請檢查 HTML 結構。");
-        return;
-    }
-
-    allTabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-            // 取消所有 tab 的 active 狀態
-            allTabs.forEach(t => t.classList.remove("active"));
-            allTabContents.forEach(c => c.classList.remove("active"));
-
-            // 設定當前 tab 為 active
-            tab.classList.add("active");
-
-            // 取得 data-tab，確保它存在
-            const targetTabId = tab.getAttribute("data-tab");
-            if (targetTabId) {
-                const targetTabContent = document.getElementById(targetTabId);
-                if (targetTabContent) {
-                    targetTabContent.classList.add("active");
-                }
-            }
-
-            // 清空翻譯結果
-            if (dom?.translation?.result) {
-                dom.translation.result.textContent = "";
-            }
-
-            // 清空圖片擷取的文字
-            if (dom?.image?.extractedText) {
-                dom.image.extractedText.textContent = "";
-            }
-        });
-    });
-}
-
-
-function initTranslation() {
-    let lastTranslationTime = 0;
-    
-    // 初始化模型選擇器
-    const modelSelect = document.getElementById("modelSelect");
-    const r18ModelSelect = document.getElementById("r18ModelSelect");
-    
-    if (modelSelect) {
-        modelSelect.addEventListener("change", (e) => {
-            translationManager.setModel(e.target.value);
-            localStorage.setItem("selectedModel", e.target.value);
-            showNotification(`已切換到 ${e.target.value === "openrouter" ? "DeepSeek R1" : "GPT-3.5"} 模型`, "info");
-        });
+    try {
+        console.log("應用初始化開始...");
         
-        // 從本地存儲中讀取之前選擇的模型
-        const savedModel = localStorage.getItem("selectedModel");
-        if (savedModel) {
-            modelSelect.value = savedModel;
-            translationManager.setModel(savedModel);
-        }
-    }
-    
-    if (r18ModelSelect) {
-        r18ModelSelect.addEventListener("change", (e) => {
-            translationManager.setModel(e.target.value);
-            localStorage.setItem("selectedModel", e.target.value);
-            showNotification(`已切換到 ${e.target.value === "openrouter" ? "DeepSeek R1" : "GPT-3.5"} 模型`, "info");
-        });
-        
-        // 同步兩個選擇器的值
-        if (modelSelect) {
-            r18ModelSelect.value = modelSelect.value;
-        }
-    }
-    
-    // 確保頁面載入時執行驗證
-    validateTranslationInput(false);
-    
-    dom.translateButton.addEventListener("click", async () => {
-        const now = Date.now();
-        if (now - lastTranslationTime < 3000) {
-            showNotification("請稍等片刻再進行下一次翻譯請求", "warning");
+        // 單一初始化入口
+        if (window._initialized) {
+            console.warn("應用已初始化，跳過重複初始化");
             return;
         }
-        lastTranslationTime = now;
-        
-        const text = dom.inputText.value.trim();
-        const sourceLang = dom.sourceLang.value;
-        const targetLang = dom.targetLang.value;
-        
-        if (!text) {
-            showNotification("請輸入要翻譯的文字", "warning");
-            return;
-        }
-        
-        try {
-            dom.translateButton.disabled = true;
-            dom.translateButton.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
-            
-            const translatedText = await translationManager.translate(text, sourceLang, targetLang);
-            
-            dom.result.textContent = translatedText;
-            
-            // 添加到歷史記錄
-            addToHistory({
-                timestamp: new Date().toISOString(),
-                sourceText: text,
-                targetText: translatedText,
-                sourceLang: sourceLang,
-                targetLang: targetLang,
-                isSpecial: false
-            });
-            
-            showNotification("翻譯完成", "success");
-        } catch (error) {
-            console.error("翻譯失敗:", error);
-            dom.result.textContent = `翻譯失敗: ${error.message}`;
-            showNotification(`翻譯失敗: ${error.message}`, "error");
-        } finally {
-            dom.translateButton.disabled = false;
-            dom.translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
-        }
-    });
-    
-    dom.swapLangButton.addEventListener("click", swapLanguages);
-    dom.inputText.addEventListener("input", () => validateTranslationInput(false));
-    dom.sourceLang.addEventListener("change", () => validateTranslationInput(false));
-    dom.targetLang.addEventListener("change", () => validateTranslationInput(false));
+        window._initialized = true;
+
+        initDOM().validateDOMElements();
+        initTheme();
+        initTabs();
+        initTranslation();
+        initImageTranslation();
+        initDragAndDrop();
+        initVoiceRecognition();
+        initHistory();
+        initR18Translation();
+        initAPISettings();
+        initSettings();
+
+        // 延遲載入非必要資源
+        setTimeout(() => {
+            initHuggingFaceTab();
+            checkAPIStatus();
+        }, 2000);
+
+        console.log("應用初始化完成");
+    } catch (error) {
+        console.error("初始化失敗:", error);
+        showNotification("應用初始化失敗，請刷新頁面", "error", 0);
+    }
 }
 
-function swapLanguages() {
-    [dom.sourceLang.value, dom.targetLang.value] = [dom.targetLang.value, dom.sourceLang.value];
-    validateTranslationInput();
-}
-
+// 強化翻譯輸入驗證
 function validateTranslationInput(isR18 = false) {
-    // 確保 DOM 物件已定義
-    if (!dom) {
-        console.error("DOM 物件未初始化！");
-        return false; // ✅ 如果 dom 為 undefined，直接回傳 false
-    }
+    const sourceLang = isR18 ? 
+        (dom.r18SourceLang || { value: '' }).value : 
+        (dom.sourceLang || { value: '' }).value;
+    
+    const targetLang = isR18 ? 
+        (dom.r18TargetLang || { value: '' }).value : 
+        (dom.targetLang || { value: '' }).value;
+    
+    const inputText = isR18 ? 
+        (dom.r18InputText || { value: '' }).value.trim() : 
+        (dom.inputText || { value: '' }).value.trim();
 
-    // 確保對應的 DOM 元素存在
-    const sourceLangElem = isR18 ? dom?.r18SourceLang : dom?.sourceLang;
-    const targetLangElem = isR18 ? dom?.r18TargetLang : dom?.targetLang;
-    const inputTextElem = isR18 ? dom?.r18InputText : dom?.inputText;
-    const translateButton = isR18 ? dom?.r18TranslateButton : dom?.translateButton;
+    const translateButton = isR18 ? 
+        (dom.r18TranslateButton || { disabled: false }) : 
+        (dom.translateButton || { disabled: false });
 
-    if (!sourceLangElem || !targetLangElem || !inputTextElem || !translateButton) {
-        console.warn("部分 DOM 元素缺失，請檢查 HTML 結構");
-        return false;
-    }
-
-    // 取得值
-    const sourceLang = sourceLangElem.value || "";
-    const targetLang = targetLangElem.value || "";
-    const inputText = inputTextElem.value.trim();
-
-    // 檢查輸入是否為空
-    const isInputEmpty = inputText.length === 0;
-
-    // 檢查源語言和目標語言是否相同
+    const isInputEmpty = !inputText;
     const isSameLang = sourceLang === targetLang;
 
-    // 禁用或啟用翻譯按鈕
-    translateButton.disabled = isInputEmpty || isSameLang;
+    if (translateButton) {
+        translateButton.disabled = isInputEmpty || isSameLang;
+    }
 
-    // 如果語言相同且輸入不為空，顯示警告（確保 `showNotification` 存在）
-    if (isSameLang && !isInputEmpty && typeof showNotification === "function") {
+    if (isSameLang && !isInputEmpty) {
         showNotification("源語言和目標語言不能相同", "warning");
     }
 
-    return !isInputEmpty && !isSameLang; // ✅ 只有驗證成功才回傳 true
+    return !isInputEmpty && !isSameLang;
 }
 
+// 修正進度條更新邏輯
+function updateProgressBar(progress) {
+    const progressBar = dom.progress?.bar;
+    const progressContainer = dom.progress?.container;
 
-// 處理翻譯請求
-async function handleTranslation(isR18 = false) {
-    try {
-        // 確保 dom 物件已定義
-        if (!dom) {
-            console.error("DOM物件未定義!");
-            showNotification("應用未完全初始化，請刷新頁面", "error");
-            return;
-        }
+    if (progressBar && progressContainer) {
+        progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+        progressContainer.style.display = "block";
         
-        // 獲取對應的元素
-        const inputElement = isR18 ? dom.r18InputText : dom.inputText;
-        const resultElement = isR18 ? dom.r18Result : dom.result;
-        const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
-        
-        // 檢查DOM元素是否存在
-        if (!inputElement || !resultElement || !translateButton) {
-            console.error("必要的DOM元素未找到:", {inputElement, resultElement, translateButton});
-            showNotification("應用界面元素未找到，請刷新頁面", "error");
-            return;
-        }
-        
-        // 獲取輸入文本
-        const inputText = inputElement.value.trim();
-        if (!inputText) {
-            showNotification("請輸入要翻譯的文字", "warning");
-            return;
-        }
-        
-        // 獲取語言設置
-        const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
-        const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
-        
-        // 驗證翻譯輸入
-        const validationResult = validateTranslationInput(inputText, sourceLang, targetLang);
-        if (!validationResult.valid) {
-            showNotification(validationResult.message, "warning");
-            return;
-        }
-        
-        // 更新按鈕狀態
-        translateButton.disabled = true;
-        translateButton.innerHTML = '<span class="button-icon">⏳</span>翻譯中...';
-        
-        // 顯示加載狀態
-        resultElement.textContent = "翻譯中...";
-        
-        // 顯示進度條
-        const progressBar = dom.progressBar;
-        const progressContainer = progressBar.parentElement;
-        if (progressBar && progressContainer) {
-            progressBar.style.width = "0%";
-            progressContainer.style.display = "block";
-        }
-        
-        // 開始翻譯
-        const translatedText = await window.translationManager.translate(
-            inputText,
-            sourceLang,
-            targetLang,
-            isR18
-        );
-        
-        // 更新結果
-        resultElement.textContent = translatedText;
-        
-        // 更新按鈕狀態
-        translateButton.disabled = false;
-        translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
-        
-        // 更新進度條
-        if (progressBar && progressContainer) {
-            progressBar.style.width = "100%";
+        if (progress >= 100) {
             setTimeout(() => {
                 progressContainer.style.display = "none";
                 progressBar.style.width = "0%";
@@ -4996,7 +4684,7 @@ function simplifiedToTraditional(text) {
     
     // 常見簡繁對照
     const simplifiedChars = '习乐宁东买卖产业丑严与丢两严丧个临为举么义乐习乡书买乱争于亏云亚产亲亿仅从仑仓仪们价众优伙会伟传伤伦休伟体余处备党务传位低住佛作体余佣佥侠侣侥侦侧侨侩佣侵促俭修信保俦侥俩俭债俪值側偿优偓傥傧储傤僭儿儿党兰关兴兹养兽冢决况冷冻凄凉处净凑减凤凫凭凯击凿则准刘刚创删别刹刽刿剀剂剐剑剧劝办务动励劲劳势勋勐勚匀匦却厅厉厍厘厦厨厩參发参侧叁团园困囱围国图团圆國圣圾坏块坚坛坜址坝坞坟坠垄垅坛垦垧垩垴垵垒垆垄埘埙埚实埯塆墙壤壮声壤壳壶处备复够妆姗姹娄娅娆娇娈娱娲娴婳婴婶媪嫒媪嫔嬷嬿孙学孪孙宁宝实宠审宪宫宽宾寝对寻导寿将尔尘尝尧尽层居屆屉届屋屏屡孱岁岂峄峡峣困巨巢巽帅师帐帜带帧席帮常长帻仓厍广庄庆库应庙庞废庼廪开异弃强归归录彦彻员丽彻征径径织绕绘絷经战荡结给络继绥绿网彘徵德徽齿恒恶悦悬参悭惊恶惩惫惬惭涌淀凄愤愦慑慓栅栆校样哓核根栖栋栏树栅栈栖标栈桡桢业桥桦桧档桩梦梼梾梿检棁栋棱栾棵椁椭楼榄榇榈榉楼荣槚槛槟槠横樯柽欧欤欢欣欸欻款歼歿殇残杀殒殓殚殡殴毁毂毕毙毡气气氢汉汤汹沟没泞泪泪泼泽泾洁洒洼浃浅浆浇浈浊测浍济浏浐浑浒浓浔浕涂涛涝涞涟涠渎渐渑渔渝渐温湿湼渍渖渗沟温溆滞满滚漕沪漤汤潆潇潍沥潜澜澧澹澳激沟火灭灯灾灿炀炉炖炜炝点炼炀烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
-    const traditionalChars = '習樂寧東買賣產業醜嚴與丟兩嚴喪個臨為舉麼義樂習鄉書買亂爭於虧雲亞產親億僅從崙倉儀們價眾優夥會偉傳傷倫休偉體餘處備黨務傳位低住佛作體餘傭僉俠侶僥偵側僑儈傭侵促儉修信保儔僥倆儉債儷值側償優嫿儻儐儲儓僭兒兒黨蘭關興茲養獸塚決況冷凍淒涼處淨湊減鳳鳧憑凱擊鑿則準劉剛創刪別剎劊劌剴劑剮劍劇勸辦務動勵勁勞勢勛猛勩勻匭卻廳厲厙釐廈廚廄參發參側叄團園困囪圍國圖團圓國聖圾壞塊堅壇壢址壩塢墳墜壟壠壇墾壧礡塏壪壘壙壟塒塤堝實塱壆牆壤壯聲壤殼壺處備複夠妝姍媯婁婭嬈嬌孌娛媧嫺嫿嬰嬸媼嬡媼嬪嬤孌孫學孿孫寧寶實寵審憲宮寬賓寢對尋導壽將爾塵嚐堯盡層居屆屜屆屋屏屢孱歲豈嶧峽嶢困鉅巢巽帥師帳幟帶幀席幫常長幬倉厙廣莊慶庫應廟龐廢廎廩開異棄強歸歸錄彥徹員麗徹征徑徑織紆繪縶經戰蕩結給絡繼綏綠網彘徵德徽齒恆惡悅懸參慳驚惡懲憊惬慚湧淀淒憤僨懾慄柵棓校樣嘵核根棲棟欄樹柵棧棲標棧橈楨業橋樺檜檔樁夢檉檢樅檁棟稜欒棵槨橢樓欖櫬櫚櫪樓榮檣檉歐漚懽欣啊咦款殲歿殤殘殺殞殮殫殯毆毀轂畢斃氈氣氣氫漢湯洶溝沒濘淚淚潑澤涇潔灑窪浹淺漿澆湞濁測滸濟瀏滻渾滸濃潯濜塗濤澇淶漣潎瀆漸澮漁渝漸溫溼瀎涅滙滬瀋湯漭瀟濰瀝潛瀾灄躁滿滾漕滬灢湯瀠灩濰溝溫漊滯滿滾漕滬灤湯潆潇潍泄潜澜潾澹澳激沟火灭灯灾灿炀炉炖炜炝点炼烊烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
+    const traditionalChars = '習樂寧東買賣產業醜嚴與丟兩嚴喪個臨為舉麼義樂習鄉書買亂爭於虧雲亞產親億僅從崙倉儀們價眾優夥會偉傳傷倫休偉體餘處備黨務傳位低住佛作體餘傭僉俠侶僥偵側僑儈傭侵促儉修信保儔僥倆儉債儷值側償優嫿儻儐儲儓僭兒兒黨蘭關興茲養獸塚決況冷凍淒涼處淨湊減鳳鳧憑凱擊鑿則準劉剛創刪別剎劊劌剴劑剮劍劇勸辦務動勵勁勞勣勛勩勻匭卻廳厲厙釐廈廚廄參發參側叄團園困囪圍國圖團圓國聖圾壞塊堅壇壢址壩塢墳墜壟壠壇墾壧礡塏壪壘壙壟塒塤堝實塱壆牆壤壯聲壤殼壺處備複夠妝姍媯婁婭嬈嬌孌娛媧嫺嫿嬰嬸媼嬡媼嬪嬤孌孫學孿孫寧寶實寵審憲宮寬賓寢對尋導壽將爾塵嚐堯盡層居屆屜屆屋屏屢孱歲豈嶧峽嶢困鉅巢巽帥師帳幟帶幀席幫常長幬倉厙廣莊慶庫應廟龐廢廎廩開異棄強歸歸錄彥徹員麗徹征徑徑織紆繪縶經戰蕩結給絡繼綏綠網彘徵德徽齒恆惡悅懸參慳驚惡懲憊惬慚湧淀淒憤僨懾慄柵棓校樣嘵核根棲棟欄樹柵棧棲標棧橈楨業橋樺檜檔樁夢檉檢樅檁棟稜欒棵槨橢樓欖櫬櫚櫪樓榮檣檉歐漚懽欣啊咦款殲歿殤殘殺殞殮殫殯毆毀轂畢斃氈氣氣氫漢湯洶溝沒濘淚淚潑澤涇潔灑窪浹淺漿澆湞濁測滸濟瀏滻渾滸濃潯濜塗濤澇淶漣潎瀆漸澮漁渝漸溫溼瀎涅滙滬瀋湯漭瀟濰瀝潛瀾灄躁滿滾漕滬灢湯瀠灩濰溝溫漊滯滿滾漕滬灤湯潆潇潍泄潜澜潾澹澳激沟火灭灯灾灿炀炉炖炜炝点炼烊烁烂烛洒洁烹焕焖焘煲爱爷牍粤牵畅畴疖疗疟癞癣皑皱皲盏盐监盖盘卢眍眦眬着睁矫矶矾矿码砖砗砚硖确虏础拟隶肤肿胀胀胆脉脍脚脱脶脑肤臜舍舰舱舸舻艰艺节芈芗芜苏苹茎苧茏茑茔茕荆荐荣荦荧荨荩荪荫莱莸莹获莺莼薮萝蓝落蔹蔺蕲蕴薮药號藏藤蘖虏虚虫虬虮虾虽蚀蚁蚂蚕蝇蝎蝼衅街衔衙衩袄被袯装里裆裤裧见观觃规觅视觇览觉谟谣签签简谦谩谪谫谬谭谮谯谱谲讠谩访证评识诔词诖诘诠诩诬语误诱诲说説读诸课谈诿谀调诋诹诏谋诺谒诳诚誊诞谛谏谕谘講誉谣谱谲谛谗谶谜谦谧谪卓豁豆豉贝责贞败账货质贩贪贫贯贮贰贲贳贵贷贸费贺贼贽贾贿赀赂资赅赆赇赈赉赊赋赌赍赎赏赐赔赖赈赗赘赙赚赛赜赝赞赟赠赡赢赣赪赵趋趱趸跃跄跖跞跟跬跷跸跹跻踊踌蹒蹚蹾躏车轧轨轩轪轫转轭轮软轰轱轲轶轺轻轼载轾辀辁辂较辄辅辆辇辈辉辊辋辌辍辎辏辐辑辒连辔辕辖辗辘辙辚辞辩辫边辽达迁过迈运还这进远违连迟迩迳迹适选递逻逻遗遥邓邝邬郓郦郧镧镨镰镱馈馊馍馏馑馒馓馔馕盖麦黄齐齑龀龁龂龃龄龅龆龇龈龉龊龌龙龚龛';
     
     let result = '';
     for (let i = 0; i < text.length; i++) {
