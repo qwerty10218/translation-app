@@ -3263,7 +3263,7 @@ function validateTranslationInput(isR18 = false) {
     // 確保 DOM 物件已定義
     if (!dom) {
         console.error("DOM 物件未初始化！");
-        return;
+        return false; // ✅ 如果 dom 為 undefined，直接回傳 false
     }
 
     // 確保對應的 DOM 元素存在
@@ -3274,12 +3274,12 @@ function validateTranslationInput(isR18 = false) {
 
     if (!sourceLangElem || !targetLangElem || !inputTextElem || !translateButton) {
         console.warn("部分 DOM 元素缺失，請檢查 HTML 結構");
-        return;
+        return false;
     }
 
     // 取得值
-    const sourceLang = sourceLangElem.value;
-    const targetLang = targetLangElem.value;
+    const sourceLang = sourceLangElem.value || "";
+    const targetLang = targetLangElem.value || "";
     const inputText = inputTextElem.value.trim();
 
     // 檢查輸入是否為空
@@ -3295,12 +3295,10 @@ function validateTranslationInput(isR18 = false) {
     if (isSameLang && !isInputEmpty && typeof showNotification === "function") {
         showNotification("源語言和目標語言不能相同", "warning");
     }
+
+    return !isInputEmpty && !isSameLang; // ✅ 只有驗證成功才回傳 true
 }
 
-    
-    // 返回驗證結果
-    return !isInputEmpty && !isSameLang;
-}
 
 // 處理翻譯請求
 async function handleTranslation(isR18 = false) {
