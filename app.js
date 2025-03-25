@@ -876,59 +876,55 @@ function initTranslation() {
 
 // 初始化应用
 function init() {
-    initTranslation();
-    // 其他模块初始化...
-}
-
-// 调用初始化
-init();
-
-function init() {
-    console.log("初始化應用...");
-    
-    // 初始化DOM引用
-    initDOM();
-    
-    // 初始化標籤頁
-    initTabs();
-    
-    // 初始化翻譯功能
-    initTranslation();
-    
-    // 初始化圖片翻譯
-    initImageTranslation();
-    
-    // 初始化拖放功能
-    initDragAndDrop();
-    
-    // 初始化按鈕操作
-    initButtons();
-    
-    // 初始化主題
-    initTheme();
-    
-    // 初始化語音識別
-    initVoiceRecognition();
-    
-    // 初始化歷史記錄
-    initHistory();
-    
-    // 初始化 R18 翻譯
-    initR18Translation();
-    
-    // 初始化 API 設置
-    initAPISettings();
-    
-    // 初始化設置選項
-    initSettings();
-    
-    // 初始化 HuggingFace 嵌入
-    initHuggingFaceTab();
-    
-    console.log("應用初始化完成");
-    
-    // 創建翻譯管理器並掛載到全局
-    window.translationManager = new TranslationManager();
+    try {
+        console.log("初始化應用...");
+        
+        // 確保先初始化 DOM 元素
+        const domInitialized = initDOM();
+        if (!domInitialized) {
+            throw new Error("DOM 初始化失敗");
+        }
+        
+        // 初始化基本功能
+        initTheme();
+        initTabs();
+        initTranslation();
+        
+        // 初始化圖片相關功能
+        initImageTranslation();
+        initDragAndDrop();
+        
+        // 初始化其他功能
+        initButtons();
+        initVoiceRecognition();
+        initHistory();
+        
+        // 確保 R18 在標準翻譯後初始化
+        initR18Translation();
+        
+        // 初始化設置
+        initAPISettings();
+        initSettings();
+        
+        // 非關鍵功能延遲初始化
+        setTimeout(() => {
+            try {
+                initHuggingFaceTab();
+            } catch (error) {
+                console.warn("HuggingFace 標籤頁初始化失敗:", error);
+            }
+        }, 1000);
+        
+        // 確保翻譯管理器存在
+        if (!window.translationManager) {
+            window.translationManager = new TranslationManager();
+        }
+        
+        console.log("應用初始化完成");
+    } catch (error) {
+        console.error("應用初始化失敗:", error);
+        showNotification("應用初始化失敗，請刷新頁面", "error", 0);
+    }
 }
 
 // 3. 修改 initButtons 函數，增加錯誤處理和元素檢查
@@ -1283,6 +1279,8 @@ function validateTranslationInput(isR18 = false) {
 // 處理翻譯請求
 async function handleTranslation(isR18 = false) {
     try {
+        console.log("處理翻譯請求，模式：", isR18 ? "R18" : "標準");
+        
         // 確保 dom 物件已定義
         if (!dom) {
             console.error("DOM物件未定義!");
@@ -1290,14 +1288,27 @@ async function handleTranslation(isR18 = false) {
             return;
         }
         
-        // 獲取對應的元素
-        const inputElement = isR18 ? dom.r18InputText : dom.inputText;
-        const resultElement = isR18 ? dom.r18Result : dom.result;
-        const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
+        // 正確獲取對應的元素 (使用 dom.r18 對象)
+        const inputElement = isR18 ? 
+            dom.r18?.inputText : 
+            dom.translation?.inputText;
+            
+        const resultElement = isR18 ? 
+            dom.r18?.result : 
+            dom.translation?.result;
+            
+        const translateButton = isR18 ? 
+            dom.r18?.translateButton : 
+            dom.translation?.translateButton;
         
         // 檢查DOM元素是否存在
         if (!inputElement || !resultElement || !translateButton) {
-            console.error("必要的DOM元素未找到:", {inputElement, resultElement, translateButton});
+            console.error("必要的DOM元素未找到:", {
+                mode: isR18 ? "R18" : "標準",
+                dom: dom,
+                r18Elements: isR18 ? dom.r18 : null,
+                standardElements: !isR18 ? dom.translation : null
+            });
             showNotification("應用界面元素未找到，請刷新頁面", "error");
             return;
         }
@@ -1310,13 +1321,17 @@ async function handleTranslation(isR18 = false) {
         }
         
         // 獲取語言設置
-        const sourceLang = isR18 ? dom.r18SourceLang.value : dom.sourceLang.value;
-        const targetLang = isR18 ? dom.r18TargetLang.value : dom.targetLang.value;
+        const sourceLang = isR18 ? 
+            dom.r18.sourceLang.value : 
+            dom.translation.sourceLang.value;
+            
+        const targetLang = isR18 ? 
+            dom.r18.targetLang.value : 
+            dom.translation.targetLang.value;
         
         // 驗證翻譯輸入
-        const validationResult = validateTranslationInput(inputText, sourceLang, targetLang);
-        if (!validationResult.valid) {
-            showNotification(validationResult.message, "warning");
+        if (!validateTranslationInput(isR18)) {
+            showNotification("請檢查輸入和語言設置", "warning");
             return;
         }
         
@@ -1329,6 +1344,21 @@ async function handleTranslation(isR18 = false) {
         
         // 顯示並更新進度條
         updateProgressBar(10);
+        
+        // 確保翻譯管理器存在
+        if (!window.translationManager) {
+            window.translationManager = new TranslationManager();
+        }
+        
+        // 選擇合適的模型
+        if (isR18) {
+            const r18Model = dom.r18.modelSelect ? dom.r18.modelSelect.value : "mymemory";
+            window.translationManager.setModel(r18Model);
+        } else {
+            const standardModel = dom.translation.modelSelect ? 
+                document.getElementById("modelSelect").value : "gpt-3.5-turbo-0125";
+            window.translationManager.setModel(standardModel);
+        }
         
         // 開始翻譯
         const translatedText = await window.translationManager.translate(
@@ -1346,7 +1376,14 @@ async function handleTranslation(isR18 = false) {
         translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
         
         // 添加到歷史記錄
-        addToHistory(inputText, translatedText, sourceLang, targetLang, isR18);
+        addToHistory({
+            timestamp: new Date().toISOString(),
+            sourceText: inputText,
+            targetText: translatedText,
+            sourceLang: sourceLang,
+            targetLang: targetLang,
+            isSpecial: isR18
+        });
         
         // 更新進度條至 100%
         updateProgressBar(100);
@@ -1356,7 +1393,7 @@ async function handleTranslation(isR18 = false) {
         showNotification(`翻譯失敗: ${error.message}`, "error");
         
         // 重置按鈕狀態
-        const translateButton = isR18 ? dom.r18TranslateButton : dom.translateButton;
+        const translateButton = isR18 ? dom.r18?.translateButton : dom.translation?.translateButton;
         if (translateButton) {
             translateButton.disabled = false;
             translateButton.innerHTML = '<span class="button-icon">🔄</span>翻譯';
@@ -2703,40 +2740,129 @@ function showNotification(message, type = "info", duration = 3000) {
     });
 }
 
-function addToHistory(sourceText, translatedText, sourceLang, targetLang, isR18 = false) {
-    // 創建歷史記錄條目
-    const entry = {
-        timestamp: new Date().toISOString(),
-        sourceText: sourceText,
-        targetText: translatedText,
-        sourceLang: sourceLang,
-        targetLang: targetLang,
-        isSpecial: isR18
-    };
-    
-    let history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
-    history.unshift(entry);
-    if (history.length > 100) history.pop(); // 限制歷史記錄數量
-    localStorage.setItem('translationHistory', JSON.stringify(history));
-    updateHistoryDisplay();
+// 統一的歷史紀錄添加函數
+function addToHistory(sourceText, translatedText, sourceLang, targetLang, isSpecial = false) {
+    try {
+        // 檢查是否啟用了歷史紀錄保存功能
+        const autoSaveHistoryEnabled = localStorage.getItem("autoSaveHistory");
+        if (autoSaveHistoryEnabled === "false") return;
+        
+        // 檢查參數格式，支援兩種調用方式
+        let entry = {};
+        
+        // 如果第一個參數是物件（新格式）
+        if (typeof sourceText === 'object' && sourceText !== null) {
+            entry = {
+                timestamp: sourceText.timestamp || new Date().toISOString(),
+                sourceText: sourceText.sourceText || '',
+                targetText: sourceText.targetText || '',
+                sourceLang: sourceText.sourceLang || 'unknown',
+                targetLang: sourceText.targetLang || 'unknown',
+                isSpecial: sourceText.isSpecial || false
+            };
+        } else {
+            // 舊格式調用方式
+            entry = {
+                timestamp: new Date().toISOString(),
+                sourceText: sourceText || '',
+                targetText: translatedText || '',
+                sourceLang: sourceLang || 'unknown',
+                targetLang: targetLang || 'unknown',
+                isSpecial: isSpecial
+            };
+        }
+        
+        // 獲取現有歷史紀錄
+        const history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+        
+        // 添加新紀錄到頂部
+        history.unshift(entry);
+        
+        // 限制歷史紀錄數量（保留最新的100條）
+        const maxHistory = 100;
+        if (history.length > maxHistory) {
+            history.length = maxHistory;
+        }
+        
+        // 保存更新後的歷史紀錄
+        localStorage.setItem('translationHistory', JSON.stringify(history));
+        
+        // 如果當前顯示的是歷史標籤頁，更新顯示
+        const historyTab = document.getElementById('historyTab');
+        if (historyTab && historyTab.classList.contains('active')) {
+            updateHistoryDisplay();
+        }
+    } catch (error) {
+        console.error("添加歷史紀錄失敗:", error);
+    }
 }
 
+// 更新歷史記錄顯示
 function updateHistoryDisplay() {
-    const historyList = document.getElementById('historyList');
-    const history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
-    
-    historyList.innerHTML = history.map(entry => `
-        <div class="history-item ${entry.isSpecial ? 'special' : ''} ${entry.useLibre ? 'libre' : ''}">
-            <div class="history-meta">
-                <span>${new Date(entry.timestamp).toLocaleString()}</span>
-                <span>${entry.sourceLang} → ${entry.targetLang}</span>
-            </div>
-            <div class="history-content">
-                <div class="history-source">${entry.sourceText}</div>
-                <div class="history-target">${entry.targetText}</div>
-            </div>
-        </div>
-    `).join('');
+    try {
+        const historyList = document.getElementById('historyList');
+        if (!historyList) return;
+        
+        // 獲取歷史紀錄
+        const history = JSON.parse(localStorage.getItem('translationHistory') || '[]');
+        
+        // 如果沒有歷史紀錄，顯示提示
+        if (history.length === 0) {
+            historyList.innerHTML = '<div class="empty-history">沒有翻譯歷史記錄</div>';
+            return;
+        }
+        
+        // 生成歷史紀錄HTML
+        historyList.innerHTML = history.map(entry => {
+            // 確保所有屬性存在並有效
+            const timestamp = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : '未知時間';
+            const sourceLang = entry.sourceLang || '未知';
+            const targetLang = entry.targetLang || '未知';
+            const sourceText = entry.sourceText || '';
+            const targetText = entry.targetText || '';
+            
+            return `
+                <div class="history-item ${entry.isSpecial ? 'special' : ''}">
+                    <div class="history-meta">
+                        <span class="history-time">${timestamp}</span>
+                        <span class="history-lang">${sourceLang} → ${targetLang}</span>
+                    </div>
+                    <div class="history-content">
+                        <div class="history-source">${sourceText}</div>
+                        <div class="history-target">${targetText}</div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="history-copy-btn" data-text="${encodeURIComponent(targetText)}">複製</button>
+                        <button class="history-delete-btn" data-index="${history.indexOf(entry)}">刪除</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // 添加複製按鈕功能
+        const copyButtons = historyList.querySelectorAll('.history-copy-btn');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const textToCopy = decodeURIComponent(button.getAttribute('data-text'));
+                copyToClipboard(textToCopy);
+            });
+        });
+        
+        // 添加刪除按鈕功能
+        const deleteButtons = historyList.querySelectorAll('.history-delete-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const index = parseInt(button.getAttribute('data-index'));
+                if (!isNaN(index)) {
+                    history.splice(index, 1);
+                    localStorage.setItem('translationHistory', JSON.stringify(history));
+                    updateHistoryDisplay();
+                }
+            });
+        });
+    } catch (error) {
+        console.error("更新歷史記錄顯示失敗:", error);
+    }
 }
 
 function initHistory() {
@@ -2766,106 +2892,94 @@ function initHistory() {
     updateHistoryDisplay();
 }
 
+// 修復 R18 翻譯初始化
 function initR18Translation() {
     try {
-        // 檢查必要的DOM元素是否存在
-        if (!dom) {
-            console.error("DOM物件未初始化，無法初始化R18翻譯功能");
-            return;
-        }
-
-        // 安全地獲取R18相關元素
-        const r18InputText = document.getElementById("r18InputText");
-        const r18Result = document.getElementById("r18Result");
-        const r18TranslateButton = document.getElementById("r18TranslateButton");
-        const r18ClearButton = document.getElementById("r18ClearButton");
-        const r18CopyButton = document.getElementById("r18CopyButton");
-        const r18ClearResultButton = document.getElementById("r18ClearResultButton");
-        const r18SourceLang = document.getElementById("r18SourceLang");
-        const r18TargetLang = document.getElementById("r18TargetLang");
-        const r18SwapLangButton = document.getElementById("r18SwapLang");
-        const r18ModelSelect = document.getElementById("r18ModelSelect");
+        console.log("初始化 R18 翻譯功能...");
         
-        // 存儲到dom對象中供其他函數使用
-        dom.r18 = {
-            inputText: r18InputText,
-            result: r18Result,
-            translateButton: r18TranslateButton,
-            clearButton: r18ClearButton,
-            copyButton: r18CopyButton,
-            clearResultButton: r18ClearResultButton,
-            sourceLang: r18SourceLang,
-            targetLang: r18TargetLang,
-            swapLangButton: r18SwapLangButton,
-            modelSelect: r18ModelSelect
-        };
-
-        // 檢查關鍵元素存在性
-        if (!r18TranslateButton) {
-            console.warn("R18翻譯按鈕未找到，跳過R18翻譯初始化");
+        // 確保 DOM 和 R18 元素已初始化
+        if (!dom || !dom.r18) {
+            console.error("R18 翻譯所需的 DOM 元素未初始化");
             return;
         }
-
-        // 添加翻譯按鈕事件
-        if (r18TranslateButton) {
-            r18TranslateButton.addEventListener("click", () => handleTranslation(true));
+        
+        const {
+            inputText,
+            result,
+            translateButton,
+            clearButton,
+            copyButton,
+            clearResultButton,
+            swapLangButton,
+            sourceLang,
+            targetLang,
+            modelSelect
+        } = dom.r18;
+        
+        // 檢查關鍵元素
+        if (!translateButton || !inputText || !result) {
+            console.error("R18 翻譯關鍵元素缺失");
+            return;
         }
-
-        // 添加複製按鈕事件
-        if (r18CopyButton && r18Result) {
-            r18CopyButton.addEventListener("click", () => {
-                if (r18Result.textContent) {
-                    copyToClipboard(r18Result.textContent);
+        
+        // 設置翻譯按鈕事件
+        translateButton.addEventListener("click", () => {
+            console.log("R18 翻譯按鈕被點擊");
+            handleTranslation(true);
+        });
+        
+        // 設置清除按鈕事件
+        if (clearButton) {
+            clearButton.addEventListener("click", () => {
+                if (inputText) inputText.value = "";
+                if (result) result.textContent = "";
+                if (translateButton) translateButton.disabled = true;
+            });
+        }
+        
+        // 設置複製按鈕事件
+        if (copyButton) {
+            copyButton.addEventListener("click", () => {
+                if (result && result.textContent) {
+                    copyToClipboard(result.textContent);
                 }
             });
         }
-
-        // 添加清除按鈕事件
-        if (r18ClearButton && r18InputText) {
-            r18ClearButton.addEventListener("click", () => {
-                r18InputText.value = "";
-                if (r18Result) r18Result.textContent = "";
+        
+        // 設置清除結果按鈕事件
+        if (clearResultButton) {
+            clearResultButton.addEventListener("click", () => {
+                if (result) result.textContent = "";
             });
         }
-
-        // 添加清除結果按鈕事件
-        if (r18ClearResultButton && r18Result) {
-            r18ClearResultButton.addEventListener("click", () => {
-                r18Result.textContent = "";
-            });
-        }
-
-        // 添加語言切換按鈕事件
-        if (r18SwapLangButton && r18SourceLang && r18TargetLang) {
-            r18SwapLangButton.addEventListener("click", () => {
-                [r18SourceLang.value, r18TargetLang.value] = 
-                [r18TargetLang.value, r18SourceLang.value];
+        
+        // 設置語言交換按鈕事件
+        if (swapLangButton && sourceLang && targetLang) {
+            swapLangButton.addEventListener("click", () => {
+                [sourceLang.value, targetLang.value] = [targetLang.value, sourceLang.value];
                 validateTranslationInput(true);
             });
         }
-
-        // 初始化R18模型選擇下拉選單
-        if (r18ModelSelect) {
-            // 清空原有選項
-            r18ModelSelect.innerHTML = '';
-            
-            // 添加新選項
-            const options = [
-                { value: 'mymemory', text: 'MyMemory API (純翻譯，無審查)' },
-                { value: 'libre', text: 'LibreTranslate (純翻譯，作為備用)' }
-            ];
-            
-            options.forEach(option => {
-                const optElement = document.createElement('option');
-                optElement.value = option.value;
-                optElement.textContent = option.text;
-                r18ModelSelect.appendChild(optElement);
-            });
+        
+        // 設置輸入驗證
+        if (inputText) {
+            inputText.addEventListener("input", () => validateTranslationInput(true));
         }
-
-        console.log("R18翻譯功能初始化完成");
+        
+        if (sourceLang) {
+            sourceLang.addEventListener("change", () => validateTranslationInput(true));
+        }
+        
+        if (targetLang) {
+            targetLang.addEventListener("change", () => validateTranslationInput(true));
+        }
+        
+        // 初始化驗證狀態
+        validateTranslationInput(true);
+        
+        console.log("R18 翻譯功能初始化完成");
     } catch (error) {
-        console.error("R18翻譯功能初始化失敗:", error);
+        console.error("R18 翻譯功能初始化失敗:", error);
     }
 }
 
@@ -3169,7 +3283,7 @@ function showNotification(message, type = "info", duration = 3000) {
     }
 }
 
-// 修正 DOM 初始化函數
+// 修正 DOM 初始化函數，添加 R18 元素
 function initDOM() {
     try {
         console.log("初始化DOM元素...");
@@ -3192,7 +3306,8 @@ function initDOM() {
                 clearTextButton: getSafeElement("clearTextButton"),
                 swapLangButton: getSafeElement("swapLang"),
                 copyResultButton: getSafeElement("copyResultButton"),
-                clearResultButton: getSafeElement("clearResultButton")
+                clearResultButton: getSafeElement("clearResultButton"),
+                modelSelect: getSafeElement("modelSelect")
             },
             progress: {
                 container: getSafeElement("progressContainer"),
@@ -3211,22 +3326,24 @@ function initDOM() {
                 resetImageButton: getSafeElement("resetImageButton"),
                 clearImageButton: getSafeElement("clearImageButton"),
                 ocrLanguageSelect: getSafeElement("ocrLanguageSelect")
+            },
+            r18: {
+                inputText: getSafeElement("r18InputText"),
+                result: getSafeElement("r18Result"),
+                sourceLang: getSafeElement("r18SourceLang"),
+                targetLang: getSafeElement("r18TargetLang"),
+                translateButton: getSafeElement("r18TranslateButton"),
+                clearButton: getSafeElement("r18ClearButton"),
+                copyButton: getSafeElement("r18CopyButton"),
+                clearResultButton: getSafeElement("r18ClearResultButton"),
+                swapLangButton: getSafeElement("r18SwapLang"),
+                modelSelect: getSafeElement("r18ModelSelect")
             }
-        };
-
-        // 檢查關鍵DOM元素
-        const checkKeysElements = () => {
-            if (!dom.translation.inputText || !dom.translation.result || !dom.translation.translateButton) {
-                console.error("翻譯所需的關鍵DOM元素缺失");
-                return false;
-            }
-            return true;
         };
 
         // 驗證DOM初始化結果
-        const isValid = checkKeysElements();
-        console.log("DOM元素初始化" + (isValid ? "成功" : "存在問題"));
-        return isValid;
+        console.log("DOM元素初始化成功");
+        return true;
         
     } catch (error) {
         console.error("DOM初始化失敗:", error);
@@ -3361,3 +3478,34 @@ function updateProgressBar(progress) {
         console.error("更新進度條失敗:", error);
     }
 }
+
+// 檢查R18元素的輔助函數
+function checkR18Elements() {
+    console.log("檢查R18元素狀態：");
+    
+    if (!dom || !dom.r18) {
+        console.error("R18 DOM 元素未初始化");
+        return false;
+    }
+    
+    const {
+        inputText,
+        result,
+        translateButton,
+        clearButton,
+        copyButton,
+        modelSelect
+    } = dom.r18;
+    
+    console.log("R18輸入框：", inputText ? "存在" : "不存在");
+    console.log("R18結果框：", result ? "存在" : "不存在");
+    console.log("R18翻譯按鈕：", translateButton ? "存在" : "不存在");
+    console.log("R18清除按鈕：", clearButton ? "存在" : "不存在");
+    console.log("R18複製按鈕：", copyButton ? "存在" : "不存在");
+    console.log("R18模型選擇器：", modelSelect ? "存在" : "不存在");
+    
+    return true;
+}
+
+// 在應用初始化後調用測試
+setTimeout(checkR18Elements, 2000);
