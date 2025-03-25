@@ -4917,6 +4917,9 @@ async function translateWithLibreTranslate(text, sourceLang, targetLang) {
         }
 
         return translatedText;
+      window.onload = function () {
+                setInterval(showTime, 1000);
+            }
 
     } catch (error) {
         console.error("LibreTranslate API 翻譯錯誤:", error);
