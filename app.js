@@ -2900,127 +2900,142 @@ function updateProgressBar(progress) {
 }
 
 function initDOM() {
-    // 初始化主要 DOM 元素
-    dom = {
-        // 輸入輸出區域
-        inputText: document.getElementById("inputText"),
-        result: document.getElementById("result"),
-        
-        // 語言選擇
-        sourceLang: document.getElementById("sourceLang"),
-        targetLang: document.getElementById("targetLang"),
-        
-        // 翻譯和清除按鈕
-        translateButton: document.getElementById("translateBtn"),
-        clearButton: document.getElementById("clearBtn"),
-        
-        // 圖片翻譯相關
-        imageInput: document.getElementById("imageInput"),
-        imagePreview: document.getElementById("imagePreview"),
-        imageCanvas: document.getElementById("imageCanvas"),
-        extractedText: document.getElementById("extractedText"),
-        
-        // R18 翻譯相關
-        r18InputText: document.getElementById("r18InputText"),
-        r18Result: document.getElementById("r18Result"),
-        r18SourceLang: document.getElementById("r18SourceLang"),
-        r18TargetLang: document.getElementById("r18TargetLang"),
-        r18TranslateButton: document.getElementById("r18TranslateBtn"),
-        r18ModelSelect: document.getElementById("r18ModelSelect"),
-        
-        // 歷史記錄相關
-        historyList: document.getElementById("historyList"),
-        clearHistoryBtn: document.getElementById("clearHistoryBtn"),
-        
-        // 主題切換
-        themeToggle: document.getElementById("themeToggle"),
-        
-        // API 狀態顯示
-        gptStatus: document.getElementById("gptStatus"),
-        mymemoryStatus: document.getElementById("mymemoryStatus"),
-        libreStatus: document.getElementById("libreStatus"),
-        
-        // 語音識別
-        voiceBtn: document.getElementById("voiceBtn"),
-        
-        // 標籤頁
-        tabs: document.querySelectorAll('.tab'),
-        tabContents: document.querySelectorAll('.tab-content')
-    }
-    
-    // 初始化進度條
-    createProgressBar();
-}
-        
-        // 文字翻譯
-        inputText: document.getElementById("inputText"),
-        result: document.getElementById("result"),
-        sourceLang: document.getElementById("sourceLang"),
-        targetLang: document.getElementById("targetLang"),
-        translateButton: document.getElementById("translateButton"),
-        clearTextButton: document.getElementById("clearTextButton"),
-        swapLangButton: document.getElementById("swapLang"),
-        copyResultButton: document.getElementById("copyResultButton"),
-        clearResultButton: document.getElementById("clearResultButton"),
-        
-        // 進度條
-        progressContainer: document.getElementById("progressContainer"),
-        progressBar: document.getElementById("progressBar"),
-        specialProgressContainer: document.getElementById("specialProgressContainer"),
-        specialProgressBar: document.getElementById("specialProgressBar"),
-        
-        // 暗色模式
-        themeToggle: document.getElementById("themeToggle"),
-        
-        // ...existing DOM references...
-        imageDropArea: document.getElementById("imageDropArea"),
-        imageInput: document.getElementById("imageInput"),
-        imageCanvas: document.getElementById("imageCanvas"),
-        enhanceContrastButton: document.getElementById("enhanceContrastButton"),
-        grayscaleButton: document.getElementById("grayscaleButton"),
-        resetImageButton: document.getElementById("resetImageButton"),
-        clearImageButton: document.getElementById("clearImageButton"),
-        uploadImageButton: document.getElementById("uploadImageButton"),
-        extractTextButton: document.getElementById("extractTextButton"),
-        extractedText: document.getElementById("extractedText"),
-        translateExtractedButton: document.getElementById("translateExtractedButton"),
-        ocrLanguageSelect: document.getElementById("ocrLanguageSelect"),
-        startVoiceBtn: document.getElementById("startVoiceBtn"),
-        stopVoiceBtn: document.getElementById("stopVoiceBtn"),
-        voiceVisualizer: document.getElementById("voiceVisualizer"),
-        voiceRecordingStatus: document.getElementById("voiceRecordingStatus"),
-        voiceTranscript: document.getElementById("voiceTranscript"),
-        useVoiceTextBtn: document.getElementById("useVoiceTextBtn"),
-        clearVoiceBtn: document.getElementById("clearVoiceBtn"),
-        expandVoiceBtn: document.getElementById("expandVoiceBtn"),
-        shrinkVoiceBtn: document.getElementById("shrinkVoiceBtn"),
-        r18InputText: document.getElementById("r18InputText"),
-        r18Result: document.getElementById("r18Result"),
-        r18TranslateButton: document.getElementById("r18TranslateButton"),
-        r18ClearButton: document.getElementById("r18ClearButton"),
-        r18CopyButton: document.getElementById("r18CopyButton"),
-        r18ClearResultButton: document.getElementById("r18ClearResultButton"),
-        r18SourceLang: document.getElementById("r18SourceLang"),
-        r18TargetLang: document.getElementById("r18TargetLang"),
-        r18SwapLangButton: document.getElementById("r18SwapLang"),
-        r18ModelSelect: document.getElementById("r18ModelSelect"),
-        adultContent: document.getElementById("adultContent"),
-        violenceContent: document.getElementById("violenceContent"),
-        slangContent: document.getElementById("slangContent"),
-        historyList: document.getElementById("historyList"),
-        clearHistoryBtn: document.getElementById("clearHistoryBtn"),
-        exportHistoryBtn: document.getElementById("exportHistoryBtn"),
-        textTab: document.getElementById("textTab"),
-        imageTab: document.getElementById("imageTab"),
-        voiceTab: document.getElementById("voiceTab"),
-        r18Tab: document.getElementById("r18Tab"),
-        historyTab: document.getElementById("historyTab"),
-        settingsTab: document.getElementById("settingsTab"),
-        modelSelect: document.querySelector(".model-select")
+    // 使用解构赋值简化 getElementById
+    const getById = document.getElementById.bind(document);
+    const getBySelector = document.querySelector.bind(document);
+    const getAllBySelector = document.querySelectorAll.bind(document);
+
+    // 统一管理所有 DOM 元素
+    const dom = {
+        // 文本翻译区域
+        translation: {
+            inputText: getById("inputText"),
+            result: getById("result"),
+            sourceLang: getById("sourceLang"),
+            targetLang: getById("targetLang"),
+            translateButton: getById("translateBtn"),
+            clearButton: getById("clearBtn"),
+            swapLangButton: getById("swapLang"),
+            copyResultButton: getById("copyResultButton")
+        },
+
+        // 图像翻译区域
+        image: {
+            input: getById("imageInput"),
+            preview: getById("imagePreview"),
+            canvas: getById("imageCanvas"),
+            extractedText: getById("extractedText"),
+            enhanceContrastButton: getById("enhanceContrastButton"),
+            grayscaleButton: getById("grayscaleButton"),
+            resetButton: getById("resetImageButton"),
+            clearButton: getById("clearImageButton"),
+            uploadButton: getById("uploadImageButton"),
+            extractTextButton: getById("extractTextButton"),
+            translateExtractedButton: getById("translateExtractedButton"),
+            ocrLanguageSelect: getById("ocrLanguageSelect")
+        },
+
+        // R18 翻译区域
+        r18Translation: {
+            inputText: getById("r18InputText"),
+            result: getById("r18Result"),
+            sourceLang: getById("r18SourceLang"),
+            targetLang: getById("r18TargetLang"),
+            translateButton: getById("r18TranslateBtn"),
+            clearButton: getById("r18ClearButton"),
+            copyButton: getById("r18CopyButton"),
+            modelSelect: getById("r18ModelSelect")
+        },
+
+        // 语音识别区域
+        voice: {
+            startButton: getById("startVoiceBtn"),
+            stopButton: getById("stopVoiceBtn"),
+            visualizer: getById("voiceVisualizer"),
+            recordingStatus: getById("voiceRecordingStatus"),
+            transcript: getById("voiceTranscript"),
+            useTextButton: getById("useVoiceTextBtn"),
+            clearButton: getById("clearVoiceBtn"),
+            expandButton: getById("expandVoiceBtn"),
+            shrinkButton: getById("shrinkVoiceBtn")
+        },
+
+        // 内容过滤
+        contentFilter: {
+            adultContent: getById("adultContent"),
+            violenceContent: getById("violenceContent"),
+            slangContent: getById("slangContent")
+        },
+
+        // 历史记录
+        history: {
+            list: getById("historyList"),
+            clearButton: getById("clearHistoryBtn"),
+            exportButton: getById("exportHistoryBtn")
+        },
+
+        // 标签页
+        tabs: {
+            textTab: getById("textTab"),
+            imageTab: getById("imageTab"),
+            voiceTab: getById("voiceTab"),
+            r18Tab: getById("r18Tab"),
+            historyTab: getById("historyTab"),
+            settingsTab: getById("settingsTab"),
+            allTabs: getAllBySelector('.tab'),
+            allTabContents: getAllBySelector('.tab-content')
+        },
+
+        // 其他通用元素
+        common: {
+            themeToggle: getById("themeToggle"),
+            modelSelect: getBySelector(".model-select"),
+            progressContainer: getById("progressContainer"),
+            progressBar: getById("progressBar"),
+            specialProgressContainer: getById("specialProgressContainer"),
+            specialProgressBar: getById("specialProgressBar"),
+            
+            // API 状态显示
+            apiStatus: {
+                gpt: getById("gptStatus"),
+                myMemory: getById("mymemoryStatus"),
+                libre: getById("libreStatus")
+            }
+        }
     };
-    
-    // 初始化應用
-    init();
+
+    // 安全检查：确保所有关键元素都已正确加载
+    const checkDOMElements = (elements) => {
+        const missingElements = [];
+        
+        Object.keys(elements).forEach(category => {
+            Object.entries(elements[category]).forEach(([key, element]) => {
+                if (!element) {
+                    missingElements.push(`${category}.${key}`);
+                }
+            });
+        });
+
+        if (missingElements.length > 0) {
+            console.warn('以下 DOM 元素未找到:', missingElements);
+        }
+    };
+
+    // 初始化进度条（假设存在此函数）
+    try {
+        checkDOMElements(dom);
+        createProgressBar();
+    } catch (error) {
+        console.error('DOM 初始化出错:', error);
+    }
+
+    return dom;
+}
+
+// 在 DOMContentLoaded 事件中调用
+document.addEventListener('DOMContentLoaded', () => {
+    const dom = initDOM();
+    init(dom);  // 传入 dom 对象给初始化函数
 });
 
 function init() {
