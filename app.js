@@ -323,6 +323,11 @@ document.addEventListener("DOMContentLoaded", () => {
             clearResultButton 
         } = dom.standard;
         
+        if (!translateButton || !inputText || !result) {
+            console.error("標準翻譯必要元素未找到");
+            return;
+        }
+        
         // 獲取模型選擇下拉菜單
         const modelSelect = document.getElementById("modelSelect");
         
@@ -351,15 +356,14 @@ document.addEventListener("DOMContentLoaded", () => {
             result.classList.add("translating");
             
             try {
-                // 參照app_參考.js的API調用實現
-                const prompt = `請將以下${from === 'auto' ? '檢測到的語言' : from}文本翻譯成${to}，保持原文格式：\n\n${text}`;
-                
                 console.log(`使用${model}翻譯中...`);
                 
                 // 更新進度條
                 updateProgress(progressContainer, 30);
                 
-                // 直接參照參考代碼的實現方式
+                // 呼叫GPT API
+                const prompt = `請將以下${from === 'auto' ? '檢測到的語言' : from}文本翻譯成${to}，保持原文格式：\n\n${text}`;
+                
                 const response = await fetch(API_CONFIG.GPT.URL, {
                     method: "POST",
                     headers: {
@@ -376,44 +380,71 @@ document.addEventListener("DOMContentLoaded", () => {
                     })
                 });
                 
-                updateProgress(progressContainer, 60);
-                
+                // 檢查API響應
                 if (!response.ok) {
                     throw new Error(`API錯誤: ${response.status}`);
                 }
                 
-                const data = await response.json();
-                updateProgress(progressContainer, 90);
+                updateProgress(progressContainer, 60);
                 
-                if (data.choices && data.choices[0] && data.choices[0].message) {
-                    const translatedText = data.choices[0].message.content;
+                const data = await response.json();
+                
+                if (data && data.choices && data.choices[0].message) {
+                    const translatedText = data.choices[0].message.content.trim();
                     result.textContent = translatedText;
                     result.classList.remove("translating");
                     
                     // 添加到歷史記錄
-                    addToHistory(text, translatedText, from, to, false);
+                    addToHistory(text, translatedText, from, to);
+                    
                     console.log("GPT翻譯完成");
                 } else {
-                    throw new Error("API返回格式錯誤");
+                    throw new Error("API返回了無效響應");
                 }
             } catch (error) {
                 console.error("GPT翻譯錯誤:", error);
                 
-                // 嘗試使用MyMemory作為備用
+                // 使用MyMemory作為備用
                 try {
-                    result.textContent = "使用備用翻譯服務...";
-                    const translatedText = await translateWithMyMemory(text, from, to);
-                    result.textContent = translatedText + "\n\n[備用翻譯]";
-                    result.classList.remove("translating");
+                    console.log("使用MyMemory API翻譯...");
                     
-                    // 添加到歷史記錄
-                    addToHistory(text, translatedText, from, to, false);
+                    // 修正：確保語言代碼正確
+                    // 對於auto，使用"auto"而不是空字符串
+                    const fromCode = from === 'auto' ? 'auto' : from;
+                    
+                    const url = `${API_CONFIG.MYMEMORY.URL}?q=${encodeURIComponent(text)}&langpair=${fromCode}|${to}`;
+                    
+                    console.log("MyMemory API URL:", url);
+                    
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API返回錯誤: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.responseData && data.responseData.translatedText) {
+                        const translatedText = data.responseData.translatedText;
+                        result.textContent = translatedText;
+                        result.classList.remove("translating");
+                        
+                        // 添加到歷史記錄
+                        addToHistory(text, translatedText, from, to);
+                        
+                        console.log("備用翻譯完成");
+                    } else if (data.responseStatus && data.responseStatus !== 200) {
+                        throw new Error(data.responseDetails || "MyMemory API返回錯誤");
+                    } else {
+                        throw new Error("未收到有效翻譯結果");
+                    }
                 } catch (backupError) {
-                    result.textContent = `翻譯失敗: ${error.message}`;
+                    console.error("備用翻譯錯誤:", backupError);
+                    result.textContent = `翻譯失敗: GPT API不可用，備用翻譯也失敗: ${backupError.message}`;
                     result.classList.remove("translating");
                 }
             } finally {
-                // 完成進度條
+                // 更新進度條
                 updateProgress(progressContainer, 100);
                 setTimeout(() => {
                     if (progressContainer) {
@@ -551,10 +582,11 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 console.log("執行R18翻譯...");
                 
-                // 直接使用MyMemory API - 只傳遞純文本
-                const url = `${API_CONFIG.MYMEMORY.URL}?q=${encodeURIComponent(text)}&langpair=${from === 'auto' ? '' : from}|${to}`;
+                // 修正：當源語言為auto時，使用"auto"而非空字符串
+                const fromCode = from === 'auto' ? 'auto' : from;
+                const url = `${API_CONFIG.MYMEMORY.URL}?q=${encodeURIComponent(text)}&langpair=${fromCode}|${to}`;
                 
-                console.log("MyMemory API URL:", url);
+                console.log("使用MyMemory API URL:", url);
                 
                 const response = await fetch(url);
                 
@@ -752,15 +784,24 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         
+        // 檢查Tesseract.js是否存在
+        if (typeof Tesseract === 'undefined') {
+            console.error("找不到Tesseract.js庫，嘗試動態加載");
+            
+            // 如果Tesseract未定義，動態添加腳本
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.0.2/dist/tesseract.min.js";
+            script.onload = () => console.log("Tesseract.js已成功加載");
+            script.onerror = () => console.error("無法加載Tesseract.js，圖片識別功能將不可用");
+            document.head.appendChild(script);
+        }
+        
         // 確保有進度條
         let progressContainer = document.querySelector('#imageTab .progress-container');
         if (!progressContainer) {
             progressContainer = document.createElement('div');
             progressContainer.className = 'progress-container';
-            
-            const progressBar = document.createElement('div');
-            progressBar.className = 'progress-bar';
-            progressContainer.appendChild(progressBar);
+            progressContainer.innerHTML = '<div class="progress-bar"></div>';
             
             const imageTab = document.getElementById('imageTab');
             if (imageTab) {
@@ -774,30 +815,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // 綁定文件選擇事件
         imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
-            if (file) {
-                displayImage(file);
-            }
-        });
-        
-        // 綁定拖放事件
-        imageDropArea.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            this.classList.add('highlight');
-        });
-        
-        imageDropArea.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            this.classList.remove('highlight');
-        });
-        
-        imageDropArea.addEventListener('drop', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            this.classList.remove('highlight');
-            
-            const file = e.dataTransfer.files[0];
             if (file) {
                 displayImage(file);
             }
@@ -819,10 +836,33 @@ document.addEventListener("DOMContentLoaded", () => {
             reader.readAsDataURL(file);
         }
         
+        // 將語言代碼轉換為Tesseract支持的格式
+        function mapLanguageCodeForTesseract(langCode) {
+            const langMap = {
+                'zh-TW': 'chi_tra',
+                'zh-CN': 'chi_sim',
+                'ja': 'jpn',
+                'en': 'eng',
+                'ko': 'kor',
+                'fr': 'fra',
+                'de': 'deu',
+                'es': 'spa',
+                'ru': 'rus'
+            };
+            
+            return langMap[langCode] || 'eng';
+        }
+        
         // 修復提取文字功能
         extractTextButton.addEventListener('click', function() {
             if (imageCanvas.width === 0 || imageCanvas.height === 0) {
                 alert("請先上傳圖片");
+                return;
+            }
+            
+            // 檢查Tesseract是否可用
+            if (typeof Tesseract === 'undefined') {
+                extractedText.textContent = "錯誤：OCR文字識別庫未載入。請刷新頁面後重試，或檢查網路連接。";
                 return;
             }
             
@@ -838,79 +878,62 @@ document.addEventListener("DOMContentLoaded", () => {
             // 從Canvas獲取圖片數據
             const imageData = imageCanvas.toDataURL('image/png');
             
-            // 檢查Tesseract是否可用
-            if (typeof Tesseract === 'undefined') {
-                console.error("Tesseract庫未找到");
-                extractedText.textContent = "錯誤：OCR文字識別庫未載入。請檢查網路連接並重新載入頁面。";
-                
-                // 隱藏進度條
-                if (progressContainer) progressContainer.style.display = "none";
-                return;
-            }
-            
-            // 修復：安全使用Tesseract
-            Tesseract.recognize(
-                imageData,
-                sourceLang.value === 'auto' ? 'eng+jpn+chi_tra' : mapLanguageCodeForTesseract(sourceLang.value),
-                { 
-                    logger: function(info) {
-                        console.log(info);
-                        // 更新進度條
-                        if (info.status === 'recognizing text' && info.progress !== undefined) {
-                            if (progressContainer) {
-                                const progressBar = progressContainer.querySelector(".progress-bar");
-                                if (progressBar) {
-                                    progressBar.style.width = `${Math.floor(info.progress * 100)}%`;
+            try {
+                // 安全調用Tesseract
+                Tesseract.recognize(
+                    imageData,
+                    sourceLang.value === 'auto' ? 'eng+jpn+chi_tra' : mapLanguageCodeForTesseract(sourceLang.value),
+                    { 
+                        logger: function(info) {
+                            console.log(info);
+                            // 只在有progress屬性時更新進度條
+                            if (info.status === 'recognizing text' && typeof info.progress === 'number') {
+                                if (progressContainer) {
+                                    const progressBar = progressContainer.querySelector(".progress-bar");
+                                    if (progressBar) {
+                                        progressBar.style.width = `${Math.floor(info.progress * 100)}%`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            ).then(function(result) {
-                // 確保結果有效
-                if (result && result.data && result.data.text) {
-                    extractedText.textContent = result.data.text.trim();
-                } else {
-                    extractedText.textContent = "未能識別文字，請嘗試不同的圖片或語言設置";
-                }
+                ).then(function(result) {
+                    // 確保結果有效
+                    if (result && result.data && result.data.text) {
+                        extractedText.textContent = result.data.text.trim();
+                    } else {
+                        extractedText.textContent = "未能識別文字，請嘗試不同的圖片或語言設置";
+                    }
+                    
+                    // 隱藏進度條
+                    if (progressContainer) {
+                        progressContainer.style.display = "none";
+                        const progressBar = progressContainer.querySelector(".progress-bar");
+                        if (progressBar) progressBar.style.width = "0";
+                    }
+                }).catch(function(error) {
+                    console.error("文字提取錯誤:", error);
+                    extractedText.textContent = `提取文字失敗: ${error.message || '未知錯誤'}`;
+                    
+                    // 隱藏進度條
+                    if (progressContainer) {
+                        progressContainer.style.display = "none";
+                        const progressBar = progressContainer.querySelector(".progress-bar");
+                        if (progressBar) progressBar.style.width = "0";
+                    }
+                });
+            } catch (error) {
+                console.error("Tesseract調用錯誤:", error);
+                extractedText.textContent = "OCR引擎調用失敗，請確保Tesseract.js已正確引入";
                 
                 // 隱藏進度條
                 if (progressContainer) {
                     progressContainer.style.display = "none";
-                    const progressBar = progressContainer.querySelector(".progress-bar");
-                    if (progressBar) progressBar.style.width = "0";
                 }
-            }).catch(function(error) {
-                console.error("文字提取錯誤:", error);
-                extractedText.textContent = `提取文字失敗: ${error.message || '未知錯誤'}`;
-                
-                // 隱藏進度條
-                if (progressContainer) {
-                    progressContainer.style.display = "none";
-                    const progressBar = progressContainer.querySelector(".progress-bar");
-                    if (progressBar) progressBar.style.width = "0";
-                }
-            });
+            }
         });
         
-        // 語言代碼映射
-        function mapLanguageCodeForTesseract(langCode) {
-            const map = {
-                'en': 'eng',
-                'ja': 'jpn', 
-                'zh-TW': 'chi_tra',
-                'zh-CN': 'chi_sim',
-                'ko': 'kor',
-                'fr': 'fra',
-                'de': 'deu',
-                'es': 'spa',
-                'it': 'ita',
-                'ru': 'rus'
-            };
-            return map[langCode] || 'eng';
-        }
-        
-        // 綁定翻譯按鈕等其他功能...
+        // 其他功能保持不變...
         
         console.log("圖片翻譯功能初始化完成");
     }
