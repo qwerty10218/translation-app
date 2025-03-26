@@ -2808,3 +2808,170 @@ body, .container, textarea, .result-box, button, select,
     border-color: #ff6eb4;
     background-color: rgba(255, 110, 180, 0.05);
 }
+
+/* 添加手機版響應式優化 */
+@media screen and (max-width: 768px) {
+    /* 優化標籤頁按鈕 */
+    .tab-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .tab-button {
+        flex: 0 0 33.33%; /* 每行顯示3個按鈕 */
+        min-height: 50px;
+        font-size: 16px;
+        padding: 12px 5px;
+        border-radius: 8px 8px 0 0;
+        margin: 0 1px 2px;
+    }
+    
+    /* 標籤頁內容區域調整 */
+    .tab-content {
+        padding: 15px 10px;
+    }
+    
+    /* 翻譯區域調整 */
+    .translation-area {
+        flex-direction: column;
+    }
+    
+    .input-area, .result-area {
+        width: 100%;
+        margin: 0 0 15px 0;
+    }
+    
+    /* 輸入輸出區域高度調整 */
+    #inputText, #r18InputText, #result, #r18Result, 
+    #voiceTextArea, #voiceResult, #extractedText, #imageTranslationResult {
+        min-height: 120px;
+        font-size: 16px;
+        padding: 12px;
+    }
+    
+    /* 控制按鈕放大 */
+    .action-button, .swap-button {
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        margin: 5px;
+    }
+    
+    /* 語言選擇區域 */
+    .language-selection {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .language-select {
+        flex: 1;
+        min-width: 40%;
+        max-width: 45%;
+        height: 45px;
+        font-size: 16px;
+        padding: 0 5px;
+    }
+    
+    /* 增加進度條可視性 */
+    .progress-container {
+        height: 10px;
+    }
+    
+    /* 調整間距 */
+    .app-container {
+        padding: 10px;
+    }
+    
+    /* 增加浮動菜單按鈕 */
+    .floating-menu-button {
+        display: block;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        background-color: var(--accent-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        font-size: 24px;
+    }
+    
+    /* 圖片上傳區域優化 */
+    #imageDropArea {
+        padding: 15px;
+        min-height: 120px;
+    }
+    
+    /* Toast消息調整 */
+    #toast-message {
+        width: 80%;
+        padding: 15px;
+        font-size: 16px;
+    }
+}
+
+/* 特小螢幕設備（如iPhone SE等） */
+@media screen and (max-width: 375px) {
+    .tab-button {
+        flex: 0 0 50%; /* 每行顯示2個按鈕 */
+        font-size: 14px;
+        padding: 10px 5px;
+    }
+    
+    h1 {
+        font-size: 22px;
+    }
+    
+    .action-button {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+}
+
+/* 夜間模式下按鈕顏色調整 */
+.dark-theme .tab-button, 
+.dark-theme .action-button, 
+.dark-theme .swap-button {
+    border: 1px solid #444;
+}
+
+.dark-theme .tab-button.active {
+    background-color: #3a3a3a;
+    border-bottom-color: #3a3a3a;
+}
+
+/* 浮動菜單樣式 */
+.floating-menu {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    background-color: var(--bg-color);
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.floating-menu.active {
+    display: flex;
+}
+
+.floating-menu-item {
+    padding: 10px 15px;
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    cursor: pointer;
+}
