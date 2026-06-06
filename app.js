@@ -7,7 +7,7 @@ const API_CONFIG = {
     GPT: {
         URL: "https://api.chatanywhere.tech/v1/chat/completions",
         // 預設金鑰，建議未來由使用者自行輸入並存入 localStorage
-        DEFAULT_KEY: "sk-OQn5NInU9x7GZq8aG1B87d9A7c8e4347A1371fE5Ca7f1057" // <--- 記得替換成你申請到的真實 Key
+        DEFAULT_KEY: "sk-ycwolDyyaQR8qP3SgacwubUX3eUE1Fmk4HMaUduVyt121UfZ" 
     },
     MYMEMORY: {
         URL: "https://api.mymemory.translated.net/get"
