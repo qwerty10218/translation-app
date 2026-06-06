@@ -5,9 +5,9 @@
 // 全局 API 配置
 const API_CONFIG = {
     GPT: {
-        URL: "https://free.v36.cm/v1/chat/completions",
+        URL: "https://api.chatanywhere.tech/v1/chat/completions",
         // 預設金鑰，建議未來由使用者自行輸入並存入 localStorage
-        DEFAULT_KEY: "sk-TvndIpBUNiRsow2f892949F550B741CbBc16A098FcCc7827" 
+        DEFAULT_KEY: "sk-ycwolDyyaQR8qP3SgacwubUX3eUE1Fmk4HMaUduVyt121UfZ" 
     },
     MYMEMORY: {
         URL: "https://api.mymemory.translated.net/get"
