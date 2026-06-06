@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
         imageInput: $("imageInput"), imageCanvas: $("imageCanvas"), extractTextButton: $("extractTextButton"),
         extractedText: $("extractedText"), sourceLang: $("imageSourceLang"), targetLang: $("imageTargetLang"),
         result: $("imageTranslationResult")
+        imageDropArea: $("imageDropArea") //
     };
     
     dom.voice = {
@@ -272,7 +273,25 @@ function initImageTranslation() {
     const { imageInput, imageCanvas, extractTextButton, extractedText, sourceLang } = dom.image;
     if (!imageCanvas) return;
     const ctx = imageCanvas.getContext('2d');
+// 👇 補上這段：點擊虛線框框時，觸發隱藏的真實上傳按鈕
+    imageDropArea?.addEventListener('click', () => imageInput?.click());
 
+    // 👇 補上這段：支援把圖片直接「拖」進框框裡
+    imageDropArea?.addEventListener('dragover', e => {
+        e.preventDefault();
+        imageDropArea.style.borderColor = 'var(--primary-color, #8d6c61)'; // 拖曳進來時改變邊框顏色
+    });
+    imageDropArea?.addEventListener('dragleave', () => {
+        imageDropArea.style.borderColor = ''; // 離開時恢復
+    });
+    imageDropArea?.addEventListener('drop', e => {
+        e.preventDefault();
+        imageDropArea.style.borderColor = '';
+        if (e.dataTransfer.files.length) {
+            imageInput.files = e.dataTransfer.files;
+            imageInput.dispatchEvent(new Event('change')); // 手動觸發圖片讀取
+        }
+    });
     // 動態載入 Tesseract
     if (typeof Tesseract === 'undefined') {
         const script = document.createElement('script');
