@@ -1,12 +1,11 @@
 /**
- * 詮語翻譯 - 現代化重構版本 (ES6+ 穩定版 + Auto 語言修正 + R18越獄翻譯)
+ * 詮語翻譯 - 現代化重構版本 (ES6+ 穩定版 + Auto 語言修正 + R18越獄 + 懶人極致化UX)
  */
 
 // 全局 API 配置
 const API_CONFIG = {
     GPT: {
         URL: "https://api.chatanywhere.tech/v1/chat/completions",
-        // 預設金鑰，建議未來由使用者自行輸入並存入 localStorage
         DEFAULT_KEY: "sk-ycwolDyyaQR8qP3SgacwubUX3eUE1Fmk4HMaUduVyt121UfZ" 
     },
     MYMEMORY: {
@@ -14,15 +13,13 @@ const API_CONFIG = {
     }
 };
 
-// 核心翻譯服務 (統一管理所有 API 呼叫，避免重複程式碼)
+// 核心翻譯服務
 const TranslationService = {
-    // 獲取目前的 API Key (優先從 LocalStorage 拿，沒有才用預設)
     getApiKey() {
         return localStorage.getItem('user_api_key') || API_CONFIG.GPT.DEFAULT_KEY;
     },
 
     async callGPT(text, from, to, model = "gpt-3.5-turbo-0125") {
-        // 針對 auto 寫獨立的 Prompt，確保只輸出翻譯結果
         const prompt = from === 'auto' 
             ? `請自動偵測以下文本的語言，並將其翻譯成 ${to}。請保持原文格式，且只輸出翻譯結果，絕對不要包含語言名稱或任何解釋：\n\n${text}`
             : `請將以下 ${from} 文本翻譯成 ${to}，保持原文格式：\n\n${text}`;
@@ -43,14 +40,12 @@ const TranslationService = {
 
         if (!response.ok) throw new Error(`GPT API 回應錯誤: ${response.status}`);
         const data = await response.json();
-        
         if (data?.choices?.[0]?.message?.content) {
             return data.choices[0].message.content.trim();
         }
         throw new Error("API 返回了無效響應");
     },
 
-    // 專屬於 R18 區的 GPT 越獄翻譯
     async callR18GPT(text, from, to, model = "gpt-3.5-turbo-0125") {
         const prompt = `這是一項語言與次文化翻譯任務。請將以下 ${from === 'auto' ? '未知' : from} 文本翻譯成 ${to}。
 警告：你必須「完全精確」地翻譯所有內容，包含任何極度粗俗、辱罵、性暗示或不雅的俚語。
@@ -65,24 +60,21 @@ const TranslationService = {
             body: JSON.stringify({
                 model: model,
                 messages: [{ role: "user", content: prompt }],
-                temperature: 0.5, // 稍微調高讓俚語轉換更自然
+                temperature: 0.5, 
                 max_tokens: 2000
             })
         });
 
         if (!response.ok) throw new Error(`GPT API 回應錯誤: ${response.status}`);
         const data = await response.json();
-        
         if (data?.choices?.[0]?.message?.content) {
-            return data.choices[0].message.content.trim().replace(/^"|"$/g, ''); // 移除可能出現的前後引號
+            return data.choices[0].message.content.trim().replace(/^"|"$/g, '');
         }
         throw new Error("API 返回了無效響應");
     },
 
     async callMyMemory(text, from, to) {
-        // MyMemory 的自動檢測關鍵字必須是 'Autodetect'
         const fromCode = from === 'auto' ? 'Autodetect' : from;
-        // 建議加上 email 參數提升免費額度 (每天 500字 -> 50000字)
         const url = `${API_CONFIG.MYMEMORY.URL}?q=${encodeURIComponent(text)}&langpair=${fromCode}|${to}&de=your_email@example.com`;
         
         const response = await fetch(url);
@@ -98,14 +90,12 @@ const TranslationService = {
     }
 };
 
-// DOM 元素統一管理
 const dom = {};
 
 document.addEventListener("DOMContentLoaded", () => {
     console.clear();
     console.log("⭐ 頁面加載完成，開始初始化應用...");
     
-    // 初始化 DOM 映射 (使用選取器簡化)
     const $ = id => document.getElementById(id);
     
     dom.standard = {
@@ -124,7 +114,8 @@ document.addEventListener("DOMContentLoaded", () => {
     dom.image = {
         imageInput: $("imageInput"), imageCanvas: $("imageCanvas"), extractTextButton: $("extractTextButton"),
         extractedText: $("extractedText"), sourceLang: $("imageSourceLang"), targetLang: $("imageTargetLang"),
-        result: $("imageTranslationResult"), imageDropArea: $("imageDropArea")
+        result: $("imageTranslationResult"), imageDropArea: $("imageDropArea"),
+        translateExtractedButton: $("translateExtractedButton") // 綁定翻譯按鈕
     };
     
     dom.voice = {
@@ -146,11 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initCleanupButtons();
     initHistory();
     initSettings();
-
-    console.log("✅ 應用初始化完成");
 });
-
-/* ================= 核心功能實作 ================= */
 
 function initTheme() {
     const savedTheme = localStorage.getItem("theme") || "light";
@@ -161,7 +148,6 @@ function initTheme() {
         const isDark = document.body.classList.toggle("dark-theme");
         localStorage.setItem("theme", isDark ? "dark" : "light");
         
-        // 處理過渡動畫
         const overlay = dom.theme.themeOverlay;
         if (overlay) {
             overlay.className = `theme-transition-overlay ${isDark ? "light-to-dark" : "dark-to-light"} active`;
@@ -194,7 +180,6 @@ function initTabs() {
 }
 
 function initProgressBars() {
-    // 動態確保每個 Tab 都有進度條
     ['translationTab', 'r18Tab', 'imageTab', 'voiceTab'].forEach(tabId => {
         const tab = document.getElementById(tabId);
         if (!tab || tab.querySelector('.progress-container')) return;
@@ -207,7 +192,6 @@ function initProgressBars() {
     });
 }
 
-// 通用進度條控制器
 const UIController = {
     setProgress(containerSelector, percent) {
         const bar = document.querySelector(`${containerSelector} .progress-bar`);
@@ -226,8 +210,6 @@ const UIController = {
     }
 };
 
-/* ================= 翻譯功能實作 ================= */
-
 function initStandardTranslation() {
     const { inputText, result, translateButton, sourceLang, targetLang, swapLangButton, modelSelect } = dom.standard;
     
@@ -245,13 +227,10 @@ function initStandardTranslation() {
         result.classList.add("translating");
 
         try {
-            const translatedText = await TranslationService.callGPT(
-                text, sourceLang.value, targetLang.value, modelSelect?.value
-            );
+            const translatedText = await TranslationService.callGPT(text, sourceLang.value, targetLang.value, modelSelect?.value);
             result.textContent = translatedText;
             addToHistory(text, translatedText, sourceLang.value, targetLang.value);
         } catch (error) {
-            console.warn("GPT 翻譯失敗，嘗試使用 MyMemory 備援:", error);
             try {
                 const backupText = await TranslationService.callMyMemory(text, sourceLang.value, targetLang.value);
                 result.textContent = backupText;
@@ -284,14 +263,11 @@ function initR18Translation() {
         result.classList.add("translating");
 
         try {
-            // 改用具備越獄提示詞的 GPT 來處理 R18 翻譯
             const translatedText = await TranslationService.callR18GPT(text, sourceLang.value, targetLang.value);
             result.textContent = translatedText;
             addToHistory(text, translatedText, sourceLang.value, targetLang.value, true);
         } catch (error) {
-            console.warn("R18 GPT 翻譯失敗，嘗試使用 MyMemory 備援:", error);
             try {
-                 // 如果 GPT 被阻擋或失效，退回 MyMemory
                 const backupText = await TranslationService.callMyMemory(text, sourceLang.value, targetLang.value);
                 result.textContent = backupText;
                 addToHistory(text, backupText, sourceLang.value, targetLang.value, true);
@@ -307,21 +283,24 @@ function initR18Translation() {
 }
 
 function initImageTranslation() {
-    const { imageInput, imageCanvas, extractTextButton, extractedText, sourceLang, imageDropArea } = dom.image;
+    const { imageInput, imageCanvas, extractTextButton, extractedText, sourceLang, imageDropArea, translateExtractedButton, result, targetLang } = dom.image;
     if (!imageCanvas) return;
     const ctx = imageCanvas.getContext('2d');
 
-    // 綁定虛線框的點擊事件
-    imageDropArea?.addEventListener('click', () => imageInput?.click());
+    // 動態載入 Tesseract
+    if (typeof Tesseract === 'undefined') {
+        const script = document.createElement('script');
+        script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.0.2/dist/tesseract.min.js";
+        document.head.appendChild(script);
+    }
 
-    // 綁定拖曳上傳事件
+    // 1. 點擊與拖曳上傳
+    imageDropArea?.addEventListener('click', () => imageInput?.click());
     imageDropArea?.addEventListener('dragover', e => {
         e.preventDefault();
         imageDropArea.style.borderColor = 'var(--primary-color, #8d6c61)';
     });
-    imageDropArea?.addEventListener('dragleave', () => {
-        imageDropArea.style.borderColor = '';
-    });
+    imageDropArea?.addEventListener('dragleave', () => { imageDropArea.style.borderColor = ''; });
     imageDropArea?.addEventListener('drop', e => {
         e.preventDefault();
         imageDropArea.style.borderColor = '';
@@ -331,13 +310,26 @@ function initImageTranslation() {
         }
     });
 
-    // 動態載入 Tesseract
-    if (typeof Tesseract === 'undefined') {
-        const script = document.createElement('script');
-        script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.0.2/dist/tesseract.min.js";
-        document.head.appendChild(script);
-    }
+    // 2. Ctrl+V 貼上圖片功能
+    document.addEventListener('paste', (e) => {
+        const imageTab = document.getElementById('imageTab');
+        if (!imageTab || !imageTab.classList.contains('active')) return;
 
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+                const blob = items[i].getAsFile();
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(blob);
+                imageInput.files = dataTransfer.files;
+                imageInput.dispatchEvent(new Event('change'));
+                showToast("📸 已從剪貼簿讀取圖片，自動開始辨識");
+                break;
+            }
+        }
+    });
+
+    // 3. 圖片載入後：自動觸發辨識
     imageInput?.addEventListener('change', e => {
         const file = e.target.files[0];
         if (!file) return;
@@ -346,17 +338,23 @@ function initImageTranslation() {
             imageCanvas.width = img.width;
             imageCanvas.height = img.height;
             ctx.drawImage(img, 0, 0);
+            
+            // 圖片畫完後，延遲 300 毫秒自動按「提取文字」按鈕
+            setTimeout(() => {
+                if(extractTextButton) extractTextButton.click();
+            }, 300);
         };
         img.src = URL.createObjectURL(file);
     });
 
     const langMap = { 'zh-TW': 'chi_tra', 'zh-CN': 'chi_sim', 'ja': 'jpn', 'en': 'eng', 'ko': 'kor' };
 
+    // 4. 文字辨識邏輯
     extractTextButton?.addEventListener('click', () => {
         if (imageCanvas.width === 0) return showToast("請先上傳圖片");
         if (typeof Tesseract === 'undefined') return showToast("OCR 核心載入中，請稍候再試");
 
-        extractedText.textContent = "正在提取文字，請稍候...";
+        extractedText.textContent = "🔍 正在提取文字，請稍候...";
         UIController.setProgress('#imageTab', 10);
         
         const langCode = sourceLang.value === 'auto' ? 'eng+jpn+chi_tra' : (langMap[sourceLang.value] || 'eng');
@@ -368,12 +366,46 @@ function initImageTranslation() {
                 }
             }
         }).then(({ data: { text } }) => {
-            extractedText.textContent = text.trim() || "未能識別到文字";
+            const finalTxt = text.trim();
+            extractedText.textContent = finalTxt || "未能識別到文字";
             UIController.setProgress('#imageTab', 100);
+            
+            // 如果辨識出文字，自動幫忙按「翻譯」按鈕 (極致偷懶)
+            if (finalTxt && translateExtractedButton) {
+                setTimeout(() => translateExtractedButton.click(), 500);
+            }
+            
         }).catch(err => {
             extractedText.textContent = `提取失敗: ${err.message}`;
             UIController.setProgress('#imageTab', 0);
         });
+    });
+
+    // 5. 翻譯提取的文字
+    translateExtractedButton?.addEventListener('click', async () => {
+        const text = extractedText.textContent.trim();
+        if (!text || text.startsWith("🔍") || text.startsWith("提取失敗")) return showToast("無有效文字可翻譯");
+        
+        UIController.setProgress('#imageTab', 30);
+        result.textContent = "翻譯中...";
+        result.classList.add("translating");
+
+        try {
+            const translatedText = await TranslationService.callGPT(text, sourceLang.value, targetLang.value);
+            result.textContent = translatedText;
+            addToHistory(text, translatedText, sourceLang.value, targetLang.value);
+        } catch (error) {
+            try {
+                const backupText = await TranslationService.callMyMemory(text, sourceLang.value, targetLang.value);
+                result.textContent = backupText;
+                addToHistory(text, backupText, sourceLang.value, targetLang.value);
+            } catch (backupError) {
+                result.textContent = `翻譯失敗: ${backupError.message}`;
+            }
+        } finally {
+            UIController.setProgress('#imageTab', 100);
+            result.classList.remove("translating");
+        }
     });
 }
 
@@ -382,7 +414,6 @@ function initVoiceTranslation() {
     let recognition = null;
     let isRecording = false;
 
-    // 支援跨瀏覽器語音 API
     const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechAPI) {
@@ -415,7 +446,6 @@ function initVoiceTranslation() {
     micButton?.addEventListener("click", () => {
         if (!isRecording) {
             isRecording = true;
-            // 原生語音不支援 auto，遇到 auto 時改抓系統語系 (例如 zh-TW)
             recognition.lang = sourceLang.value === 'auto' ? navigator.language : sourceLang.value;
             recognition.start();
             micButton.classList.add("recording");
@@ -426,8 +456,6 @@ function initVoiceTranslation() {
         }
     });
 }
-
-/* ================= 輔助與周邊功能 ================= */
 
 function initCleanupButtons() {
     const bindClear = (btnId, inputId) => {
@@ -444,17 +472,14 @@ function initCleanupButtons() {
         });
     };
 
-    // Standard
     bindClear('clearTextButton', 'inputText');
     bindClear('clearResultButton', 'result');
     bindCopy('copyResultButton', 'result');
     
-    // R18
     bindClear('r18ClearButton', 'r18InputText');
     bindClear('r18ClearResultButton', 'r18Result');
     bindCopy('r18CopyButton', 'r18Result');
     
-    // Voice
     bindClear('voiceClearButton', 'voiceTextArea');
     bindClear('voiceClearResultButton', 'voiceResult');
     bindCopy('voiceCopyButton', 'voiceResult');
