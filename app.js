@@ -1,5 +1,5 @@
 /**
- * 詮語翻譯 - 現代化重構版本 (ES6+ 穩定版)
+ * 詮語翻譯 - 現代化重構版本 (ES6+ 穩定版 + Auto 語言修正)
  */
 
 // 全局 API 配置
@@ -22,8 +22,11 @@ const TranslationService = {
     },
 
     async callGPT(text, from, to, model = "gpt-3.5-turbo-0125") {
-        const prompt = `請將以下${from === 'auto' ? '檢測到的語言' : from}文本翻譯成${to}，保持原文格式：\n\n${text}`;
-        
+        // 針對 auto 寫獨立的 Prompt，確保只輸出翻譯結果
+        const prompt = from === 'auto' 
+            ? `請自動偵測以下文本的語言，並將其翻譯成 ${to}。請保持原文格式，且只輸出翻譯結果，絕對不要包含語言名稱或任何解釋：\n\n${text}`
+            : `請將以下 ${from} 文本翻譯成 ${to}，保持原文格式：\n\n${text}`;
+            
         const response = await fetch(API_CONFIG.GPT.URL, {
             method: "POST",
             headers: {
@@ -48,7 +51,8 @@ const TranslationService = {
     },
 
     async callMyMemory(text, from, to) {
-        const fromCode = from === 'auto' ? 'auto' : from;
+        // MyMemory 的自動檢測關鍵字必須是 'Autodetect'
+        const fromCode = from === 'auto' ? 'Autodetect' : from;
         // 建議加上 email 參數提升免費額度 (每天 500字 -> 50000字)
         const url = `${API_CONFIG.MYMEMORY.URL}?q=${encodeURIComponent(text)}&langpair=${fromCode}|${to}&de=your_email@example.com`;
         
@@ -353,7 +357,8 @@ function initVoiceTranslation() {
     micButton?.addEventListener("click", () => {
         if (!isRecording) {
             isRecording = true;
-            recognition.lang = sourceLang.value;
+            // 原生語音不支援 auto，遇到 auto 時改抓系統語系 (例如 zh-TW)
+            recognition.lang = sourceLang.value === 'auto' ? navigator.language : sourceLang.value;
             recognition.start();
             micButton.classList.add("recording");
             micButton.textContent = "停止錄音";
