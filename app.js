@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dom.image = {
         imageInput: $("imageInput"), imageCanvas: $("imageCanvas"), extractTextButton: $("extractTextButton"),
         extractedText: $("extractedText"), sourceLang: $("imageSourceLang"), targetLang: $("imageTargetLang"),
-        result: $("imageTranslationResult")
+        result: $("imageTranslationResult"),
         imageDropArea: $("imageDropArea") //
     };
     
@@ -270,7 +270,7 @@ function initR18Translation() {
 }
 
 function initImageTranslation() {
-    const { imageInput, imageCanvas, extractTextButton, extractedText, sourceLang } = dom.image;
+    const { imageInput, imageCanvas, extractTextButton, extractedText, sourceLang, imageDropArea } = dom.image; //
     if (!imageCanvas) return;
     const ctx = imageCanvas.getContext('2d');
 // 👇 補上這段：點擊虛線框框時，觸發隱藏的真實上傳按鈕
